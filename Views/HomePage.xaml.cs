@@ -1,7 +1,7 @@
 ﻿using trovagiocatoriApp.ViewModels;
 
 namespace trovagiocatoriApp.Views;
-
+//Commit di prova
 public partial class HomePage : ContentPage
 {
     public HomePage()
