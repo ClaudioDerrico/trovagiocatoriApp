@@ -10,16 +10,15 @@ public partial class LoginPage : ContentPage
         InitializeComponent();
     }
 
-    // Impostare la dimensione della finestra ogni volta che la pagina appare
     protected override void OnAppearing()
     {
         base.OnAppearing();
 
-        // Impostare la dimensione per la pagina di login (800x600)
-        
-            Application.Current.MainPage.Window.Height = 600;
-            Application.Current.MainPage.Window.Width = 800;
-        
+        // Impostare la dimensione per la pagina di login (1000x800)
+
+        Application.Current.MainPage.Window.Height = 800;
+        Application.Current.MainPage.Window.Width = 500;
+
     }
 
     private void OnTogglePasswordVisibility(object sender, EventArgs e)

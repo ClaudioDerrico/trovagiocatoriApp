@@ -44,16 +44,62 @@
 
                 <!-- Selezione Regione -->
                 <Frame BackgroundColor="White" CornerRadius="10" Margin="20" Padding="20">
+                    <!-- Sezione Seleziona Regione -->
                     <VerticalStackLayout>
-                        <Label Text="SELEZIONA LA TUA REGIONE"
-                               FontSize="20"
-                               FontAttributes="Bold"
-                               TextColor="#333" />
-                        <Picker ItemsSource="{Binding Regions}" 
-                                SelectedItem="{Binding SelectedRegion}" 
-                                Title="Seleziona una Regione" />
+                        <Label Text="Seleziona una Regione"
+                       FontSize="20"
+                       FontAttributes="Bold"
+                       TextColor="#333"
+                       HorizontalOptions="Center" />
+                        <Picker x:Name="RegionPicker"
+                        Title="Seleziona una regione"
+                        ItemsSource="{Binding Regions}" 
+                        SelectedItem="{Binding SelectedRegion}" 
+                        HorizontalOptions="FillAndExpand" />
                     </VerticalStackLayout>
                 </Frame>
+
+                <!-- Seleziona Provincia -->
+                <Frame BackgroundColor="White" CornerRadius="10" Margin="10" Padding="10" IsVisible="{Binding IsProvincePickerVisible}">
+                    <VerticalStackLayout>
+                        <Label Text="SELEZIONA LA TUA PROVINCIA"
+                           FontSize="20"
+                           FontAttributes="Bold"
+                           TextColor="#333"
+                           HorizontalOptions="Center" />
+                        <Picker x:Name="ProvincePicker"
+                            Title="Seleziona una provincia"
+                            ItemsSource="{Binding Provinces}"
+                            SelectedItem="{Binding SelectedProvince}"
+                            HorizontalOptions="FillAndExpand" />
+                    </VerticalStackLayout>
+                </Frame>
+
+                <!-- Seleziona Sport -->
+                <Frame BackgroundColor="White" CornerRadius="10" Margin="10" Padding="10" IsVisible="{Binding IsSportPickerVisible}">
+                    <VerticalStackLayout>
+                        <Label Text="SELEZIONA LO SPORT"
+                           FontSize="20"
+                           FontAttributes="Bold"
+                           TextColor="#333"
+                           HorizontalOptions="Center" />
+                        <Picker x:Name="SportPicker"
+                            Title="Seleziona uno sport"
+                            ItemsSource="{Binding Sports}"
+                            SelectedItem="{Binding SelectedSport}"
+                            HorizontalOptions="FillAndExpand" />
+                    </VerticalStackLayout>
+                </Frame>
+
+                <!-- Bottone Gioca -->
+                <Button Text="GIOCA"
+                BackgroundColor="#E0E0E0"
+                TextColor="Black"
+                FontAttributes="Bold"
+                CornerRadius="10"
+                HeightRequest="50"
+                HorizontalOptions="Center"
+                Command="{Binding PlayCommand}" />
 
                 <!-- Descrizione del sito con Logo -->
                 <Frame BackgroundColor="White" CornerRadius="10" Margin="20" Padding="20">

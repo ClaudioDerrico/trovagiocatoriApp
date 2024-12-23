@@ -18,7 +18,7 @@ public partial class HomePage : ContentPage
         // Impostare la dimensione per la pagina di login (1000x800)
 
         Application.Current.MainPage.Window.Height = 800;
-        Application.Current.MainPage.Window.Width = 1000;
+        Application.Current.MainPage.Window.Width = 500;
 
     }
 }
