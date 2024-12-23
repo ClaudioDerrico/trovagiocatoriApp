@@ -1,0 +1,30 @@
+﻿<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="trovagiocatoriApp.Views.RegionForm"
+             Title="Seleziona Regione"
+             BackgroundColor="#f2f2f2">
+
+    <ScrollView>
+        <StackLayout Padding="20" Spacing="20">
+            <Label Text="Seleziona Regione" FontAttributes="Bold" />
+            <Picker ItemsSource="{Binding Regions}" 
+                    SelectedItem="{Binding SelectedRegion}" 
+                    Title="Seleziona una Regione" />
+
+            <Label Text="Seleziona Provincia" FontAttributes="Bold" />
+            <Picker ItemsSource="{Binding Provinces}" 
+                    SelectedItem="{Binding SelectedProvince}" 
+                    Title="Seleziona una Provincia" />
+
+            <Label Text="Seleziona Sport" FontAttributes="Bold" />
+            <Picker ItemsSource="{Binding Sports}" 
+                    SelectedItem="{Binding SelectedSport}" 
+                    Title="Seleziona uno Sport" />
+
+            <Button Text="Gioca"
+                    BackgroundColor="#FF0000"
+                    TextColor="White"
+                    Command="{Binding PlayCommand}" />
+        </StackLayout>
+    </ScrollView>
+</ContentPage>

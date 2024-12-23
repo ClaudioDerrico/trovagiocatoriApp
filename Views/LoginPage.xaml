@@ -1,0 +1,103 @@
+<!-- LoginPage.xaml -->
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="trovagiocatoriApp.Views.LoginPage"
+             Title="Login"
+             BackgroundColor="#f9f9f9">
+
+  <ScrollView>
+    <VerticalStackLayout Spacing="20" Padding="20" HorizontalOptions="Center" VerticalOptions="Center">
+      <Grid BackgroundColor="#333" Padding="10" HorizontalOptions="FillAndExpand">
+        <HorizontalStackLayout HorizontalOptions="Start">
+          <Image Source="trovagiocatori.png" HeightRequest="100" WidthRequest="240" />
+        </HorizontalStackLayout>
+      </Grid>
+      <!-- Titolo -->
+      <VerticalStackLayout HorizontalOptions="Center" Padding="10">
+        <Label Text="LOGIN"
+               FontSize="30"
+               FontAttributes="Bold"
+               TextColor="#333"
+               HorizontalOptions="Center" />
+        <Label Text="Bentornato! Inserisci i tuoi dati."
+               FontSize="16"
+               TextColor="Gray"
+               HorizontalOptions="Center" />
+      </VerticalStackLayout>
+
+      <!-- Messaggi di Errore -->
+      <Label x:Name="ErrorMessage"
+             Text=""
+             FontSize="14"
+             TextColor="Red"
+             IsVisible="False"
+             HorizontalOptions="Center" />
+
+      <!-- Input Email -->
+      <VerticalStackLayout>
+        <Label Text="E-mail o Username" FontAttributes="Bold" />
+        <Entry x:Name="EmailEntry" Placeholder="Inserisci la tua email o username" Keyboard="Email" />
+        <Label x:Name="EmailError" Text="E-mail non valida" TextColor="Red" IsVisible="False" />
+      </VerticalStackLayout>
+
+      <!-- Input Password -->
+      <VerticalStackLayout>
+        <Label Text="Password" FontAttributes="Bold" />
+        <Grid>
+          <Entry x:Name="PasswordEntry" Placeholder="Inserisci la tua password" IsPassword="True" />
+          <ImageButton Source="eye_open.png" WidthRequest="24" HeightRequest="24"
+                       HorizontalOptions="End" VerticalOptions="Center"
+                       Clicked="OnTogglePasswordVisibility" />
+        </Grid>
+        <Label x:Name="PasswordError" Text="Inserisci la tua password (almeno 8 caratteri)" TextColor="Red" IsVisible="False" />
+      </VerticalStackLayout>
+
+      <!-- Pulsante Login -->
+      <Button Text="LOGIN"
+              BackgroundColor="Black"
+              TextColor="White"
+              CornerRadius="10"
+              FontAttributes="Bold"
+              HeightRequest="50"
+              Clicked="OnLoginClicked" />
+
+      <!-- Password Dimenticata -->
+      <Label Text="Password dimenticata?"
+             FontSize="14"
+             TextColor="Blue"
+             HorizontalOptions="End" />
+
+      <!-- Divider con "or" -->
+      <HorizontalStackLayout VerticalOptions="Center" Spacing="10" Margin="0,10">
+        <BoxView HeightRequest="1" BackgroundColor="#ccc" WidthRequest="100" HorizontalOptions="FillAndExpand" />
+        <Label Text="or" FontSize="14" TextColor="Gray" />
+        <BoxView HeightRequest="1" BackgroundColor="#ccc" WidthRequest="100" HorizontalOptions="FillAndExpand" />
+      </HorizontalStackLayout>
+
+      <!-- Pulsante Google -->
+      <Button Text="Accedi con Google"
+              BackgroundColor="#4285F4"
+              TextColor="White"
+              CornerRadius="10"
+              HeightRequest="50"
+              ImageSource="google-logo.png"
+              ContentLayout="Left,10" />
+
+      <!-- Registrazione -->
+      <Label Text="Non hai ancora un account?"
+             FontSize="14"
+             HorizontalOptions="Center" />
+      <Button Text="REGISTRATI ORA"
+              FontSize="14"
+              TextColor="#4285F4"
+              BackgroundColor="Transparent"
+              BorderColor="#4285F4"
+              BorderWidth="1"
+              CornerRadius="10"
+              HeightRequest="40"
+              Clicked="OnRegisterNowClicked"
+              HorizontalOptions="Center" />
+      
+    </VerticalStackLayout>
+  </ScrollView>
+</ContentPage>

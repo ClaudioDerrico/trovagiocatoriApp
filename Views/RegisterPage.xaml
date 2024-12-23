@@ -1,0 +1,98 @@
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="trovagiocatoriApp.Views.RegisterPage"
+             Title="Registrazione"
+             BackgroundColor="#f9f9f9">
+
+  <ScrollView>
+    <VerticalStackLayout Spacing="20" Padding="20" HorizontalOptions="Center" VerticalOptions="Center">
+      <Grid BackgroundColor="#333" Padding="10" HorizontalOptions="FillAndExpand">
+        <HorizontalStackLayout HorizontalOptions="Start">
+          <Image Source="trovagiocatori.png" HeightRequest="100" WidthRequest="240" />
+        </HorizontalStackLayout>
+      </Grid>
+      <!-- Titolo -->
+      <Label Text="REGISTRAZIONE"
+             FontSize="30"
+             FontAttributes="Bold"
+             TextColor="#333"
+             HorizontalOptions="Center" />
+      <Label Text="REGISTRATI QUI COMPILANDO GLI APPOSITI MODULI CHE LEGGI QUI SOTTO"
+             FontSize="16"
+             TextColor="Gray"
+             HorizontalOptions="Center" />
+
+      <!-- Messaggi di Errore -->
+      <Label x:Name="ErrorMessage"
+             Text=""
+             FontSize="14"
+             TextColor="Red"
+             IsVisible="False"
+             HorizontalOptions="Center" />
+
+      <!-- Nome -->
+      <VerticalStackLayout>
+        <Label Text="Nome" FontAttributes="Bold" />
+        <Entry x:Name="NomeEntry" Placeholder="Inserisci il tuo nome" />
+        <Label x:Name="NomeError" Text="Nome non valido" TextColor="Red" IsVisible="False" />
+      </VerticalStackLayout>
+
+      <!-- Cognome -->
+      <VerticalStackLayout>
+        <Label Text="Cognome" FontAttributes="Bold" />
+        <Entry x:Name="CognomeEntry" Placeholder="Inserisci il tuo cognome" />
+        <Label x:Name="CognomeError" Text="Cognome non valido" TextColor="Red" IsVisible="False" />
+      </VerticalStackLayout>
+
+      <!-- Username -->
+      <VerticalStackLayout>
+        <Label Text="Username" FontAttributes="Bold" />
+        <Entry x:Name="UsernameEntry" Placeholder="Inserisci il tuo username" />
+        <Label x:Name="UsernameError" Text="Username non valido" TextColor="Red" IsVisible="False" />
+      </VerticalStackLayout>
+
+      <!-- Email -->
+      <VerticalStackLayout>
+        <Label Text="E-mail" FontAttributes="Bold" />
+        <Entry x:Name="EmailEntry" Placeholder="Inserisci la tua email" Keyboard="Email" />
+        <Label Text="Ti verrà inviata un'email di conferma (controlla anche negli spam)."
+               FontSize="12"
+               TextColor="Gray" />
+        <Label x:Name="EmailError" Text="E-mail non valida" TextColor="Red" IsVisible="False" />
+      </VerticalStackLayout>
+
+      <!-- Password -->
+      <VerticalStackLayout>
+        <Label Text="Password" FontAttributes="Bold" />
+        <Grid>
+          <Entry x:Name="PasswordEntry" Placeholder="Inserisci la tua password" IsPassword="True" />
+          <ImageButton Source="eye_open.png" WidthRequest="24" HeightRequest="24"
+                       HorizontalOptions="End" VerticalOptions="Center"
+                       Clicked="OnTogglePasswordVisibility" />
+        </Grid>
+        <Label x:Name="PasswordError" Text="Inserisci una password di almeno 8 caratteri" TextColor="Red" IsVisible="False" />
+      </VerticalStackLayout>
+
+      <!-- Foto Profilo -->
+      <VerticalStackLayout>
+        <Label Text="Foto Profilo (facoltativa)" FontAttributes="Bold" />
+        <Button Text="Carica Foto Profilo" Clicked="OnUploadPhotoClicked" />
+        <Image x:Name="ProfilePhotoPreview"
+               HeightRequest="150"
+               WidthRequest="150"
+               Aspect="AspectFill"
+               Margin="10"
+               IsVisible="False" />
+      </VerticalStackLayout>
+
+      <!-- Pulsante Registrazione -->
+      <Button Text="REGISTRATI"
+              BackgroundColor="Black"
+              TextColor="White"
+              CornerRadius="10"
+              FontAttributes="Bold"
+              HeightRequest="50"
+              Clicked="OnRegisterClicked" />
+    </VerticalStackLayout>
+  </ScrollView>
+</ContentPage>

@@ -1,0 +1,156 @@
+﻿<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="trovagiocatoriApp.Views.HomePage"
+             Title=""
+             BackgroundColor="#f2f2f2">
+
+    <Grid>
+
+
+        <!-- Contenuto -->
+        <ScrollView>
+            <VerticalStackLayout Spacing="20" Padding="20">
+                <!-- Barra di Navigazione -->
+                <Grid BackgroundColor="#333" Padding="10" HorizontalOptions="FillAndExpand">
+                    <HorizontalStackLayout HorizontalOptions="Start">
+                        <Image Source="trovagiocatori.png" HeightRequest="100" WidthRequest="240" />
+                    </HorizontalStackLayout>
+                </Grid>
+
+                <!-- Hero Section -->
+                <Grid Margin="20" HeightRequest="250" >
+                    <Image Source="sfondo.png"  Aspect="AspectFill" Opacity="0.5" />
+                    <VerticalStackLayout Spacing="10" HorizontalOptions="Center" VerticalOptions="CenterAndExpand">
+                        <Label Text="Trovagiocatori"
+                               FontSize="25"
+                               FontAttributes="Bold"
+                               TextColor="black"
+                               HorizontalOptions="Center" />
+                        <Label Text="Scopri quanto è facile trovare il decimo a calcetto"
+                               FontSize="15"
+                               FontAttributes="Bold"
+                               TextColor="grey"
+                               HorizontalOptions="Center" />
+                        <Button Text="Inizia a giocare"
+                                BackgroundColor="#FF0000"
+                                TextColor="White"
+                                WidthRequest="200"
+                                HeightRequest="50"
+                                CornerRadius="10"
+                                HorizontalOptions="Center"
+                                Command="{Binding StartGameCommand}" />
+                    </VerticalStackLayout>
+                </Grid>
+
+                <!-- Selezione Regione -->
+                <Frame BackgroundColor="White" CornerRadius="10" Margin="20" Padding="20">
+                    <VerticalStackLayout>
+                        <Label Text="SELEZIONA LA TUA REGIONE"
+                               FontSize="20"
+                               FontAttributes="Bold"
+                               TextColor="#333" />
+                        <Picker ItemsSource="{Binding Regions}" 
+                                SelectedItem="{Binding SelectedRegion}" 
+                                Title="Seleziona una Regione" />
+                    </VerticalStackLayout>
+                </Frame>
+
+                <!-- Descrizione del sito con Logo -->
+                <Frame BackgroundColor="White" CornerRadius="10" Margin="20" Padding="20">
+
+                    <VerticalStackLayout Spacing="10" HorizontalOptions="Center">
+                        
+                        <!-- Logo -->
+                        <Image Source="logo.jpg" HeightRequest="250" HorizontalOptions="Center" />
+
+                        <!-- Titolo -->
+                        <Label Text="Cosa è Trovagiocatori.it?"
+                               FontSize="18"
+                               FontAttributes="Bold"
+                               TextColor="#333"
+                               HorizontalOptions="Center" />
+
+                        <!-- Descrizione -->
+                        <Label Text="Ti aiutiamo a trovare il giocatore mancante e ad organizzare le tue partite quando, come e con chi vuoi!"
+                               FontSize="14"
+                               TextColor="#666"
+                               HorizontalOptions="Center"
+                               Margin="0,10,0,0" />
+                    </VerticalStackLayout>
+                </Frame>
+
+                <!-- Sezione "Come funziona?" -->
+                <Frame BackgroundColor="#FFF" CornerRadius="10" Margin="20" Padding="20">
+                    <VerticalStackLayout>
+                        <Label Text="Come funziona?"
+                               FontSize="18"
+                               FontAttributes="Bold"
+                               TextColor="#333"
+                               HorizontalOptions="Center" />
+
+                        <Grid ColumnDefinitions="*,*,*" RowDefinitions="Auto" Margin="0,20,0,0">
+                            <!-- Prima Colonna -->
+                            <VerticalStackLayout Grid.Column="0" HorizontalOptions="Center" Spacing="10">
+                                <Frame BackgroundColor="#E0E0E0" Padding="10" CornerRadius="5"
+                                       WidthRequest="120" HeightRequest="80">
+                                    <Label Text="Seleziona la provincia"
+                                           FontSize="14"
+                                           FontAttributes="Bold"
+                                           HorizontalOptions="Center" 
+                                           VerticalOptions="Center"/>
+                                </Frame>
+                                <Label Text="Scegli lo sport"
+                                       FontSize="12"
+                                       TextColor="#666"
+                                       HorizontalOptions="Center" />
+                            </VerticalStackLayout>
+
+                            <!-- Seconda Colonna -->
+                            <VerticalStackLayout Grid.Column="1" HorizontalOptions="Center" Spacing="10">
+                                <Frame BackgroundColor="#E0E0E0" Padding="10" CornerRadius="5"
+                                       WidthRequest="120" HeightRequest="80">
+                                    <Label Text="Crea un post"
+                                           FontSize="14"
+                                           FontAttributes="Bold"
+                                           HorizontalOptions="Center"
+                                           VerticalOptions="Center"/>
+                                </Frame>
+                                <Label Text="Imposta le informazioni sulla partita"
+                                       FontSize="12"
+                                       TextColor="#666"
+                                       HorizontalOptions="Center" />
+                            </VerticalStackLayout>
+
+                            <!-- Terza Colonna -->
+                            <VerticalStackLayout Grid.Column="2" HorizontalOptions="Center" Spacing="10">
+                                <Frame BackgroundColor="#E0E0E0" Padding="10" CornerRadius="5"
+                                       WidthRequest="120" HeightRequest="80">
+                                    <Label Text="Chatta con gli altri"
+                                           FontSize="14"
+                                           FontAttributes="Bold"
+                                           HorizontalOptions="Center"
+                                           VerticalOptions="Center"/>
+                                </Frame>
+                                <Label Text="Metti in contatto con gli altri per organizzare le partite"
+                                       FontSize="12"
+                                       TextColor="#666"
+                                       HorizontalOptions="Center" />
+                            </VerticalStackLayout>
+                        </Grid>
+                    </VerticalStackLayout>
+                </Frame>
+
+                <!-- Footer -->
+                <Grid BackgroundColor="#333" Padding="10" HorizontalOptions="FillAndExpand">
+                    <VerticalStackLayout HorizontalOptions="Center">
+                        <Label Text="TrovagiocatoriApp © 2024" 
+                               FontSize="14" 
+                               TextColor="White" 
+                               HorizontalOptions="Center" />
+
+                    </VerticalStackLayout>
+                </Grid>
+            </VerticalStackLayout>
+        </ScrollView>
+    </Grid>
+</ContentPage>

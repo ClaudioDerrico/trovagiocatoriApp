@@ -1,0 +1,25 @@
+﻿<Application xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="trovagiocatoriApp.App">
+    <Application.Resources>
+        <ResourceDictionary>
+            <!-- Stile Globale per ContentPage -->
+            <Style TargetType="ContentPage">
+                <Setter Property="Padding" Value="20" />
+                <Setter Property="BackgroundColor" Value="#f9f9f9" />
+            </Style>
+
+            <!-- Stile per Grid con Larghezza Fissa -->
+            <Style TargetType="Grid" x:Key="CenteredGrid">
+                <Setter Property="HorizontalOptions" Value="Center" />
+                <Setter Property="VerticalOptions" Value="FillAndExpand" />
+                <Setter Property="WidthRequest">
+                    <OnIdiom x:TypeArguments="x:Double"
+                             Phone="360"
+                             Tablet="600"
+                             Desktop="800" />
+                </Setter>
+            </Style>
+        </ResourceDictionary>
+    </Application.Resources>
+</Application>
