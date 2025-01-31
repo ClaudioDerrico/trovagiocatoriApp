@@ -7,16 +7,19 @@
     Shell.FlyoutBehavior="Flyout"
     Title="trovagiocatoriApp">
 
+    <!-- Home Page -->
     <ShellContent
         Title="Home"
         ContentTemplate="{DataTemplate local:HomePage}"
         Route="HomePage" />
 
+    <!-- Login Page -->
     <ShellContent
         Title="Login"
         ContentTemplate="{DataTemplate local:LoginPage}"
         Route="LoginPage" />
 
+    <!-- Register Page -->
     <ShellContent
         Title="Registrazione"
         ContentTemplate="{DataTemplate local:RegisterPage}"

@@ -39,9 +39,7 @@ public partial class LoginPage : ContentPage
         };
 
         string json = JsonSerializer.Serialize(loginData);
-
         using var client = new HttpClient();
-
 
         var content = new StringContent(json, Encoding.UTF8, new System.Net.Http.Headers.MediaTypeHeaderValue("application/json"));
 
@@ -49,8 +47,15 @@ public partial class LoginPage : ContentPage
 
         if (response.IsSuccessStatusCode)
         {
-            await DisplayAlert("Login", "Login eseguito con successo!", "OK");
+            // Estrai il session_id dalla risposta (ipotizzando che venga restituito come cookie o nel corpo della risposta)
+            var sessionId = response.Headers.GetValues("Set-Cookie").FirstOrDefault();
+            if (sessionId != null)
+            {
+                // Salva il session_id nelle preferenze
+                Preferences.Set("session_id", sessionId);
+            }
 
+            await DisplayAlert("Login", "Login eseguito con successo!", "OK");
         }
         else
         {

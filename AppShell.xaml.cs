@@ -1,10 +1,11 @@
-﻿namespace trovagiocatoriApp
+﻿using trovagiocatoriApp.Views;
+
+namespace trovagiocatoriApp;
+
+public partial class AppShell : Shell
 {
-    public partial class AppShell : Shell
+    public AppShell()
     {
-        public AppShell()
-        {
-            InitializeComponent();
-        }
+        InitializeComponent();
     }
 }

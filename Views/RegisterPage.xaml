@@ -8,7 +8,7 @@
     <VerticalStackLayout Spacing="20" Padding="20" HorizontalOptions="Center" VerticalOptions="Center">
       <Grid BackgroundColor="#333" Padding="10" HorizontalOptions="FillAndExpand">
         <HorizontalStackLayout HorizontalOptions="Start">
-          <Image Source="trovagiocatori.png" HeightRequest="100" WidthRequest="240" />
+          <Image Source="trovagiocatori.png" HeightRequest="100" WidthRequest="340" />
         </HorizontalStackLayout>
       </Grid>
       <!-- Titolo -->
