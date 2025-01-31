@@ -1,0 +1,75 @@
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="trovagiocatoriApp.Views.CreatePostPage"
+             Title="Post">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="20">
+            <!-- TITOLO DEL POST -->
+            <Label Text="IMPOSTA IL TITOLO DEL POST"
+                   HorizontalOptions="Start"
+                   VerticalOptions="Start" />
+            <Entry x:Name="TitoloEntry" MaxLength="50"
+                   Placeholder="PARTITA CALCETTO CAMPO ROSSI"
+                   TextChanged="OnTitoloTextChanged" />
+
+            <Label x:Name="CaratteriRimanenti"
+                   HorizontalOptions="EndAndExpand"
+                   VerticalOptions="Start" />
+
+            <!-- CITTA DEL CAMPO -->
+            <Label Text="IMPOSTA LA CITTA' DEL CAMPO"
+                   HorizontalOptions="Start"
+                   VerticalOptions="Start" />
+            <Entry x:Name="CittaEntry" MaxLength="35"
+                   Placeholder="Città  del campo"
+                   TextChanged="OnCittaTextChanged" />
+
+            <Label x:Name="CaratteriRimanentiCitta"
+                   HorizontalOptions="EndAndExpand"
+                   VerticalOptions="Start" />
+
+            <!-- PROVINCIA -->
+            <Label Text="IMPOSTA LA PROVINCIA"
+                   HorizontalOptions="Start"
+                   VerticalOptions="Start" />
+            <Entry x:Name="ProvinciaEntry" MaxLength="35"
+                   Placeholder="Provincia" />
+
+            <!-- SPORT -->
+            <Label Text="IMPOSTA LO SPORT"
+                   HorizontalOptions="Start"
+                   VerticalOptions="Start" />
+            <Entry x:Name="SportEntry" MaxLength="20"
+                   Placeholder="Sport" />
+
+            <!-- DATA DELLA PARTITA -->
+            <Label Text="IMPOSTA LA DATA DELLA PARTITA"
+                   HorizontalOptions="Start"
+                   VerticalOptions="Start" />
+            <DatePicker x:Name="DataPartitaPicker" MinimumDate="{Binding CurrentDate}"
+                        MaximumDate="{Binding MaxDate}" />
+
+            <!-- ORA DELLA PARTITA -->
+            <Label Text="IMPOSTA L'ORA DELLA PARTITA"
+                   HorizontalOptions="Start"
+                   VerticalOptions="Start" />
+            <TimePicker x:Name="OraPartitaPicker" />
+
+            <!-- COMMENTO -->
+            <Label Text="SCRIVI UN COMMENTO PER LA PARTITA"
+                   HorizontalOptions="Start"
+                   VerticalOptions="Start" />
+            <Editor x:Name="CommentoEditor" MaxLength="155"
+                    HeightRequest="200" TextChanged="OnCommentoTextChanged" />
+
+            <Label x:Name="CharCountLabel"
+                   HorizontalOptions="EndAndExpand"
+                   VerticalOptions="Start" />
+
+            <!-- CREARE POST -->
+            <Button Text="CREA POST"
+                    Clicked="OnCreatePostClicked" />
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

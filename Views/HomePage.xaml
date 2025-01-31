@@ -13,12 +13,12 @@
                 <!-- Barra di Navigazione -->
                 <Grid BackgroundColor="#333" Padding="10" HorizontalOptions="FillAndExpand">
                     <HorizontalStackLayout HorizontalOptions="Start">
-                        <Image Source="trovagiocatori.png" HeightRequest="100" WidthRequest="240" />
+                        <Image Source="trovagiocatori.png" HeightRequest="100" WidthRequest="340" />
                     </HorizontalStackLayout>
                 </Grid>
 
                 <!-- Hero Section -->
-                <Grid Margin="20" HeightRequest="250" >
+                <Grid Margin="0" HeightRequest="250" >
                     <Image Source="sfondo.png"  Aspect="AspectFill" Opacity="0.5" />
                     <VerticalStackLayout Spacing="10" HorizontalOptions="Center" VerticalOptions="CenterAndExpand">
                         <Label Text="Trovagiocatori"
@@ -38,7 +38,7 @@
                                 HeightRequest="50"
                                 CornerRadius="10"
                                 HorizontalOptions="Center"
-                                Command="{Binding StartGameCommand}" />
+                                Clicked="OnCreatePostButtonClicked"/>
                     </VerticalStackLayout>
                 </Grid>
 
@@ -99,7 +99,16 @@
                 CornerRadius="10"
                 HeightRequest="50"
                 HorizontalOptions="Center"
-                Command="{Binding PlayCommand}" />
+                Clicked="PostPageClicked"/>
+                <!-- Command="{Binding PlayCommand}"-->
+
+                <Label x:Name="ErrorLabel" 
+                IsVisible="False" 
+                TextColor="Red" 
+                HorizontalOptions="Center" 
+                VerticalOptions="CenterAndExpand" 
+                Text="Compilare tutti i campi" />
+
 
                 <!-- Descrizione del sito con Logo -->
                 <Frame BackgroundColor="White" CornerRadius="10" Margin="20" Padding="20">

@@ -45,6 +45,7 @@
 	<MauiAsset Include="Resources\mipmap-xhdpi\**" LogicalName="Resources\mipmap-xhdpi\%(Filename)%(Extension)" />
 	<MauiAsset Include="Resources\mipmap-xxhdpi\**" LogicalName="Resources\mipmap-xxhdpi\%(Filename)%(Extension)" />
 	<MauiAsset Include="Resources\mipmap-xxxhdpi\**" LogicalName="Resources\mipmap-xxxhdpi\%(Filename)%(Extension)" />
+	<MauiSplashScreen Include="Resources\Splash\splash.svg" Color="#512BD4" BaseSize="128,128" />
 	</ItemGroup>
 
 

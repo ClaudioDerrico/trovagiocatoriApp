@@ -5,9 +5,10 @@ namespace trovagiocatoriApp.ViewModels
 {
     public class HomePageViewModel : BaseViewModel
     {
-        private string _selectedRegion;
-        private string _selectedProvince;
-        private string _selectedSport;
+        private string _selectedRegion = "";
+        private string _selectedProvince = "";
+        private string _selectedSport = "";
+
 
         public ObservableCollection<string> Regions { get; } = new ObservableCollection<string>
         {
