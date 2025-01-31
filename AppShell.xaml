@@ -4,21 +4,63 @@
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:local="clr-namespace:trovagiocatoriApp.Views"
-    Shell.FlyoutBehavior="Flyout"
-    Title="trovagiocatoriApp">
+    Title="trovagiocatoriApp"
+    Shell.FlyoutBehavior="Flyout">
 
-    <ShellContent
+    <!-- HOME -->
+    <FlyoutItem
+        x:Name="HomeFlyoutItem"
         Title="Home"
-        ContentTemplate="{DataTemplate local:HomePage}"
-        Route="HomePage" />
+        Icon="home_icon.png"
+        Route="HomePage">
+        <ShellContent
+            Title="Home"
+            ContentTemplate="{DataTemplate local:HomePage}"
+            Route="HomePage" />
+    </FlyoutItem>
 
-    <ShellContent
+    <!-- LOGIN -->
+    <FlyoutItem
+        x:Name="LoginFlyoutItem"
         Title="Login"
-        ContentTemplate="{DataTemplate local:LoginPage}"
-        Route="LoginPage" />
+        Icon="login_icon.png"
+        Route="LoginPage">
+        <ShellContent
+            Title="Login"
+            ContentTemplate="{DataTemplate local:LoginPage}"
+            Route="LoginPage" />
+    </FlyoutItem>
 
-    <ShellContent
+    <!-- REGISTRAZIONE -->
+    <FlyoutItem
+        x:Name="RegisterFlyoutItem"
         Title="Registrazione"
-        ContentTemplate="{DataTemplate local:RegisterPage}"
-        Route="RegisterPage" />
+        Icon="register_icon.png"
+        Route="RegisterPage">
+        <ShellContent
+            Title="Registrazione"
+            ContentTemplate="{DataTemplate local:RegisterPage}"
+            Route="RegisterPage" />
+    </FlyoutItem>
+
+    <!-- PROFILO -->
+    <FlyoutItem
+        x:Name="ProfileFlyoutItem"
+        Title="Profilo"
+        Icon="profile_icon.png"
+        Route="ProfilePage">
+        <ShellContent
+            Title="Profilo"
+            ContentTemplate="{DataTemplate local:ProfilePage}"
+            Route="ProfilePage" />
+    </FlyoutItem>
+
+    <!-- Rimuovi il MenuItem Logout da qui -->
+    <!-- <MenuItem
+        x:Name="LogoutMenuItem"
+        Text="Logout"
+        IconImageSource="logout_icon.png"
+        IsDestructive="True"
+        Clicked="OnLogoutClicked" /> -->
+
 </Shell>

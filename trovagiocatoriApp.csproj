@@ -68,10 +68,21 @@
 	</ItemGroup>
 
 	<ItemGroup>
+	  <Compile Remove="Models\UserModel.cs" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <None Include="Models\UserModel.cs" />
+	</ItemGroup>
+
+	<ItemGroup>
 	  <MauiXaml Update="Views\HomePage.xaml">
 	    <Generator>MSBuild:Compile</Generator>
 	  </MauiXaml>
 	  <MauiXaml Update="Views\LoginPage.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </MauiXaml>
+	  <MauiXaml Update="Views\ProfilePage.xaml">
 	    <Generator>MSBuild:Compile</Generator>
 	  </MauiXaml>
 	  <MauiXaml Update="Views\RegisterPage.xaml">

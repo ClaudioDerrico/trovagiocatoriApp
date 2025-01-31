@@ -1,0 +1,32 @@
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="trovagiocatoriApp.Views.ProfilePage"
+             Title="Profilo Utente"
+             BackgroundColor="#f9f9f9">
+
+    <VerticalStackLayout Padding="20" Spacing="20" HorizontalOptions="Center">
+        
+        <!-- Immagine Profilo -->
+        <Frame CornerRadius="50" WidthRequest="100" HeightRequest="100">
+            <Image x:Name="ProfileImage"
+                   WidthRequest="100"
+                   HeightRequest="100"
+                   Aspect="AspectFill"/>
+        </Frame>
+
+        <!-- Nome Utente -->
+        <Label x:Name="UsernameLabel"
+               FontSize="28"
+               FontAttributes="Bold"
+               HorizontalOptions="Center"/>
+
+        <!-- Bottone Osserva/Non Osservare
+        <Button x:Name="FollowButton"
+                Text="Osserva atleta"
+                BackgroundColor="#1877f2"
+                TextColor="White"
+                FontAttributes="Bold"
+                Clicked="OnFollowButtonClicked"/>
+ -->
+    </VerticalStackLayout>
+</ContentPage>
