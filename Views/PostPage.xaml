@@ -1,41 +1,62 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="trovagiocatoriApp.Views.PostPage"
-             Title="Post"
-             BackgroundImageSource="sfondo_rimosso.png">
+             Title="Risultati"
+             BackgroundColor="#F5F5F5">
+    <StackLayout Padding="20" Spacing="15">
+        <Label x:Name="TitleLabel"
+           FontAttributes="Bold"
+           FontSize="24"
+           HorizontalOptions="Center"
+           TextColor="#333"
+           Margin="0,10" />
 
-	<VerticalStackLayout>
-		<!-- Titolo con provincia e sport -->
-		<Label x:Name="TitleLabel"
-               HorizontalOptions="Center"
-               VerticalOptions="CenterAndExpand"
-               FontSize="Large"
-               TextColor="Black"/>
+        <ListView x:Name="PostsListView"
+              SeparatorVisibility="None"
+              HasUnevenRows="True"
+              BackgroundColor="Transparent">
+            <ListView.ItemTemplate>
+                <DataTemplate>
+                    <ViewCell>
+                        <Frame CornerRadius="10"
+                   HasShadow="True"
+                   Padding="15"
+                   Margin="0,5"
+                   BackgroundColor="White">
+                            <StackLayout Spacing="5">
+                                <!-- Titolo del post -->
+                                <Label Text="{Binding titolo}"
+                       FontAttributes="Bold"
+                       FontSize="18"
+                       TextColor="#2C3E50" />
 
-        <!-- Griglia dei post -->
-		<CollectionView x:Name="PostCollectionView"
-                        ItemsSource="{Binding Posts}">
-			<CollectionView.ItemTemplate>
-				<DataTemplate>
-					<Frame BorderColor="#f2f2f2" Padding="10" Margin="5">
-						<Grid>
-							<Grid.RowDefinitions>
-								<RowDefinition Height="Auto"/>
-								<RowDefinition Height="Auto"/>
-								<RowDefinition Height="Auto"/>
-								<RowDefinition Height="Auto"/>
-								<RowDefinition Height="Auto"/>
-							</Grid.RowDefinitions>
-							<Label Grid.Row="0" Text="{Binding Titolo}" FontAttributes="Bold" HorizontalTextAlignment="Center"/>
-							<Label Grid.Row="1" Text="{Binding NomeUtente}" HorizontalTextAlignment="Center"/>
-							<Label Grid.Row="2" Text="{Binding DataPartita}" HorizontalTextAlignment="Center"/>
-							<Label Grid.Row="3" Text="{Binding Citta}" HorizontalTextAlignment="Center"/>
-							<Label Grid.Row="4" Text="{Binding DataAttuale}" HorizontalTextAlignment="Center"/>
-						</Grid>
-					</Frame>
-				</DataTemplate>
-			</CollectionView.ItemTemplate>
-		</CollectionView>
-	</VerticalStackLayout>
+                                <Grid ColumnDefinitions="*,Auto" VerticalOptions="Center">
+                                    <Label Text="{Binding citta}"
+                         FontSize="14"
+                         TextColor="#34495E" />
+                                    <StackLayout Orientation="Horizontal"
+                               HorizontalOptions="End"
+                               Spacing="10">
+                                        <Label Text="{Binding data_partita}"
+                           FontSize="12"
+                           TextColor="#7F8C8D" />
+                                        <Label Text="{Binding ora_partita}"
+                           FontSize="12"
+                           TextColor="#7F8C8D" />
+                                    </StackLayout>
+                                </Grid>
+
+                                <Label Text="{Binding commento}"
+                       FontSize="14"
+                       TextColor="#555"
+                       LineBreakMode="TailTruncation" />
+
+
+                            </StackLayout>
+                        </Frame>
+                    </ViewCell>
+                </DataTemplate>
+            </ListView.ItemTemplate>
+        </ListView>
+    </StackLayout>
 </ContentPage>
-

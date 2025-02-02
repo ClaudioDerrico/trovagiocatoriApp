@@ -1,7 +1,8 @@
 ﻿using System.Text.Json;
 using System.Text;
 using Microsoft.Maui.Storage; // Per Preferences
-using trovagiocatoriApp;     // Per AppShell
+using trovagiocatoriApp;
+using System.Diagnostics;     // Per AppShell
 
 namespace trovagiocatoriApp.Views
 {
@@ -53,6 +54,9 @@ namespace trovagiocatoriApp.Views
                     {
                         var sessionId = sessionCookie.Split(';')[0].Split('=')[1];
                         Preferences.Set("session_id", sessionId);
+                        Debug.WriteLine($"La mia session id è {sessionId}");
+
+
                     }
                 }
 

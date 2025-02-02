@@ -5,7 +5,7 @@ namespace trovagiocatoriApp.Views;
 //Commit di prova
 public partial class HomePage : ContentPage
 {
-    private HomePageViewModel ViewModel;
+
     public HomePage()
     {
         InitializeComponent();
@@ -26,34 +26,22 @@ public partial class HomePage : ContentPage
 
 
 
-private async void PostPageClicked(object sender, EventArgs e)
-{
-    var viewModel = BindingContext as HomePageViewModel;
-
-    // Se BindingContext non è impostato correttamente
-    if (viewModel == null)
+    private async void PostPageClicked(object sender, EventArgs e)
     {
-        await DisplayAlert("Errore", "Impossibile trovare il ViewModel", "OK");
-        return;
-    }
+        // Recupera i valori selezionati nei Picker
+        var province = ProvincePicker.SelectedItem?.ToString();
+        var sport = SportPicker.SelectedItem?.ToString();
 
-    // Verifica se tutti i campi sono compilati
-    if (string.IsNullOrEmpty(viewModel.SelectedRegion) ||
-        string.IsNullOrEmpty(viewModel.SelectedProvince) ||
-        string.IsNullOrEmpty(viewModel.SelectedSport))
-    {
-        // Mostra il messaggio di errore sotto il bottone
-        ErrorLabel.IsVisible = true;
-        ErrorLabel.Text = "Compilare tutti i campi";  // Messaggio di errore
-        return;
-    }
+        if (string.IsNullOrEmpty(province) || string.IsNullOrEmpty(sport))
+        {
+            ErrorLabel.IsVisible = true;
+            ErrorLabel.Text = "Compilare tutti i campi";
+            return;
+        }
+        ErrorLabel.IsVisible = false;
 
-    // Salva le scelte usando Preferences
-    Preferences.Set("provincia", viewModel.SelectedProvince);
-    Preferences.Set("opzionesport", viewModel.SelectedSport);
-
-        // Se i campi sono compilati, naviga verso la PostPage
-        await Navigation.PushAsync(new PostPage());
+        // Naviga alla pagina PostsListPage passando i criteri selezionati
+        await Navigation.PushAsync(new PostPage(province, sport));
     }
 
 

@@ -1,70 +1,80 @@
-﻿using System.Collections.ObjectModel;
+﻿using System;
+using System.Collections.Generic;
 using System.Net.Http;
 using System.Text.Json;
+using System.Threading.Tasks;
 using Microsoft.Maui.Controls;
 
 namespace trovagiocatoriApp.Views
 {
     public partial class PostPage : ContentPage
     {
-        public ObservableCollection<Post> Posts { get; set; }
+        // Criteri di ricerca
+        private string SelectedProvince { get; set; }
+        private string SelectedSport { get; set; }
 
-        public PostPage()
+        public PostPage(string province, string sport)
         {
             InitializeComponent();
-            Posts = new ObservableCollection<Post>();
-            BindingContext = this;
-
-            // Carica i post all'avvio della pagina
-            LoadPosts();
+            SelectedProvince = province;
+            SelectedSport = sport;
+            TitleLabel.Text = $"{SelectedProvince} - {SelectedSport}";
         }
 
-        private async void LoadPosts()
+        protected override async void OnAppearing()
         {
-            // Recupera provincia e sport usando Preferences
-            string provincia = Preferences.Get("provincia", string.Empty);
-            string sport = Preferences.Get("opzionesport", string.Empty);
+            base.OnAppearing();
+            await LoadPosts();
+        }
 
+        // Classe per deserializzare la risposta JSON dal backend
+        public class PostResponse
+        {
+            public int id { get; set; }
+            public string titolo { get; set; }
+            public string provincia { get; set; }
+            public string citta { get; set; }
+            public string sport { get; set; }
+            public string data_partita { get; set; }
+            public string ora_partita { get; set; }
+            public string commento { get; set; }
+            public string autore_email { get; set; }
+        }
+
+        private async Task LoadPosts()
+        {
             try
             {
                 using (var client = new HttpClient())
                 {
-                    var response = await client.GetStringAsync($"https://example.com/forum/provincia/allpost/{provincia}/{sport}");
-                    var posts = JsonSerializer.Deserialize<List<Post>>(response);
+                    string url = $"http://localhost:8000/posts/search?provincia={Uri.EscapeDataString(SelectedProvince)}&sport={Uri.EscapeDataString(SelectedSport)}";
+                    var response = await client.GetAsync(url);
 
-                    if (posts != null && posts.Count > 0)
+                    if (response.IsSuccessStatusCode)
                     {
-                        foreach (var post in posts)
+                        var json = await response.Content.ReadAsStringAsync();
+                        var posts = JsonSerializer.Deserialize<List<PostResponse>>(json, new JsonSerializerOptions
                         {
-                            Posts.Add(post);
+                            PropertyNameCaseInsensitive = true
+                        });
+
+                        if (posts != null && posts.Count > 0)
+                        {
+                            PostsListView.ItemsSource = posts;
                         }
+
                     }
                     else
                     {
-                        // Se non ci sono post, mostra un messaggio
-                        var emptyPost = new Post { Titolo = "Nessun post disponibile" };
-                        Posts.Add(emptyPost);
+                        await DisplayAlert("Nessun risultato", "Non sono stati trovati post per i criteri selezionati.", "OK");
+                        PostsListView.ItemsSource = null;
                     }
                 }
             }
             catch (Exception ex)
             {
-                // Gestisci eventuali errori di rete o API
-                await DisplayAlert("Errore", $"Si è verificato un errore: {ex.Message}", "OK");
+                await DisplayAlert("Errore", $"Errore durante la ricerca dei post: {ex.Message}", "OK");
             }
         }
-
-
-
-    }
-
-    // Modello di Post
-    public class Post
-    {
-        public string Titolo { get; set; }
-        public string NomeUtente { get; set; }
-        public string DataPartita { get; set; }
-        public string Citta { get; set; }
-        public string DataAttuale { get; set; }
     }
 }

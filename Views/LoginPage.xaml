@@ -13,7 +13,6 @@
                 </HorizontalStackLayout>
             </Grid>
             
-            <!-- Titolo -->
             <Label Text="LOGIN"
                FontSize="30"
                FontAttributes="Bold"
@@ -24,7 +23,6 @@
                TextColor="Gray"
                HorizontalOptions="Center" />
 
-            <!-- Messaggi di Errore -->
             <Label x:Name="ErrorMessage"
              Text=""
              FontSize="14"
@@ -32,14 +30,12 @@
              IsVisible="False"
              HorizontalOptions="Center" />
 
-            <!-- Input Email -->
             <VerticalStackLayout>
                 <Label Text="E-mail o Username" FontAttributes="Bold" />
                 <Entry x:Name="EmailEntry" Placeholder="Inserisci la tua email o username" Keyboard="Email" />
                 <Label x:Name="EmailError" Text="E-mail non valida" TextColor="Red" IsVisible="False" />
             </VerticalStackLayout>
 
-            <!-- Password -->
             <VerticalStackLayout>
                 <Label Text="Password" FontAttributes="Bold" />
                 <Grid>
@@ -51,7 +47,6 @@
                 <Label x:Name="PasswordError" Text="Inserisci una password di almeno 8 caratteri" TextColor="Red" IsVisible="False" />
             </VerticalStackLayout>
 
-            <!-- Pulsante Login -->
             <Button Text="LOGIN"
               BackgroundColor="Black"
               TextColor="White"
@@ -60,12 +55,6 @@
               HeightRequest="50"
               Clicked="OnLoginClicked" />
 
-            <!-- Password Dimenticata -->
-            <Label Text="Password dimenticata?"
-             FontSize="14"
-             TextColor="Blue"
-             HorizontalOptions="End" />
-
             <!--"or" -->
             <HorizontalStackLayout VerticalOptions="Center" Spacing="75" Margin="0,10">
                 <BoxView HeightRequest="1" BackgroundColor="#ccc" WidthRequest="100" HorizontalOptions="FillAndExpand" />
@@ -73,16 +62,9 @@
                 <BoxView HeightRequest="1" BackgroundColor="#ccc" WidthRequest="100" HorizontalOptions="FillAndExpand" />
             </HorizontalStackLayout>
 
-            <!-- Pulsante Google -->
-            <Button Text="Accedi con Google"
-              BackgroundColor="#4285F4"
-              TextColor="White"
-              CornerRadius="10"
-              HeightRequest="50"
-              ImageSource="google-logo.png"
-              ContentLayout="Left,10" />
 
-            <!-- Registrazione -->
+
+      
             <Label Text="Non hai ancora un account?"
              FontSize="14"
              HorizontalOptions="Center" />

@@ -5,11 +5,12 @@
              BackgroundColor="#f9f9f9">
 
     <VerticalStackLayout Padding="20" Spacing="20" HorizontalOptions="Center">
-        
+
         <!-- Immagine Profilo -->
-        <Frame CornerRadius="50" WidthRequest="100" HeightRequest="100">
+        <Frame CornerRadius="50" WidthRequest="100" HeightRequest="100" Padding="0">
             <Image x:Name="ProfileImage"
                    WidthRequest="100"
+                   HorizontalOptions="Center"  
                    HeightRequest="100"
                    Aspect="AspectFill"/>
         </Frame>

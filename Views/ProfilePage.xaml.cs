@@ -16,6 +16,7 @@ namespace trovagiocatoriApp.Views
         public ProfilePage()
         {
             InitializeComponent();
+
             LoadProfile(); 
         }
 

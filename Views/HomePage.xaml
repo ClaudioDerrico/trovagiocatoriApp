@@ -31,7 +31,7 @@
                                FontAttributes="Bold"
                                TextColor="grey"
                                HorizontalOptions="Center" />
-                        <Button Text="Inizia a giocare"
+                        <Button Text="Crea un Post"
                                 BackgroundColor="#FF0000"
                                 TextColor="White"
                                 WidthRequest="200"

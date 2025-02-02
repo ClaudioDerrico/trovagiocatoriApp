@@ -4,63 +4,16 @@
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:local="clr-namespace:trovagiocatoriApp.Views"
-    Title="trovagiocatoriApp"
-    Shell.FlyoutBehavior="Flyout">
+    Shell.FlyoutBehavior="Flyout"
+    Title="trovagiocatoriApp">
 
-    <!-- HOME -->
     <FlyoutItem
-        x:Name="HomeFlyoutItem"
         Title="Home"
-        Icon="home_icon.png"
-        Route="HomePage">
+        Icon="home_icon.png">
         <ShellContent
-            Title="Home"
             ContentTemplate="{DataTemplate local:HomePage}"
             Route="HomePage" />
     </FlyoutItem>
 
-    <!-- LOGIN -->
-    <FlyoutItem
-        x:Name="LoginFlyoutItem"
-        Title="Login"
-        Icon="login_icon.png"
-        Route="LoginPage">
-        <ShellContent
-            Title="Login"
-            ContentTemplate="{DataTemplate local:LoginPage}"
-            Route="LoginPage" />
-    </FlyoutItem>
 
-    <!-- REGISTRAZIONE -->
-    <FlyoutItem
-        x:Name="RegisterFlyoutItem"
-        Title="Registrazione"
-        Icon="register_icon.png"
-        Route="RegisterPage">
-        <ShellContent
-            Title="Registrazione"
-            ContentTemplate="{DataTemplate local:RegisterPage}"
-            Route="RegisterPage" />
-    </FlyoutItem>
-
-    <!-- PROFILO -->
-    <FlyoutItem
-        x:Name="ProfileFlyoutItem"
-        Title="Profilo"
-        Icon="profile_icon.png"
-        Route="ProfilePage">
-        <ShellContent
-            Title="Profilo"
-            ContentTemplate="{DataTemplate local:ProfilePage}"
-            Route="ProfilePage" />
-    </FlyoutItem>
-
-    <!-- Rimuovi il MenuItem Logout da qui -->
-    <!-- <MenuItem
-        x:Name="LogoutMenuItem"
-        Text="Logout"
-        IconImageSource="logout_icon.png"
-        IsDestructive="True"
-        Clicked="OnLogoutClicked" /> -->
-
-</Shell>
+</Shell> 
