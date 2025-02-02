@@ -1,8 +1,11 @@
 ﻿using Microsoft.Maui.Storage;
 using System.IO;
+using System.Linq;
+using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text.Json;
-using trovagiocatoriApp; // Per AppShell
+using System.Diagnostics;
+using Microsoft.Maui.Controls;
 
 namespace trovagiocatoriApp.Views
 {
@@ -20,6 +23,7 @@ namespace trovagiocatoriApp.Views
         {
             base.OnAppearing();
 
+            // Se desideri forzare una dimensione fissa per la finestra (usato in fase di sviluppo o su desktop)
             Application.Current.MainPage.Window.Height = 800;
             Application.Current.MainPage.Window.Width = 500;
         }
@@ -69,6 +73,7 @@ namespace trovagiocatoriApp.Views
 
         private async void OnRegisterClicked(object sender, EventArgs e)
         {
+            // Nasconde i messaggi d'errore
             ErrorMessage.IsVisible = false;
             NomeError.IsVisible = false;
             CognomeError.IsVisible = false;
@@ -126,14 +131,14 @@ namespace trovagiocatoriApp.Views
                     formData.Add(fileContent, "profile_picture", "userProfile.jpg");
                 }
 
-                // Invio richiesta POST
+                // Invio della richiesta POST
                 var response = await client.PostAsync(registerUrl, formData);
 
                 if (response.IsSuccessStatusCode)
                 {
                     await DisplayAlert("Registrazione", "Registrazione completata con successo!", "OK");
 
-                    // Salva il cookie della sessione
+                    // Salva il cookie della sessione se presente nell'header "Set-Cookie"
                     if (response.Headers.TryGetValues("Set-Cookie", out var cookieValues))
                     {
                         var sessionCookie = cookieValues.FirstOrDefault(c => c.StartsWith("session_id="));
@@ -144,13 +149,10 @@ namespace trovagiocatoriApp.Views
                         }
                     }
 
-                    // Aggiorna il menu (profilo/logout al posto di login/registrazione)
-                    if (Application.Current.MainPage is AppShell shell)
-                    {
-                        shell.RefreshMenu();
-                    }
+                    // Imposta l'AppShell come MainPage in modo da avere l'interfaccia completa
+                    Application.Current.MainPage = new AppShell();
 
-
+                    // Naviga alla ProfilePage
                     await Shell.Current.GoToAsync("//ProfilePage");
                 }
                 else

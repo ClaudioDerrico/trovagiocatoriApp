@@ -1,25 +1,16 @@
 ﻿using Microsoft.Maui.Controls;
 using Microsoft.Maui.Storage;
-using trovagiocatoriApp.Views;  // Assicurati che questo namespace sia corretto
-using System.Linq;
 using System.Diagnostics;
+using System.Threading.Tasks;
+using trovagiocatoriApp.Views;
 
 namespace trovagiocatoriApp
 {
     public partial class AppShell : Shell
     {
-        // Elementi dinamici
-        private FlyoutItem loginFlyoutItem;
-        private FlyoutItem registerFlyoutItem;
-        private FlyoutItem profileFlyoutItem;
-        private MenuItem logoutMenuItem;
-
         public AppShell()
         {
             InitializeComponent();
-            InitializeMenuItems();
-            UpdateMenuItems();
-
             // Registra le rotte
             Routing.RegisterRoute(nameof(LoginPage), typeof(LoginPage));
             Routing.RegisterRoute(nameof(RegisterPage), typeof(RegisterPage));
@@ -27,90 +18,19 @@ namespace trovagiocatoriApp
             Routing.RegisterRoute(nameof(HomePage), typeof(HomePage));
         }
 
-        private void InitializeMenuItems()
+        protected override async void OnAppearing()
         {
-            loginFlyoutItem = new FlyoutItem
-            {
-                Title = "Login",
-                Icon = "login_icon.png",
-                Items =
-                {
-                    new ShellContent
-                    {
-                        ContentTemplate = new DataTemplate(typeof(LoginPage)),
-                        Route = "LoginPage"
-                    }
-                }
-            };
-
-            registerFlyoutItem = new FlyoutItem
-            {
-                Title = "Registrazione",
-                Icon = "register_icon.png",
-                Items =
-                {
-                    new ShellContent
-                    {
-                        ContentTemplate = new DataTemplate(typeof(RegisterPage)),
-                        Route = "RegisterPage"
-                    }
-                }
-            };
-
-            profileFlyoutItem = new FlyoutItem
-            {
-                Title = "Profilo",
-                Icon = "profile_icon.png",
-                Items =
-                {
-                    new ShellContent
-                    {
-                        ContentTemplate = new DataTemplate(typeof(ProfilePage)),
-                        Route = "ProfilePage"
-                    }
-                }
-            };
-
-            logoutMenuItem = new MenuItem
-            {
-                Text = "Logout",
-                IconImageSource = "logout_icon.png"
-            };
-            logoutMenuItem.Clicked += OnLogoutClicked;
-        }
-
-        public void UpdateMenuItems()
-        {
-            if (this.Items.Contains(loginFlyoutItem))
-                this.Items.Remove(loginFlyoutItem);
-            if (this.Items.Contains(registerFlyoutItem))
-                this.Items.Remove(registerFlyoutItem);
-            if (this.Items.Contains(profileFlyoutItem))
-                this.Items.Remove(profileFlyoutItem);
-            if (this.Items.Contains(logoutMenuItem))
-                Shell.Current.Items.Remove(logoutMenuItem);
-
+            base.OnAppearing();
 
             bool hasSession = Preferences.ContainsKey("session_id") &&
                               !string.IsNullOrEmpty(Preferences.Get("session_id", ""));
-
-            if (hasSession)
+            // Se non c'è sessione, naviga alla LoginPage (utilizziamo percorso relativo)
+            if (!hasSession)
             {
-                // Se c'è sessione, mostra Profilo e Logout
-                this.Items.Add(profileFlyoutItem);
-                this.Items.Add(logoutMenuItem);
-            }
-            else
-            {
-                this.Items.Add(loginFlyoutItem);
-                this.Items.Add(registerFlyoutItem);
+                await Shell.Current.GoToAsync("LoginPage");
             }
         }
 
-        public void RefreshMenu()
-        {
-            UpdateMenuItems();
-        }
 
         private async void OnLogoutClicked(object sender, EventArgs e)
         {
@@ -123,9 +43,8 @@ namespace trovagiocatoriApp
                 }
                 Debug.WriteLine($"Session_id AFTER REMOVE: {Preferences.Get("session_id", "")}");
 
-                RefreshMenu();
 
-                await Shell.Current.GoToAsync("//LoginPage");
+                Application.Current.MainPage = new NavigationPage(new LoginPage());
 
                 await DisplayAlert("Logout", "Sei stato disconnesso con successo.", "OK");
             }

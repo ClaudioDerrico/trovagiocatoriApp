@@ -33,6 +33,7 @@ namespace trovagiocatoriApp.Views
 
         private async void OnLoginClicked(object sender, EventArgs e)
         {
+            // Raccogli i dati del login (ad esempio email/username e password)
             var loginData = new
             {
                 email_or_username = EmailEntry.Text,
@@ -47,6 +48,7 @@ namespace trovagiocatoriApp.Views
 
             if (response.IsSuccessStatusCode)
             {
+                // Legge il cookie dalla risposta e lo salva nelle Preferences
                 if (response.Headers.TryGetValues("Set-Cookie", out var cookieValues))
                 {
                     var sessionCookie = cookieValues.FirstOrDefault(c => c.StartsWith("session_id="));
@@ -54,20 +56,14 @@ namespace trovagiocatoriApp.Views
                     {
                         var sessionId = sessionCookie.Split(';')[0].Split('=')[1];
                         Preferences.Set("session_id", sessionId);
-                        Debug.WriteLine($"La mia session id è {sessionId}");
-
-
+                        Debug.WriteLine($"Session id salvata: {sessionId}");
                     }
                 }
 
                 await DisplayAlert("Login", "Login eseguito con successo!", "OK");
 
-                if (Application.Current.MainPage is AppShell shell)
-                {
-                    shell.RefreshMenu();
-                }
-
-                await Shell.Current.GoToAsync("//ProfilePage");
+                // Dopo il login riuscito, imposta l'AppShell come nuova MainPage
+                Application.Current.MainPage = new AppShell();
             }
             else
             {
@@ -78,7 +74,7 @@ namespace trovagiocatoriApp.Views
 
         private async void OnRegisterNowClicked(object sender, EventArgs e)
         {
-            await Shell.Current.GoToAsync("//RegisterPage");
+            await Navigation.PushAsync(new RegisterPage());
         }
     }
 }

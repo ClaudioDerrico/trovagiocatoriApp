@@ -1,4 +1,6 @@
-﻿namespace trovagiocatoriApp
+﻿using trovagiocatoriApp.Views;
+
+namespace trovagiocatoriApp
 {
     public partial class App : Application
     {
@@ -6,7 +8,18 @@
         {
             InitializeComponent();
 
-            MainPage = new AppShell();
+            bool hasSession = Preferences.ContainsKey("session_id") &&
+                              !string.IsNullOrEmpty(Preferences.Get("session_id", ""));
+
+            if (hasSession)
+            {
+                MainPage = new AppShell();
+            }
+            else
+            {
+                MainPage = new NavigationPage(new LoginPage());
+            }
         }
+
     }
 }

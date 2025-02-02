@@ -66,6 +66,8 @@
 
 	<ItemGroup>
 	<MauiImage Include="Resources\Images\*" />
+
+
 	</ItemGroup>
 
 	<ItemGroup>

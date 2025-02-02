@@ -1,23 +1,28 @@
-﻿using System.Diagnostics;
-using System.Net.Http.Headers;
-using System.Net.Http.Json;
+﻿using System;
+using System.Diagnostics;
+using System.Net.Http;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Microsoft.Maui.Controls;
-using static Microsoft.Maui.Controls.Shell;
+using Microsoft.Maui.Storage;
 
 namespace trovagiocatoriApp.Views
 {
     public partial class ProfilePage : ContentPage
     {
-        private HttpClient _client = new HttpClient();
-        private string _apiBaseUrl = "http://localhost:8080"; 
+        private readonly HttpClient _client = new HttpClient();
+        private readonly string _apiBaseUrl = "http://localhost:8080";
 
         public ProfilePage()
         {
             InitializeComponent();
+        }
 
-            LoadProfile(); 
+        // Ricarica il profilo ogni volta che la pagina diventa visibile
+        protected override void OnAppearing()
+        {
+            base.OnAppearing();
+            LoadProfile();
         }
 
         private async void LoadProfile()
@@ -27,7 +32,7 @@ namespace trovagiocatoriApp.Views
             {
                 var request = new HttpRequestMessage(HttpMethod.Get, $"{_apiBaseUrl}/profile");
 
-                // Recupera i cookie salvati
+                // Recupera il cookie di sessione salvato nelle Preferences
                 if (Preferences.ContainsKey("session_id"))
                 {
                     string sessionId = Preferences.Get("session_id", "");
@@ -44,37 +49,34 @@ namespace trovagiocatoriApp.Views
                     {
                         PropertyNameCaseInsensitive = true
                     });
-                    Debug.Write(userProfile);
+
                     if (userProfile != null)
                     {
-                        Debug.WriteLine($"Profilo Utente Caricato:");
-                        Debug.WriteLine($"Username: {userProfile.Username}");
-                        Debug.WriteLine($"ProfilePic: {userProfile.ProfilePic}");
-
+                        Debug.WriteLine($"Profilo Utente Caricato: {userProfile.Username}");
                         UsernameLabel.Text = userProfile.Username;
+                        // Se il profilo contiene un'immagine, la carichiamo; altrimenti, usiamo un'immagine predefinita
                         ProfileImage.Source = !string.IsNullOrEmpty(userProfile.ProfilePic)
                             ? $"{_apiBaseUrl}/images/{userProfile.ProfilePic}"
-                            : "default.jpg"; // Usa l'immagine predefinita
+                            : "default_images.jpg";
                     }
                     else
                     {
-                        Console.WriteLine("Errore: userProfile è null.");
+                        Debug.WriteLine("Errore: userProfile è null.");
                         await DisplayAlert("Errore", "Profilo utente non valido.", "OK");
                     }
                 }
                 else
                 {
-                    Console.WriteLine($"Errore: Stato della risposta {response.StatusCode}");
+                    Debug.WriteLine($"Errore: Stato della risposta {response.StatusCode}");
                     await DisplayAlert("Errore", "Impossibile caricare il profilo.", "OK");
                 }
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Eccezione durante il caricamento del profilo: {ex.Message}");
+                Debug.WriteLine($"Eccezione durante il caricamento del profilo: {ex.Message}");
                 await DisplayAlert("Errore", $"Errore durante il caricamento: {ex.Message}", "OK");
             }
         }
-
 
         private async void OnLogoutButtonClicked(object sender, EventArgs e)
         {
@@ -86,39 +88,35 @@ namespace trovagiocatoriApp.Views
                     Preferences.Remove("session_id");
                 }
 
-                if (Application.Current.MainPage is Shell shell)
-                {
-                    ((AppShell)shell).RefreshMenu();
-                }
+                // Dopo il logout, imposta l'AppShell in modo che l'utente venga reindirizzato al login.
+                // Se la logica per aggiornare il menu è gestita in AppShell, questa chiamata non è necessaria.
+                // Puoi semplicemente reimpostare la MainPage:
+                Application.Current.MainPage = new NavigationPage(new LoginPage());
 
-                await Shell.Current.GoToAsync("//LoginPage");
                 await DisplayAlert("Logout", "Sei stato disconnesso con successo.", "OK");
             }
         }
-    
+    }
 
-
+    // Modello per deserializzare il profilo utente ricevuto dal backend
     public class UserModel
-        {
-            [JsonPropertyName("username")]
-            public string Username { get; set; }
+    {
+        [JsonPropertyName("username")]
+        public string Username { get; set; }
 
-            [JsonPropertyName("profile_picture")] 
-            public string ProfilePic { get; set; }
+        [JsonPropertyName("profile_picture")]
+        public string ProfilePic { get; set; }
 
-            [JsonPropertyName("id")]
-            public int Id { get; set; }
+        [JsonPropertyName("id")]
+        public int Id { get; set; }
 
-            [JsonPropertyName("nome")]
-            public string Nome { get; set; }
+        [JsonPropertyName("nome")]
+        public string Nome { get; set; }
 
-            [JsonPropertyName("cognome")]
-            public string Cognome { get; set; }
+        [JsonPropertyName("cognome")]
+        public string Cognome { get; set; }
 
-            [JsonPropertyName("email")]
-            public string Email { get; set; }
-        }
-
+        [JsonPropertyName("email")]
+        public string Email { get; set; }
     }
 }
-
