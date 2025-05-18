@@ -57,8 +57,8 @@ public partial class HomePage : ContentPage
         await Navigation.PushAsync(new AboutAppPage());
     }
 
-    private async void OnHowItWorksTapped(object sender, EventArgs e)
+    private async void ProfilePageTapped(object sender, EventArgs e)
     {
-        await Navigation.PushAsync(new HowItWorksPage());
+        await Navigation.PushAsync(new ProfilePage());
     }
 }

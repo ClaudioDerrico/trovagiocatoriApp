@@ -3,7 +3,9 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     x:Class="trovagiocatoriApp.Views.CreatePostPage"
     Title="Crea Post"
-    BackgroundColor="#f4f4f4">
+    BackgroundColor="#f4f4f4"
+    ControlTemplate="{StaticResource PageWithBackButtonOnly}">
+
 
     <ScrollView>
         <VerticalStackLayout Padding="20" Spacing="20">

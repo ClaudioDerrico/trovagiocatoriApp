@@ -3,7 +3,9 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="trovagiocatoriApp.Views.AboutAppPage"
              Title="Cos'è Trovagiocatori?"
-             BackgroundColor="#F5F7FA">
+             BackgroundColor="#F5F7FA"
+             ControlTemplate="{StaticResource PageWithBackButtonOnly}">
+
   <ScrollView>
     <VerticalStackLayout Spacing="16" Padding="14,20,14,20">
       <Frame Style="{StaticResource CardStyle}">

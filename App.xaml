@@ -1,25 +1,29 @@
-﻿<Application xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<Application xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="trovagiocatoriApp.App">
     <Application.Resources>
         <ResourceDictionary>
-            <!-- Stile Globale per ContentPage -->
+
+            <!-- 1) Stile Globale per ContentPage -->
             <Style TargetType="ContentPage">
                 <Setter Property="Padding" Value="20" />
                 <Setter Property="BackgroundColor" Value="#f9f9f9" />
             </Style>
 
-            <!-- Stile per Grid con Larghezza Fissa -->
+            <!-- 2) Grid centrato -->
             <Style TargetType="Grid" x:Key="CenteredGrid">
                 <Setter Property="HorizontalOptions" Value="Center" />
                 <Setter Property="VerticalOptions" Value="FillAndExpand" />
                 <Setter Property="WidthRequest">
                     <OnIdiom x:TypeArguments="x:Double"
-                             Phone="360"
-                             Tablet="600"
-                             Desktop="800" />
+                   Phone="360"
+                   Tablet="600"
+                   Desktop="800" />
                 </Setter>
             </Style>
+
+            <!-- 3) Tipografia -->
             <Style x:Key="HeaderStyle" TargetType="Label">
                 <Setter Property="FontFamily" Value="OpenSansExtraBold"/>
                 <Setter Property="FontSize" Value="22"/>
@@ -33,7 +37,8 @@
                 <Setter Property="TextColor" Value="#6D7A8D"/>
                 <Setter Property="HorizontalOptions" Value="Center"/>
             </Style>
-            
+
+            <!-- 4) Bottoni -->
             <Style x:Key="PrimaryButtonStyle" TargetType="Button">
                 <Setter Property="BackgroundColor" Value="#FC4C02"/>
                 <Setter Property="TextColor" Value="White"/>
@@ -43,6 +48,8 @@
                 <Setter Property="HeightRequest" Value="50"/>
                 <Setter Property="Padding" Value="20,0"/>
             </Style>
+
+            <!-- 5) Card -->
             <Style x:Key="CardStyle" TargetType="Frame">
                 <Setter Property="BackgroundColor" Value="White"/>
                 <Setter Property="CornerRadius" Value="16"/>
@@ -51,6 +58,7 @@
                 <Setter Property="Padding" Value="18"/>
             </Style>
 
+            <!-- 6) Footer icons -->
             <Style x:Key="FooterIconFrameStyle" TargetType="Frame">
                 <Setter Property="BackgroundColor" Value="Transparent"/>
                 <Setter Property="Padding" Value="8,5"/>
@@ -71,14 +79,12 @@
                     </VisualStateGroupList>
                 </Setter>
             </Style>
-
             <Style x:Key="FooterIconImageStyle" TargetType="Image">
                 <Setter Property="HeightRequest" Value="28"/>
                 <Setter Property="WidthRequest" Value="28"/>
                 <Setter Property="HorizontalOptions" Value="Center"/>
                 <Setter Property="Margin" Value="0,0,0,2"/>
             </Style>
-
             <Style x:Key="FooterIconLabelStyle" TargetType="Label">
                 <Setter Property="FontSize" Value="12"/>
                 <Setter Property="TextColor" Value="#303545"/>
@@ -86,6 +92,34 @@
                 <Setter Property="HorizontalTextAlignment" Value="Center"/>
                 <Setter Property="FontFamily" Value="OpenSansSemibold"/>
             </Style>
+
+            <!-- 7) Stile base per il pulsante “indietro” -->
+            <Style x:Key="HeaderBackButtonStyle" TargetType="ImageButton">
+                <Setter Property="Source" Value="back_arrow_white.png"/>
+                <Setter Property="HeightRequest" Value="40"/>
+                <Setter Property="WidthRequest" Value="40"/>
+                <Setter Property="CornerRadius" Value="20"/>
+                <Setter Property="BackgroundColor" Value="White"/>
+                <Setter Property="Padding" Value="8"/>
+                <Setter Property="Margin" Value="0"/>
+                <Setter Property="VerticalOptions" Value="Start"/>
+                <Setter Property="HorizontalOptions" Value="Start"/>
+            </Style>
+
+            <!-- 8) ControlTemplate che sovrappone SOLO il back‑button -->
+            <ControlTemplate x:Key="PageWithBackButtonOnly">
+                <Grid>
+                    <!-- Contenuto della pagina -->
+                    <ContentPresenter />
+
+                    <!-- Pulsante indietro in alto a sinistra -->
+                    <ImageButton
+            Style="{StaticResource HeaderBackButtonStyle}"
+            Clicked="OnBackButtonClicked"
+            Margin="23,23,0,0" />
+                </Grid>
+            </ControlTemplate>
+
         </ResourceDictionary>
     </Application.Resources>
 </Application>

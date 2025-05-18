@@ -4,7 +4,8 @@
              x:Class="trovagiocatoriApp.Views.PostDetailPage"
              Title="Dettaglio Post"
              BackgroundColor="{StaticResource PageBackgroundColor}"
-             Shell.NavBarIsVisible="False">
+             Shell.NavBarIsVisible="False"
+             ControlTemplate="{StaticResource PageWithBackButtonOnly}">
 
     <ContentPage.Resources>
         <ResourceDictionary>
@@ -71,17 +72,6 @@
                 <Setter Property="Margin" Value="0,3,10,0"/>
             </Style>
 
-            <Style x:Key="HeaderBackButtonStyle" TargetType="ImageButton">
-                <Setter Property="Source" Value="back_arrow_white.png"/>
-                <Setter Property="HeightRequest" Value="40"/>
-                <Setter Property="WidthRequest" Value="40"/>
-                <Setter Property="CornerRadius" Value="20"/>
-                <Setter Property="BackgroundColor" Value="Transparent"/>
-                <Setter Property="Padding" Value="8"/>
-                <Setter Property="Margin" Value="12,0,0,0"/>
-                <Setter Property="VerticalOptions" Value="Center"/>
-                <Setter Property="HorizontalOptions" Value="Start"/>
-            </Style>
 
             <Style x:Key="ModernActionButtonStyle" TargetType="Button">
                 <Setter Property="BackgroundColor" Value="{StaticResource PrimaryAccentColor}"/>
@@ -113,7 +103,6 @@
                 <Shadow Brush="#99AAB8" Offset="0,2" Radius="6" Opacity="0.1"/>
             </Grid.Shadow>
 
-            <ImageButton Grid.Column="0" Style="{StaticResource HeaderBackButtonStyle}" Clicked="OnBackButtonClicked" />
             <Label Grid.Column="1" Text="Dettaglio Partita" FontFamily="OpenSansSemiBold" FontSize="18" TextColor="{StaticResource HeaderBarTextColor}" VerticalOptions="Center" HorizontalOptions="CenterAndExpand" Margin="0,0,52,0"/>
         </Grid>
 

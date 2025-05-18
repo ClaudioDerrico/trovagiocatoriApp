@@ -103,15 +103,7 @@ namespace trovagiocatoriApp.Views
             CommentoLabel.Text = post.commento;
         }
 
-        private async void OnBackButtonClicked(object sender, EventArgs e)
-        {
-            if (Navigation.NavigationStack.Count > 1)
-            {
-                await Navigation.PopAsync();
-            }
-            // Se questa è la prima pagina dello stack (improbabile per una pagina di dettaglio),
-            // potresti voler gestire diversamente la chiusura o la navigazione.
-        }
+
 
         private void OnInviaRispostaClicked(object sender, EventArgs e)
         {

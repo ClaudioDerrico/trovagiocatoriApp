@@ -5,7 +5,9 @@
  x:Class="trovagiocatoriApp.Views.PostPage"
  Title="Risultati"
  BackgroundColor="#F9FAFE"
- Shell.NavBarIsVisible="False">
+ Shell.NavBarIsVisible="False"
+ ControlTemplate="{StaticResource PageWithBackButtonOnly}">
+    
     <ContentPage.Resources>
         <ResourceDictionary>
             <!-- Stili moderni -->

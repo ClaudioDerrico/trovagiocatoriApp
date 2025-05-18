@@ -4,19 +4,10 @@
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:local="clr-namespace:trovagiocatoriApp.Views"
-    Shell.FlyoutBehavior="Flyout">
+    Shell.FlyoutBehavior="Disabled">
 
-    <!-- FlyoutItems per le pagine protette -->
-    <FlyoutItem Title="Home" Icon="home_icon.png" Route="HomePage">
-        <ShellContent ContentTemplate="{DataTemplate local:HomePage}" />
-    </FlyoutItem>
-    <FlyoutItem Title="Profilo" Icon="profile_icon.png" Route="ProfilePage">
-        <ShellContent ContentTemplate="{DataTemplate local:ProfilePage}" />
-    </FlyoutItem>
 
-    <!-- MenuItem per il Logout -->
-    <MenuItem Text="Logout" 
-              IconImageSource="logout_icon.png"
-              Clicked="OnLogoutClicked"
-              IsEnabled="{Binding IsUserLoggedIn}" />
+
+    <ShellContent Route="HomePage" ContentTemplate="{DataTemplate local:HomePage}" />
+
 </Shell>

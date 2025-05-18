@@ -11,13 +11,7 @@ namespace trovagiocatoriApp
         public AppShell()
         {
             InitializeComponent();
-            // Registra le rotte
-            Routing.RegisterRoute(nameof(LoginPage), typeof(LoginPage));
-            Routing.RegisterRoute(nameof(RegisterPage), typeof(RegisterPage));
-            Routing.RegisterRoute(nameof(ProfilePage), typeof(ProfilePage));
-            Routing.RegisterRoute(nameof(HomePage), typeof(HomePage));
-            Routing.RegisterRoute(nameof(PostPage), typeof(PostPage));
-            Routing.RegisterRoute(nameof(PostDetailPage), typeof(PostDetailPage));
+
         }
 
         protected override async void OnAppearing()
@@ -51,5 +45,7 @@ namespace trovagiocatoriApp
                 await DisplayAlert("Logout", "Sei stato disconnesso con successo.", "OK");
             }
         }
+
+
     }
 }

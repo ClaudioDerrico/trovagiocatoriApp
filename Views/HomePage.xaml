@@ -94,11 +94,11 @@
 
             <Frame Grid.Column="1" Style="{StaticResource FooterIconFrameStyle}">
                 <Frame.GestureRecognizers>
-                    <TapGestureRecognizer Tapped="OnHowItWorksTapped"/>
+                    <TapGestureRecognizer Tapped="ProfilePageTapped"/>
                 </Frame.GestureRecognizers>
                 <VerticalStackLayout Spacing="4" HorizontalOptions="Center" VerticalOptions="Center">
-                    <Image Source="chat.png" Style="{StaticResource FooterIconImageStyle}"/>
-                    <Label Text="Pulsante futuro" Style="{StaticResource FooterIconLabelStyle}"/>
+                    <Image Source="profile_icon.png" Style="{StaticResource FooterIconImageStyle}"/>
+                    <Label Text="Profilo" Style="{StaticResource FooterIconLabelStyle}"/>
                 </VerticalStackLayout>
             </Frame>
         </Grid>

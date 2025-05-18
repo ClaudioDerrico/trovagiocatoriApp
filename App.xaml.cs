@@ -21,5 +21,10 @@ namespace trovagiocatoriApp
             }
         }
 
+        void OnBackButtonClicked(object sender, EventArgs e)
+        {
+            Shell.Current.GoToAsync("..");
+        }
+
     }
 }
