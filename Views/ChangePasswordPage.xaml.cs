@@ -14,12 +14,39 @@ namespace trovagiocatoriApp.Views
         private readonly HttpClient _client = new HttpClient();
         private readonly string _apiBaseUrl = "http://localhost:8080";
 
+        // Stato di visibilità delle password
+        private bool _isCurrentVisible = false;
+        private bool _isNewVisible = false;
+        private bool _isConfirmVisible = false;
+
         public ChangePasswordPage()
         {
             InitializeComponent();
         }
 
-        // Questo è il tuo handler per il bottone "Aggiorna"
+        // Toggle Visibility Handlers
+        private void OnToggleCurrentPassword(object sender, EventArgs e)
+        {
+            _isCurrentVisible = !_isCurrentVisible;
+            CurrentPasswordEntry.IsPassword = !_isCurrentVisible;
+            ToggleCurrentPasswordVisibility.Source = _isCurrentVisible ? "eye_open.png" : "eye_close.png";
+        }
+
+        private void OnToggleNewPassword(object sender, EventArgs e)
+        {
+            _isNewVisible = !_isNewVisible;
+            NewPasswordEntry.IsPassword = !_isNewVisible;
+            ToggleNewPasswordVisibility.Source = _isNewVisible ? "eye_open.png" : "eye_close.png";
+        }
+
+        private void OnToggleConfirmPassword(object sender, EventArgs e)
+        {
+            _isConfirmVisible = !_isConfirmVisible;
+            ConfirmPasswordEntry.IsPassword = !_isConfirmVisible;
+            ToggleConfirmPasswordVisibility.Source = _isConfirmVisible ? "eye_open.png" : "eye_close.png";
+        }
+
+        // Handler per il bottone "Aggiorna"
         private async void OnChangePasswordClicked(object sender, EventArgs e)
         {
             try
@@ -62,11 +89,12 @@ namespace trovagiocatoriApp.Views
                 if (response.IsSuccessStatusCode)
                 {
                     // Reset dei campi
-                    CurrentPasswordEntry.Text = "";
-                    NewPasswordEntry.Text = "";
-                    ConfirmPasswordEntry.Text = "";
+                    CurrentPasswordEntry.Text = string.Empty;
+                    NewPasswordEntry.Text = string.Empty;
+                    ConfirmPasswordEntry.Text = string.Empty;
+
                     await DisplayAlert("Successo", "Password modificata con successo", "OK");
-                    // Torna indietro alla ProfilePage
+                    // Torna a ProfilePage
                     await Navigation.PopAsync();
                 }
                 else
@@ -81,7 +109,7 @@ namespace trovagiocatoriApp.Views
             }
         }
 
-        // Handler per il tasto Annulla
+        // Handler per il bottone "Annulla"
         private async void OnCancelChangePassword(object sender, EventArgs e)
         {
             await Navigation.PopAsync();
