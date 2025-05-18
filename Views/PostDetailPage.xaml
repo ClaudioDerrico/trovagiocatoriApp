@@ -3,185 +3,181 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="trovagiocatoriApp.Views.PostDetailPage"
              Title="Dettaglio Post"
-             BackgroundColor="#F9FAFE"
+             BackgroundColor="{StaticResource PageBackgroundColor}"
              Shell.NavBarIsVisible="False">
 
-    <!-- Risorse condivise -->
     <ContentPage.Resources>
         <ResourceDictionary>
-            <Color x:Key="AccentColor">#404040</Color>
-            <LinearGradientBrush x:Key="HeaderGradient">
-                <GradientStop Color="#404040" Offset="0.0" />
-                <GradientStop Color="#404040" Offset="1.0" />
-            </LinearGradientBrush>
+            <Color x:Key="PageBackgroundColor">#F8F9FA</Color>
+            <Color x:Key="PrimaryAccentColor">#FC4C02</Color>
+            <Color x:Key="CardBackgroundColor">White</Color>
+            <Color x:Key="PrimaryTextColor">#1A202C</Color>
+            <Color x:Key="SecondaryTextColor">#4A5568</Color>
+            <Color x:Key="MutedTextColor">#A0AEC0</Color>
+            <Color x:Key="HeaderBarBackgroundColor">White</Color>
 
-            <Style x:Key="PageTitle" TargetType="Label">
-                <Setter Property="FontFamily" Value="OpenSansBold" />
-                <Setter Property="FontSize" Value="28" />
-                <Setter Property="TextColor" Value="#1D2637" />
-                <Setter Property="HorizontalOptions" Value="Start" />
-                <Setter Property="Margin" Value="0,0,0,8" />
+            <Color x:Key="EditorBackgroundColor">#F7FAFC</Color>
+            <Color x:Key="BorderColor">#E2E8F0</Color>
+            <Color x:Key="SeparatorColor">#EDF2F7</Color>
+            <Style x:Key="PageTitleTextStyle" TargetType="Label">
+                <Setter Property="FontFamily" Value="OpenSansBold"/>
+                <Setter Property="FontSize" Value="26"/>
+                <Setter Property="TextColor" Value="{StaticResource PrimaryTextColor}"/>
+                <Setter Property="Margin" Value="0,0,0,8"/>
             </Style>
-            <Style x:Key="SectionTitle" TargetType="Label">
-                <Setter Property="FontFamily" Value="OpenSansSemiBold" />
-                <Setter Property="FontSize" Value="18" />
-                <Setter Property="TextColor" Value="#1D2637" />
-                <Setter Property="Margin" Value="0,0,0,8" />
+
+            <Style x:Key="SectionTitleTextStyle" TargetType="Label">
+                <Setter Property="FontFamily" Value="OpenSansSemiBold"/>
+                <Setter Property="FontSize" Value="18"/>
+                <Setter Property="TextColor" Value="{StaticResource PrimaryTextColor}"/>
             </Style>
-            <Style x:Key="InfoLabel" TargetType="Label">
-                <Setter Property="FontFamily" Value="OpenSansSemiBold" />
-                <Setter Property="FontSize" Value="14" />
-                <Setter Property="TextColor" Value="#5B6A82" />
-                <Setter Property="LineHeight" Value="1.5" />
-                <Setter Property="Margin" Value="0,0,0,2" />
+
+            <Style x:Key="AuthorNameTextStyle" TargetType="Label">
+                <Setter Property="FontFamily" Value="OpenSansSemiBold"/>
+                <Setter Property="FontSize" Value="16"/>
+                <Setter Property="TextColor" Value="{StaticResource PrimaryTextColor}"/>
+                <Setter Property="VerticalOptions" Value="Center"/>
             </Style>
-            <Style x:Key="InfoValue" TargetType="Label">
-                <Setter Property="FontFamily" Value="OpenSansMedium" />
-                <Setter Property="FontSize" Value="16" />
-                <Setter Property="TextColor" Value="#1D2637" />
-                <Setter Property="LineHeight" Value="1.5" />
-                <Setter Property="Margin" Value="0,0,0,8" />
+
+            <Style x:Key="InfoValueTextStyle" TargetType="Label">
+                <Setter Property="FontFamily" Value="OpenSansRegular"/>
+                <Setter Property="FontSize" Value="16"/>
+                <Setter Property="TextColor" Value="{StaticResource PrimaryTextColor}"/>
+                <Setter Property="LineHeight" Value="1.4"/>
             </Style>
-            <Style x:Key="ActionButton" TargetType="Button">
-                <Setter Property="BackgroundColor" Value="{StaticResource AccentColor}" />
-                <Setter Property="TextColor" Value="White" />
-                <Setter Property="FontAttributes" Value="Bold" />
-                <Setter Property="FontFamily" Value="OpenSansBold" />
-                <Setter Property="FontSize" Value="16" />
-                <Setter Property="CornerRadius" Value="12" />
-                <Setter Property="HeightRequest" Value="54" />
-                <Setter Property="HorizontalOptions" Value="Fill" />
+
+            <Style x:Key="CommentTextStyle" TargetType="Label" BasedOn="{StaticResource InfoValueTextStyle}">
+                <Setter Property="TextColor" Value="{StaticResource SecondaryTextColor}"/>
+                <Setter Property="FontSize" Value="15"/>
+            </Style>
+
+            <Style x:Key="ModernCardFrameStyle" TargetType="Frame">
+                <Setter Property="BackgroundColor" Value="{StaticResource CardBackgroundColor}"/>
+                <Setter Property="CornerRadius" Value="16"/>
+                <Setter Property="HasShadow" Value="True"/>
                 <Setter Property="Shadow">
                     <Setter.Value>
-                        <Shadow Brush="#664361EE" Offset="0,4" Radius="12" Opacity="0.25" />
+                        <Shadow Brush="#99AAB8" Offset="0,5" Radius="20" Opacity="0.1"/>
                     </Setter.Value>
                 </Setter>
+                <Setter Property="Padding" Value="20"/>
+                <Setter Property="Margin" Value="0,0,0,18"/>
             </Style>
-            <Style x:Key="Card" TargetType="Frame">
-                <Setter Property="BackgroundColor" Value="White" />
-                <Setter Property="CornerRadius" Value="16" />
-                <Setter Property="HasShadow" Value="True" />
+
+            <Style x:Key="DetailIconImageStyle" TargetType="Image">
+                <Setter Property="WidthRequest" Value="22"/>
+                <Setter Property="HeightRequest" Value="22"/>
+                <Setter Property="VerticalOptions" Value="Start"/>
+                <Setter Property="Margin" Value="0,3,10,0"/>
+            </Style>
+
+            <Style x:Key="HeaderBackButtonStyle" TargetType="ImageButton">
+                <Setter Property="Source" Value="back_arrow_white.png"/>
+                <Setter Property="HeightRequest" Value="40"/>
+                <Setter Property="WidthRequest" Value="40"/>
+                <Setter Property="CornerRadius" Value="20"/>
+                <Setter Property="BackgroundColor" Value="Transparent"/>
+                <Setter Property="Padding" Value="8"/>
+                <Setter Property="Margin" Value="12,0,0,0"/>
+                <Setter Property="VerticalOptions" Value="Center"/>
+                <Setter Property="HorizontalOptions" Value="Start"/>
+            </Style>
+
+            <Style x:Key="ModernActionButtonStyle" TargetType="Button">
+                <Setter Property="BackgroundColor" Value="{StaticResource PrimaryAccentColor}"/>
+                <Setter Property="TextColor" Value="White"/>
+                <Setter Property="FontFamily" Value="OpenSansBold"/>
+                <Setter Property="FontSize" Value="16"/>
+                <Setter Property="CornerRadius" Value="28"/>
+                <Setter Property="HeightRequest" Value="56"/>
+                <Setter Property="HorizontalOptions" Value="Fill"/>
+                <Setter Property="Padding" Value="20,0"/>
                 <Setter Property="Shadow">
                     <Setter.Value>
-                        <Shadow Brush="#15000000" Offset="0,6" Radius="16" Opacity="0.12" />
-                    </Setter.Value>
-                </Setter>
-                <Setter Property="Padding" Value="20" />
-                <Setter Property="Margin" Value="0,0,0,16" />
-            </Style>
-            <Style x:Key="CommentCard" TargetType="Frame" BasedOn="{StaticResource Card}">
-                <Setter Property="BorderColor" Value="{StaticResource AccentColor}" />
-                <Setter Property="Padding" Value="16" />
-            </Style>
-            <Style x:Key="IconStyle" TargetType="Image">
-                <Setter Property="WidthRequest" Value="24" />
-                <Setter Property="HeightRequest" Value="24" />
-                <Setter Property="VerticalOptions" Value="Center" />
-                <Setter Property="Margin" Value="0,0,12,0" />
-                <Setter Property="Opacity" Value="0.8" />
-            </Style>
-            <Style x:Key="BackButton" TargetType="ImageButton">
-                <Setter Property="HeightRequest" Value="40" />
-                <Setter Property="WidthRequest" Value="40" />
-                <Setter Property="CornerRadius" Value="20" />
-                <Setter Property="BackgroundColor" Value="White" />
-                <Setter Property="Padding" Value="10" />
-                <Setter Property="Shadow">
-                    <Setter.Value>
-                        <Shadow Brush="#15000000" Offset="0,2" Radius="6" Opacity="0.15" />
+                        <Shadow Brush="{StaticResource PrimaryAccentColor}" Offset="0,4" Radius="12" Opacity="0.3"/>
                     </Setter.Value>
                 </Setter>
             </Style>
         </ResourceDictionary>
     </ContentPage.Resources>
 
-    <!-- Layout Principale -->
-    <Grid RowDefinitions="Auto,*">
-        <!-- Header -->
-        <Grid ColumnDefinitions="Auto,*,Auto"
-              HeightRequest="56"
-              Background="{StaticResource HeaderGradient}"
-              Padding="16,0">
+    <Grid RowDefinitions="Auto,*" RowSpacing="0">
 
-            <Label Grid.Column="1"
-                   Text="Dettaglio Partita"
-                   FontFamily="OpenSansBold"
-                   FontSize="20"
-                   TextColor="White"
-                   VerticalOptions="Center"
-                   HorizontalOptions="Center" />
+        <Grid Grid.Row="0" HeightRequest="60" BackgroundColor="{StaticResource HeaderBarBackgroundColor}">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <Grid.Shadow>
+                <Shadow Brush="#99AAB8" Offset="0,2" Radius="6" Opacity="0.1"/>
+            </Grid.Shadow>
+
+            <ImageButton Grid.Column="0" Style="{StaticResource HeaderBackButtonStyle}" Clicked="OnBackButtonClicked" />
+            <Label Grid.Column="1" Text="Dettaglio Partita" FontFamily="OpenSansSemiBold" FontSize="18" TextColor="{StaticResource HeaderBarTextColor}" VerticalOptions="Center" HorizontalOptions="CenterAndExpand" Margin="0,0,52,0"/>
         </Grid>
 
-        <!-- Contenuto -->
         <ScrollView Grid.Row="1">
-            <VerticalStackLayout Padding="20,20,20,30" Spacing="20">
+            <VerticalStackLayout Padding="20,24,20,30" Spacing="24">
+                <Frame Style="{StaticResource ModernCardFrameStyle}">
+                    <VerticalStackLayout Spacing="18">
+                        <Label x:Name="TitoloLabel"
+                               Style="{StaticResource PageTitleTextStyle}"
+                               Text="Titolo del Post Super Coinvolgente e Dettagliato" />
 
-                <!-- Titolo -->
-                <Label x:Name="TitoloLabel"
-                       Style="{StaticResource PageTitle}"
-                       Text="Titolo del post" />
+                        <HorizontalStackLayout Spacing="12" VerticalOptions="Center">
+                            <Frame WidthRequest="48" HeightRequest="48" CornerRadius="24" Padding="0" IsClippedToBounds="True" BorderColor="{StaticResource BorderColor}" HasShadow="False">
+                                <Image x:Name="ProfileImage" Source="default_profile_icon.png" Aspect="AspectFill" WidthRequest="48" HeightRequest="48"/>
+                            </Frame>
+                            <VerticalStackLayout Spacing="2" VerticalOptions="Center">
+                                <Label x:Name="AutoreLabel" Text="Nome Autore" Style="{StaticResource AuthorNameTextStyle}" />
+                                <Label x:Name="AutoreUsernameLabel" Text="\@username" TextColor="{StaticResource SecondaryTextColor}" FontSize="13"/>
+                            </VerticalStackLayout>
+                        </HorizontalStackLayout>
 
-                <!-- Autore -->
-                <HorizontalStackLayout Spacing="12" VerticalOptions="Center">
-                    <Image x:Name="ProfileImage"
-                           WidthRequest="40" HeightRequest="40"
-                           Aspect="AspectFill"/>
+                        <BoxView HeightRequest="1" Color="{StaticResource SeparatorColor}" Margin="0,6,0,0" />
 
-                    <Label x:Name="AutoreLabel"
-                           FontAttributes="Bold"
-                           VerticalOptions="Center"
-                           Text="Autore" />
-                </HorizontalStackLayout>
+                        <VerticalStackLayout Spacing="12">
+                            <Label Text="Dettagli Partita" Style="{StaticResource SectionTitleTextStyle}" />
+                            <Grid RowDefinitions="Auto,Auto" ColumnDefinitions="Auto,*" RowSpacing="14" ColumnSpacing="10">
+                                <Image Grid.Row="0" Grid.Column="0" Source="calendar.png" Style="{StaticResource DetailIconImageStyle}" />
+                                <Label Grid.Row="0" Grid.Column="1" x:Name="DataOraLabel" Text="Dom 19 Mag, 18:30" Style="{StaticResource InfoValueTextStyle}" VerticalOptions="Center"/>
 
-                <!-- Dettagli Post -->
-                <Frame Style="{StaticResource Card}">
-                    <VerticalStackLayout Spacing="12">
-                        <Label Text="Dettagli" Style="{StaticResource SectionTitle}" />
+                                <Image Grid.Row="1" Grid.Column="0" Source="location_pin.png" Style="{StaticResource DetailIconImageStyle}" />
+                                <Label Grid.Row="1" Grid.Column="1" x:Name="PosizioneLabel" Text="Campo Sportivo XYZ, Via Roma 123" Style="{StaticResource InfoValueTextStyle}" VerticalOptions="Center"/>
+                            </Grid>
+                        </VerticalStackLayout>
 
-                        <Grid RowDefinitions="Auto,Auto"
-                              ColumnDefinitions="Auto,*"
-                              RowSpacing="10"
-                              ColumnSpacing="12">
-                            <Image Grid.Row="0" Grid.Column="0"
-                                   Source="calendar.png"
-                                   Style="{StaticResource IconStyle}" />
-                            <Label Grid.Row="0" Grid.Column="1"
-                                   x:Name="DataOraLabel"
-                                   Style="{StaticResource InfoValue}" />
+                        <BoxView HeightRequest="1" Color="{StaticResource SeparatorColor}" Margin="0,6,0,0" />
 
-                            <Image Grid.Row="1" Grid.Column="0"
-                                   Source="location_pin.png"
-                                   Style="{StaticResource IconStyle}" />
-                            <Label Grid.Row="1" Grid.Column="1"
-                                   x:Name="PosizioneLabel"
-                                   Style="{StaticResource InfoValue}" />
-                        </Grid>
-                    </VerticalStackLayout>
-                </Frame>
-
-                <!-- Commento -->
-                <Frame Style="{StaticResource CommentCard}">
-                    <VerticalStackLayout Spacing="16">
-                        <Label Text="Commento" Style="{StaticResource SectionTitle}" />
-                        <ScrollView HeightRequest="120">
+                        <VerticalStackLayout Spacing="10">
+                            <Label Text="Descrizione" Style="{StaticResource SectionTitleTextStyle}" />
                             <Label x:Name="CommentoLabel"
-                                   Style="{StaticResource InfoValue}"
+                                   Style="{StaticResource CommentTextStyle}"
                                    LineBreakMode="WordWrap"
-                                   Text="Testo del commento..." />
-                        </ScrollView>
+                                   Text="Questa è una descrizione dettagliata della partita. Stiamo cercando giocatori appassionati per una sfida amichevole ma competitiva. Il livello richiesto è intermedio. Portate scarpe adatte e tanta voglia di divertirvi! Dopo la partita, ci sarà un piccolo rinfresco per socializzare. Non mancate!" />
+                        </VerticalStackLayout>
+
                     </VerticalStackLayout>
                 </Frame>
 
-                <!-- Risposta -->
-                <Frame Style="{StaticResource Card}">
-                    <VerticalStackLayout Spacing="12">
-                        <Label Text="Rispondi al post" Style="{StaticResource SectionTitle}" />
-                        <Editor x:Name="RispostaEditor"
-                                Placeholder="Scrivi la tua risposta..."
-                                AutoSize="TextChanges"
-                                HeightRequest="100"
-                                Style="{StaticResource InfoValue}" />
-                        <Button Text="Invia" Style="{StaticResource ActionButton}" />
+                <Frame Style="{StaticResource ModernCardFrameStyle}">
+                    <VerticalStackLayout Spacing="16">
+                        <Label Text="Partecipa o Invia un Messaggio" Style="{StaticResource SectionTitleTextStyle}" />
+                        <Border Stroke="{StaticResource BorderColor}" StrokeThickness="1" StrokeShape="RoundRectangle 12" BackgroundColor="{StaticResource EditorBackgroundColor}">
+                            <Editor x:Name="RispostaEditor"
+                                    Placeholder="Scrivi il tuo messaggio qui..."
+                                    AutoSize="TextChanges"
+
+                                    TextColor="{StaticResource PrimaryTextColor}"
+                                    PlaceholderColor="{StaticResource MutedTextColor}"
+                                    FontFamily="OpenSansRegular"
+                                    FontSize="15"
+                                    Margin="1"
+
+                                    BackgroundColor="Transparent"/>
+                        </Border>
+                        <Button x:Name="InviaRispostaButton" Text="Invia Messaggio" Style="{StaticResource ModernActionButtonStyle}" Clicked="OnInviaRispostaClicked" />
                     </VerticalStackLayout>
                 </Frame>
 

@@ -6,7 +6,7 @@ using System.Text.Json.Serialization;
 using Microsoft.Maui.Controls;
 using Microsoft.Maui.Storage;
 using trovagiocatoriApp.Models;
-
+using System.Text;
 namespace trovagiocatoriApp.Views
 {
     public partial class ProfilePage : ContentPage
@@ -55,6 +55,10 @@ namespace trovagiocatoriApp.Views
                     {
                         Debug.WriteLine($"Profilo Utente Caricato: {userProfile.Username}");
                         UsernameLabel.Text = userProfile.Username;
+                        NameLabel.Text = userProfile.Nome;
+                        SurnameLabel.Text = userProfile.Cognome;
+                        EmailLabel.Text = userProfile.Email;
+
                         // Se il profilo contiene un'immagine, la carichiamo; altrimenti, usiamo un'immagine predefinita
                         ProfileImage.Source = !string.IsNullOrEmpty(userProfile.ProfilePic)
                             ? $"{_apiBaseUrl}/images/{userProfile.ProfilePic}"
@@ -97,6 +101,14 @@ namespace trovagiocatoriApp.Views
                 await DisplayAlert("Logout", "Sei stato disconnesso con successo.", "OK");
             }
         }
+
+        private async void OnNavigateToChangePassword(object sender, EventArgs e)
+        {
+            await Navigation.PushAsync(new ChangePasswordPage());
+        }
+
+
+ 
     }
 
 

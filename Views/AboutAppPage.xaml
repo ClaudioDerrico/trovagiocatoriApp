@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="trovagiocatoriApp.Views.AboutAppPage"
+             Title="Cos'è Trovagiocatori?"
+             BackgroundColor="#F5F7FA">
+  <ScrollView>
+    <VerticalStackLayout Spacing="16" Padding="14,20,14,20">
+      <Frame Style="{StaticResource CardStyle}">
+        <VerticalStackLayout Spacing="15" HorizontalOptions="Center">
+          <Frame CornerRadius="16" IsClippedToBounds="True" Padding="0"
+                 BorderColor="Transparent" HasShadow="False" Margin="0,0,0,5">
+            <Image Source="logo_in_home.jpg" HeightRequest="200" Aspect="AspectFit" />
+          </Frame>
+
+          <Label Text="Cos'è Trovagiocatori?"
+                 Style="{StaticResource HeaderStyle}"
+                 Margin="0,5,0,0"/>
+
+          <Label Text="Ti aiutiamo a trovare il giocatore mancante e ad organizzare le tue partite quando, come e con chi vuoi!"
+                 FontSize="14"
+                 TextColor="#6D7A8D"
+                 HorizontalOptions="Center"
+                 HorizontalTextAlignment="Center" />
+
+
+                    <Grid ColumnDefinitions="*,*,*" RowDefinitions="Auto" ColumnSpacing="8" Margin="0,5,0,0">
+                        <Frame Grid.Column="0" BackgroundColor="#EBF8FF" Padding="10" CornerRadius="14"
+                               HasShadow="False" BorderColor="Transparent">
+                            <VerticalStackLayout HorizontalOptions="Center" Spacing="8">
+                                <Frame BackgroundColor="#239FED" CornerRadius="25" HasShadow="False"
+                                       WidthRequest="42" HeightRequest="42" HorizontalOptions="Center" Padding="0">
+                                    <Label Text="1" FontSize="18" FontAttributes="Bold" TextColor="White"
+                                           HorizontalOptions="Center" VerticalOptions="Center"/>
+                                </Frame>
+                                <Label Text="Seleziona"
+                                       FontSize="14"
+                                       FontAttributes="Bold"
+                                       TextColor="#303545"
+                                       HorizontalOptions="Center" />
+                                <Label Text="Scegli provincia e sport"
+                                       FontSize="12"
+                                       TextColor="#6D7A8D"
+                                       HorizontalOptions="Center"
+                                       HorizontalTextAlignment="Center" />
+                            </VerticalStackLayout>
+                        </Frame>
+
+                        <Frame Grid.Column="1" BackgroundColor="#ECFDF5" Padding="10" CornerRadius="14"
+                               HasShadow="False" BorderColor="Transparent">
+                            <VerticalStackLayout HorizontalOptions="Center" Spacing="8">
+                                <Frame BackgroundColor="#10B981" CornerRadius="25" HasShadow="False"
+                                       WidthRequest="42" HeightRequest="42" HorizontalOptions="Center" Padding="0">
+                                    <Label Text="2" FontSize="18" FontAttributes="Bold" TextColor="White"
+                                           HorizontalOptions="Center" VerticalOptions="Center"/>
+                                </Frame>
+                                <Label Text="Crea"
+                                       FontSize="14"
+                                       FontAttributes="Bold"
+                                       TextColor="#303545"
+                                       HorizontalOptions="Center" />
+                                <Label Text="Pubblica il tuo annuncio"
+                                       FontSize="12"
+                                       TextColor="#6D7A8D"
+                                       HorizontalOptions="Center"
+                                       HorizontalTextAlignment="Center" />
+                            </VerticalStackLayout>
+                        </Frame>
+
+                        <Frame Grid.Column="2" BackgroundColor="#FFF8EC" Padding="10" CornerRadius="14"
+                               HasShadow="False" BorderColor="Transparent">
+                            <VerticalStackLayout HorizontalOptions="Center" Spacing="8">
+                                <Frame BackgroundColor="#FC4C02" CornerRadius="25" HasShadow="False"
+                                       WidthRequest="42" HeightRequest="42" HorizontalOptions="Center" Padding="0">
+                                    <Label Text="3" FontSize="18" FontAttributes="Bold" TextColor="White"
+                                           HorizontalOptions="Center" VerticalOptions="Center"/>
+                                </Frame>
+                                <Label Text="Connetti"
+                                       FontSize="14"
+                                       FontAttributes="Bold"
+                                       TextColor="#303545"
+                                       HorizontalOptions="Center" />
+                                <Label Text="Chatta e organizza"
+                                       FontSize="12"
+                                       TextColor="#6D7A8D"
+                                       HorizontalOptions="Center"
+                                       HorizontalTextAlignment="Center" />
+                            </VerticalStackLayout>
+                        </Frame>
+                    </Grid>
+                </VerticalStackLayout>
+          
+          
+         
+      </Frame>
+    </VerticalStackLayout>
+  </ScrollView>
+</ContentPage>

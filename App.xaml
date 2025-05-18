@@ -20,6 +20,72 @@
                              Desktop="800" />
                 </Setter>
             </Style>
+            <Style x:Key="HeaderStyle" TargetType="Label">
+                <Setter Property="FontFamily" Value="OpenSansExtraBold"/>
+                <Setter Property="FontSize" Value="22"/>
+                <Setter Property="TextColor" Value="#303545"/>
+                <Setter Property="FontAttributes" Value="Bold"/>
+                <Setter Property="HorizontalOptions" Value="Center"/>
+            </Style>
+            <Style x:Key="SubHeaderStyle" TargetType="Label">
+                <Setter Property="FontFamily" Value="OpenSansRegular"/>
+                <Setter Property="FontSize" Value="14"/>
+                <Setter Property="TextColor" Value="#6D7A8D"/>
+                <Setter Property="HorizontalOptions" Value="Center"/>
+            </Style>
+            
+            <Style x:Key="PrimaryButtonStyle" TargetType="Button">
+                <Setter Property="BackgroundColor" Value="#FC4C02"/>
+                <Setter Property="TextColor" Value="White"/>
+                <Setter Property="FontAttributes" Value="Bold"/>
+                <Setter Property="CornerRadius" Value="25"/>
+                <Setter Property="FontSize" Value="16"/>
+                <Setter Property="HeightRequest" Value="50"/>
+                <Setter Property="Padding" Value="20,0"/>
+            </Style>
+            <Style x:Key="CardStyle" TargetType="Frame">
+                <Setter Property="BackgroundColor" Value="White"/>
+                <Setter Property="CornerRadius" Value="16"/>
+                <Setter Property="HasShadow" Value="True"/>
+                <Setter Property="BorderColor" Value="Transparent"/>
+                <Setter Property="Padding" Value="18"/>
+            </Style>
+
+            <Style x:Key="FooterIconFrameStyle" TargetType="Frame">
+                <Setter Property="BackgroundColor" Value="Transparent"/>
+                <Setter Property="Padding" Value="8,5"/>
+                <Setter Property="HasShadow" Value="False"/>
+                <Setter Property="BorderColor" Value="Transparent"/>
+                <Setter Property="CornerRadius" Value="0"/>
+                <Setter Property="VisualStateManager.VisualStateGroups">
+                    <VisualStateGroupList>
+                        <VisualStateGroup x:Name="CommonStates">
+                            <VisualState x:Name="Normal" />
+                            <VisualState x:Name="Pressed">
+                                <VisualState.Setters>
+                                    <Setter Property="BackgroundColor" Value="#E0E0E0" />
+                                    <Setter Property="Scale" Value="0.95" />
+                                </VisualState.Setters>
+                            </VisualState>
+                        </VisualStateGroup>
+                    </VisualStateGroupList>
+                </Setter>
+            </Style>
+
+            <Style x:Key="FooterIconImageStyle" TargetType="Image">
+                <Setter Property="HeightRequest" Value="28"/>
+                <Setter Property="WidthRequest" Value="28"/>
+                <Setter Property="HorizontalOptions" Value="Center"/>
+                <Setter Property="Margin" Value="0,0,0,2"/>
+            </Style>
+
+            <Style x:Key="FooterIconLabelStyle" TargetType="Label">
+                <Setter Property="FontSize" Value="12"/>
+                <Setter Property="TextColor" Value="#303545"/>
+                <Setter Property="HorizontalOptions" Value="Center"/>
+                <Setter Property="HorizontalTextAlignment" Value="Center"/>
+                <Setter Property="FontFamily" Value="OpenSansSemibold"/>
+            </Style>
         </ResourceDictionary>
     </Application.Resources>
 </Application>
