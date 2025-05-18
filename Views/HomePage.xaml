@@ -1,208 +1,273 @@
-﻿<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="trovagiocatoriApp.Views.HomePage"
              Title=""
-             BackgroundColor="#f2f2f2">
+             Shell.NavBarIsVisible="False"
+             BackgroundColor="#F5F7FA">
+
+    <!-- Configurazione ottimizzata per Android con dimensioni responsive -->
+    <ContentPage.Resources>
+        <ResourceDictionary>
+            <!-- Stili moderni per elementi UI -->
+            <Style x:Key="HeaderStyle" TargetType="Label">
+                <Setter Property="FontFamily" Value="OpenSansExtraBold"/>
+                <Setter Property="FontSize" Value="22"/>
+                <Setter Property="TextColor" Value="#303545"/>
+                <Setter Property="FontAttributes" Value="Bold"/>
+                <Setter Property="HorizontalOptions" Value="Center"/>
+            </Style>
+            <Style x:Key="SubHeaderStyle" TargetType="Label">
+                <Setter Property="FontFamily" Value="OpenSansRegular"/>
+                <Setter Property="FontSize" Value="14"/>
+                <Setter Property="TextColor" Value="#6D7A8D"/>
+                <Setter Property="HorizontalOptions" Value="Center"/>
+            </Style>
+            <Style x:Key="PrimaryButtonStyle" TargetType="Button">
+                <Setter Property="BackgroundColor" Value="#FC4C02"/>
+                <Setter Property="TextColor" Value="White"/>
+                <Setter Property="FontAttributes" Value="Bold"/>
+                <Setter Property="CornerRadius" Value="25"/>
+                <Setter Property="FontSize" Value="16"/>
+                <Setter Property="HeightRequest" Value="50"/>
+                <Setter Property="Padding" Value="20,0"/>
+            </Style>
+            <Style x:Key="CardStyle" TargetType="Frame">
+                <Setter Property="BackgroundColor" Value="White"/>
+                <Setter Property="CornerRadius" Value="16"/>
+                <Setter Property="HasShadow" Value="True"/>
+                <Setter Property="BorderColor" Value="Transparent"/>
+                <Setter Property="Padding" Value="18"/>
+            </Style>
+        </ResourceDictionary>
+    </ContentPage.Resources>
 
     <Grid>
-
-
-        <!-- Contenuto -->
+        <!-- Contenuto principale con ottimizzazione per dispositivi Android -->
         <ScrollView>
-            <VerticalStackLayout Spacing="20" Padding="20">
-                <!-- Barra di Navigazione -->
-                <Grid BackgroundColor="#333" Padding="10" HorizontalOptions="FillAndExpand">
-                    <HorizontalStackLayout HorizontalOptions="Start">
-                        <Image Source="trovagiocatori.png" HeightRequest="100" WidthRequest="340" />
+            <VerticalStackLayout Spacing="16" Padding="14,5,14,20">
+                <!-- Header moderno con effetto sfumato -->
+                <Grid BackgroundColor="Black" HeightRequest="75" Margin="0,0,0,0">
+                    <Grid.Shadow>
+                        <Shadow Brush="#80000000" Offset="0,4" Radius="8" Opacity="0.2"/>
+                    </Grid.Shadow>
+                    <HorizontalStackLayout HorizontalOptions="Center" VerticalOptions="Center">
+                        <Image Source="trovagiocatori.png" HeightRequest="55" WidthRequest="220" />
                     </HorizontalStackLayout>
                 </Grid>
 
-                <!-- Hero Section -->
-                <Grid Margin="0" HeightRequest="250" >
-                    <Image Source="sfondo.png"  Aspect="AspectFill" Opacity="0.5" />
-                    <VerticalStackLayout Spacing="10" HorizontalOptions="Center" VerticalOptions="CenterAndExpand">
-                        <Label Text="Trovagiocatori"
-                               FontSize="25"
-                               FontAttributes="Bold"
-                               TextColor="black"
-                               HorizontalOptions="Center" />
-                        <Label Text="Scopri quanto è facile trovare il decimo a calcetto"
-                               FontSize="15"
-                               FontAttributes="Bold"
-                               TextColor="grey"
-                               HorizontalOptions="Center" />
-                        <Button Text="Crea un Post"
-                                BackgroundColor="#FF0000"
-                                TextColor="White"
-                                WidthRequest="200"
-                                HeightRequest="50"
-                                CornerRadius="10"
-                                HorizontalOptions="Center"
-                                Clicked="OnCreatePostButtonClicked"/>
-                    </VerticalStackLayout>
-                </Grid>
+                <!-- Hero Section con stile moderno e materiale -->
+                <Frame Style="{StaticResource CardStyle}" Margin="0,10,0,10" Padding="0" HeightRequest="240">
+                    <Grid>
+                        <Image Source="sfondo.png" Aspect="AspectFill" />
+                        <BoxView Color="#80000000" />
+                        <VerticalStackLayout Spacing="14" Padding="20" VerticalOptions="Center">
+                            <Label Text="TROVAGIOCATORI" 
+                                   FontSize="24" 
+                                   FontAttributes="Bold" 
+                                   TextColor="White" 
+                                   HorizontalOptions="Center" />
+                            <Label Text="Trova rapidamente compagni per le tue partite"
+                                   FontSize="16"
+                                   TextColor="White"
+                                   Opacity="0.9"
+                                   HorizontalOptions="Center"
+                                   HorizontalTextAlignment="Center"/>
+                            <Button Text="CREA UN POST"
+                                    Style="{StaticResource PrimaryButtonStyle}"
+                                    Margin="0,10,0,0"
+                                    HorizontalOptions="Center"
+                                    Clicked="OnCreatePostButtonClicked">
+                                <Button.Shadow>
+                                    <Shadow Brush="#80000000" Offset="0,4" Radius="4" Opacity="0.3"/>
+                                </Button.Shadow>
+                            </Button>
+                        </VerticalStackLayout>
+                    </Grid>
+                </Frame>
 
                 <!-- Selezione Regione -->
-                <Frame BackgroundColor="White" CornerRadius="10" Margin="20" Padding="20">
-                    <!-- Sezione Seleziona Regione -->
-                    <VerticalStackLayout>
-                        <Label Text="Seleziona una Regione"
-                       FontSize="20"
-                       FontAttributes="Bold"
-                       TextColor="#333"
-                       HorizontalOptions="Center" />
-                        <Picker x:Name="RegionPicker"
-                        Title="Seleziona una regione"
-                        ItemsSource="{Binding Regions}" 
-                        SelectedItem="{Binding SelectedRegion}" 
-                        HorizontalOptions="FillAndExpand" />
+                <Frame Style="{StaticResource CardStyle}">
+                    <VerticalStackLayout Spacing="12">
+                        <Label Text="Seleziona Regione" Style="{StaticResource HeaderStyle}"/>
+                        <Border Stroke="#E5E9F0" StrokeThickness="1" StrokeShape="RoundRectangle 12">
+                            <Picker x:Name="RegionPicker"
+                                    Title="Seleziona una regione"
+                                    ItemsSource="{Binding Regions}" 
+                                    SelectedItem="{Binding SelectedRegion}" 
+                                    HorizontalOptions="FillAndExpand"
+                                    BackgroundColor="#F8FAFC"
+                                    FontSize="15"
+                                    TextColor="#303545"
+                                    Margin="8,0"/>
+                        </Border>
                     </VerticalStackLayout>
                 </Frame>
 
                 <!-- Seleziona Provincia -->
-                <Frame BackgroundColor="White" CornerRadius="10" Margin="10" Padding="10" IsVisible="{Binding IsProvincePickerVisible}">
-                    <VerticalStackLayout>
-                        <Label Text="SELEZIONA LA TUA PROVINCIA"
-                           FontSize="20"
-                           FontAttributes="Bold"
-                           TextColor="#333"
-                           HorizontalOptions="Center" />
-                        <Picker x:Name="ProvincePicker"
-                            Title="Seleziona una provincia"
-                            ItemsSource="{Binding Provinces}"
-                            SelectedItem="{Binding SelectedProvince}"
-                            HorizontalOptions="FillAndExpand" />
+                <Frame Style="{StaticResource CardStyle}" IsVisible="{Binding IsProvincePickerVisible}">
+                    <VerticalStackLayout Spacing="12">
+                        <Label Text="SELEZIONA PROVINCIA" Style="{StaticResource HeaderStyle}"/>
+                        <Border Stroke="#E5E9F0" StrokeThickness="1" StrokeShape="RoundRectangle 12">
+                            <Picker x:Name="ProvincePicker"
+                                    Title="Seleziona una provincia"
+                                    ItemsSource="{Binding Provinces}"
+                                    SelectedItem="{Binding SelectedProvince}"
+                                    HorizontalOptions="FillAndExpand"
+                                    BackgroundColor="#F8FAFC"
+                                    FontSize="15"
+                                    TextColor="#303545"
+                                    Margin="8,0"/>
+                        </Border>
                     </VerticalStackLayout>
                 </Frame>
 
                 <!-- Seleziona Sport -->
-                <Frame BackgroundColor="White" CornerRadius="10" Margin="10" Padding="10" IsVisible="{Binding IsSportPickerVisible}">
-                    <VerticalStackLayout>
-                        <Label Text="SELEZIONA LO SPORT"
-                           FontSize="20"
-                           FontAttributes="Bold"
-                           TextColor="#333"
-                           HorizontalOptions="Center" />
-                        <Picker x:Name="SportPicker"
-                            Title="Seleziona uno sport"
-                            ItemsSource="{Binding Sports}"
-                            SelectedItem="{Binding SelectedSport}"
-                            HorizontalOptions="FillAndExpand" />
+                <Frame Style="{StaticResource CardStyle}" IsVisible="{Binding IsSportPickerVisible}">
+                    <VerticalStackLayout Spacing="12">
+                        <Label Text="SELEZIONA SPORT" Style="{StaticResource HeaderStyle}"/>
+                        <Border Stroke="#E5E9F0" StrokeThickness="1" StrokeShape="RoundRectangle 12">
+                            <Picker x:Name="SportPicker"
+                                    Title="Seleziona uno sport"
+                                    ItemsSource="{Binding Sports}"
+                                    SelectedItem="{Binding SelectedSport}"
+                                    HorizontalOptions="FillAndExpand"
+                                    BackgroundColor="#F8FAFC"
+                                    FontSize="15"
+                                    TextColor="#303545"
+                                    Margin="8,0"/>
+                        </Border>
                     </VerticalStackLayout>
                 </Frame>
 
-                <!-- Bottone Gioca -->
-                <Button Text="GIOCA"
-                BackgroundColor="#E0E0E0"
-                TextColor="Black"
-                FontAttributes="Bold"
-                CornerRadius="10"
-                HeightRequest="50"
-                HorizontalOptions="Center"
-                Clicked="PostPageClicked"/>
-                <!-- Command="{Binding PlayCommand}"-->
+                <!-- Bottone GIOCA -->
+                <Button Text="GIOCA ORA"
+                        Style="{StaticResource PrimaryButtonStyle}"
+                        Margin="20,5"
+                        HorizontalOptions="Fill"
+                        Clicked="PostPageClicked">
+                    <Button.Shadow>
+                        <Shadow Brush="#80000000" Offset="0,4" Radius="4" Opacity="0.3"/>
+                    </Button.Shadow>
+                </Button>
 
                 <Label x:Name="ErrorLabel" 
-                IsVisible="False" 
-                TextColor="Red" 
-                HorizontalOptions="Center" 
-                VerticalOptions="CenterAndExpand" 
-                Text="Compilare tutti i campi" />
-
+                       IsVisible="False" 
+                       TextColor="#FF3B30" 
+                       FontSize="14"
+                       HorizontalOptions="Center" 
+                       VerticalOptions="Center" 
+                       Text="Compilare tutti i campi" />
 
                 <!-- Descrizione del sito con Logo -->
-                <Frame BackgroundColor="White" CornerRadius="10" Margin="20" Padding="20">
+                <Frame Style="{StaticResource CardStyle}" Margin="0,5,0,10">
+                    <VerticalStackLayout Spacing="15" HorizontalOptions="Center">
+                        <!-- Logo con effetto arrotondato e ombra -->
+                        <Frame CornerRadius="16" IsClippedToBounds="True" Padding="0" 
+                               BorderColor="Transparent" HasShadow="False" Margin="0,0,0,5">
+                            <Image Source="logo_in_home.jpg" HeightRequest="200" Aspect="AspectFit" />
+                        </Frame>
 
-                    <VerticalStackLayout Spacing="10" HorizontalOptions="Center">
-                        
-                        <!-- Logo -->
-                        <Image Source="logo.jpg" HeightRequest="250" HorizontalOptions="Center" />
+                        <!-- Titolo e Descrizione -->
+                        <Label Text="Cos'è Trovagiocatori?"
+                               Style="{StaticResource HeaderStyle}"
+                               Margin="0,5,0,0"/>
 
-                        <!-- Titolo -->
-                        <Label Text="Cosa è Trovagiocatori.it?"
-                               FontSize="18"
-                               FontAttributes="Bold"
-                               TextColor="#333"
-                               HorizontalOptions="Center" />
-
-                        <!-- Descrizione -->
                         <Label Text="Ti aiutiamo a trovare il giocatore mancante e ad organizzare le tue partite quando, come e con chi vuoi!"
                                FontSize="14"
-                               TextColor="#666"
+                               TextColor="#6D7A8D"
                                HorizontalOptions="Center"
-                               Margin="0,10,0,0" />
+                               HorizontalTextAlignment="Center" />
                     </VerticalStackLayout>
                 </Frame>
 
-                <!-- Sezione "Come funziona?" -->
-                <Frame BackgroundColor="#FFF" CornerRadius="10" Margin="20" Padding="20">
-                    <VerticalStackLayout>
-                        <Label Text="Come funziona?"
-                               FontSize="18"
-                               FontAttributes="Bold"
-                               TextColor="#333"
-                               HorizontalOptions="Center" />
+                <!-- Sezione "Come funziona?" con UI moderna -->
+                <Frame Style="{StaticResource CardStyle}" Margin="0,0,0,5">
+                    <VerticalStackLayout Spacing="16">
+                        <Label Text="Come funziona?" Style="{StaticResource HeaderStyle}"/>
 
-                        <Grid ColumnDefinitions="*,*,*" RowDefinitions="Auto" Margin="0,20,0,0">
+                        <Grid ColumnDefinitions="*,*,*" RowDefinitions="Auto" ColumnSpacing="8" Margin="0,5,0,0">
                             <!-- Prima Colonna -->
-                            <VerticalStackLayout Grid.Column="0" HorizontalOptions="Center" Spacing="10">
-                                <Frame BackgroundColor="#E0E0E0" Padding="10" CornerRadius="5"
-                                       WidthRequest="120" HeightRequest="80">
-                                    <Label Text="Seleziona la provincia"
+                            <Frame Grid.Column="0" BackgroundColor="#EBF8FF" Padding="10" CornerRadius="14" 
+                                   HasShadow="False" BorderColor="Transparent">
+                                <VerticalStackLayout HorizontalOptions="Center" Spacing="8">
+                                    <Frame BackgroundColor="#239FED" CornerRadius="25" HasShadow="False"
+                                           WidthRequest="42" HeightRequest="42" HorizontalOptions="Center" Padding="0">
+                                        <Label Text="1" FontSize="18" FontAttributes="Bold" TextColor="White"
+                                               HorizontalOptions="Center" VerticalOptions="Center"/>
+                                    </Frame>
+                                    <Label Text="Seleziona"
                                            FontSize="14"
                                            FontAttributes="Bold"
-                                           HorizontalOptions="Center" 
-                                           VerticalOptions="Center"/>
-                                </Frame>
-                                <Label Text="Scegli lo sport"
-                                       FontSize="12"
-                                       TextColor="#666"
-                                       HorizontalOptions="Center" />
-                            </VerticalStackLayout>
+                                           TextColor="#303545"
+                                           HorizontalOptions="Center" />
+                                    <Label Text="Scegli provincia e sport"
+                                           FontSize="12"
+                                           TextColor="#6D7A8D"
+                                           HorizontalOptions="Center"
+                                           HorizontalTextAlignment="Center" />
+                                </VerticalStackLayout>
+                            </Frame>
 
                             <!-- Seconda Colonna -->
-                            <VerticalStackLayout Grid.Column="1" HorizontalOptions="Center" Spacing="10">
-                                <Frame BackgroundColor="#E0E0E0" Padding="10" CornerRadius="5"
-                                       WidthRequest="120" HeightRequest="80">
-                                    <Label Text="Crea un post"
+                            <Frame Grid.Column="1" BackgroundColor="#ECFDF5" Padding="10" CornerRadius="14" 
+                                   HasShadow="False" BorderColor="Transparent">
+                                <VerticalStackLayout HorizontalOptions="Center" Spacing="8">
+                                    <Frame BackgroundColor="#10B981" CornerRadius="25" HasShadow="False"
+                                           WidthRequest="42" HeightRequest="42" HorizontalOptions="Center" Padding="0">
+                                        <Label Text="2" FontSize="18" FontAttributes="Bold" TextColor="White"
+                                               HorizontalOptions="Center" VerticalOptions="Center"/>
+                                    </Frame>
+                                    <Label Text="Crea"
                                            FontSize="14"
                                            FontAttributes="Bold"
+                                           TextColor="#303545"
+                                           HorizontalOptions="Center" />
+                                    <Label Text="Pubblica il tuo annuncio"
+                                           FontSize="12"
+                                           TextColor="#6D7A8D"
                                            HorizontalOptions="Center"
-                                           VerticalOptions="Center"/>
-                                </Frame>
-                                <Label Text="Imposta le informazioni sulla partita"
-                                       FontSize="12"
-                                       TextColor="#666"
-                                       HorizontalOptions="Center" />
-                            </VerticalStackLayout>
+                                           HorizontalTextAlignment="Center" />
+                                </VerticalStackLayout>
+                            </Frame>
 
                             <!-- Terza Colonna -->
-                            <VerticalStackLayout Grid.Column="2" HorizontalOptions="Center" Spacing="10">
-                                <Frame BackgroundColor="#E0E0E0" Padding="10" CornerRadius="5"
-                                       WidthRequest="120" HeightRequest="80">
-                                    <Label Text="Chatta con gli altri"
+                            <Frame Grid.Column="2" BackgroundColor="#FFF8EC" Padding="10" CornerRadius="14" 
+                                   HasShadow="False" BorderColor="Transparent">
+                                <VerticalStackLayout HorizontalOptions="Center" Spacing="8">
+                                    <Frame BackgroundColor="#FC4C02" CornerRadius="25" HasShadow="False"
+                                           WidthRequest="42" HeightRequest="42" HorizontalOptions="Center" Padding="0">
+                                        <Label Text="3" FontSize="18" FontAttributes="Bold" TextColor="White"
+                                               HorizontalOptions="Center" VerticalOptions="Center"/>
+                                    </Frame>
+                                    <Label Text="Connetti"
                                            FontSize="14"
                                            FontAttributes="Bold"
+                                           TextColor="#303545"
+                                           HorizontalOptions="Center" />
+                                    <Label Text="Chatta e organizza"
+                                           FontSize="12"
+                                           TextColor="#6D7A8D"
                                            HorizontalOptions="Center"
-                                           VerticalOptions="Center"/>
-                                </Frame>
-                                <Label Text="Metti in contatto con gli altri per organizzare le partite"
-                                       FontSize="12"
-                                       TextColor="#666"
-                                       HorizontalOptions="Center" />
-                            </VerticalStackLayout>
+                                           HorizontalTextAlignment="Center" />
+                                </VerticalStackLayout>
+                            </Frame>
                         </Grid>
                     </VerticalStackLayout>
                 </Frame>
 
                 <!-- Footer -->
-                <Grid BackgroundColor="#333" Padding="10" HorizontalOptions="FillAndExpand">
-                    <VerticalStackLayout HorizontalOptions="Center">
-                        <Label Text="TrovagiocatoriApp © 2024" 
+                <Grid HeightRequest="80" BackgroundColor="black" Margin="0,15,0,0">
+                    <VerticalStackLayout HorizontalOptions="Center" VerticalOptions="Center" Spacing="2">
+                        <Label Text="TrovagiocatoriApp © 2025" 
                                FontSize="14" 
                                TextColor="White" 
                                HorizontalOptions="Center" />
-
+                        <Label Text="La migliore app per trovare compagni di gioco"
+                               FontSize="12"
+                               TextColor="White"
+                               Opacity="0.8"
+                               HorizontalOptions="Center" />
                     </VerticalStackLayout>
                 </Grid>
             </VerticalStackLayout>

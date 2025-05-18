@@ -5,6 +5,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using Microsoft.Maui.Controls;
 using Microsoft.Maui.Storage;
+using trovagiocatoriApp.Models;
 
 namespace trovagiocatoriApp.Views
 {
@@ -45,7 +46,7 @@ namespace trovagiocatoriApp.Views
                 {
                     var jsonResponse = await response.Content.ReadAsStringAsync();
                     Debug.WriteLine($"jsonResponse: {jsonResponse}");
-                    var userProfile = JsonSerializer.Deserialize<UserModel>(jsonResponse, new JsonSerializerOptions
+                    var userProfile = JsonSerializer.Deserialize<User>(jsonResponse, new JsonSerializerOptions
                     {
                         PropertyNameCaseInsensitive = true
                     });
@@ -98,25 +99,5 @@ namespace trovagiocatoriApp.Views
         }
     }
 
-    // Modello per deserializzare il profilo utente ricevuto dal backend
-    public class UserModel
-    {
-        [JsonPropertyName("username")]
-        public string Username { get; set; }
 
-        [JsonPropertyName("profile_picture")]
-        public string ProfilePic { get; set; }
-
-        [JsonPropertyName("id")]
-        public int Id { get; set; }
-
-        [JsonPropertyName("nome")]
-        public string Nome { get; set; }
-
-        [JsonPropertyName("cognome")]
-        public string Cognome { get; set; }
-
-        [JsonPropertyName("email")]
-        public string Email { get; set; }
-    }
 }

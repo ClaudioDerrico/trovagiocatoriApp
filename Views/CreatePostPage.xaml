@@ -2,49 +2,66 @@
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     x:Class="trovagiocatoriApp.Views.CreatePostPage"
-    Title="Crea Post">
+    Title="Crea Post"
+    BackgroundColor="#f4f4f4">
 
     <ScrollView>
-        <StackLayout Padding="20" Spacing="15">
+        <VerticalStackLayout Padding="20" Spacing="20">
 
-            <Label Text="Titolo:" FontAttributes="Bold"/>
-            <Entry x:Name="TitoloEntry" Placeholder="Inserisci il titolo" MaxLength="50" TextChanged="OnTitoloTextChanged"/>
-            <Label x:Name="CaratteriRimanenti" Text="Caratteri rimanenti: 50"/>
+            <Frame CornerRadius="20" Padding="20" BackgroundColor="White" HasShadow="True">
+                <VerticalStackLayout Spacing="15">
 
-            <Label Text="Provincia:" FontAttributes="Bold"/>
-            <Entry x:Name="ProvinciaEntry" Placeholder="Inizia a digitare la provincia" TextChanged="ProvinciaEntry_TextChanged"/>
-            <ListView x:Name="ProvinceSuggestionsList"
-          ItemsSource="{Binding FilteredProvinces}"
-          IsVisible="False"
-          SelectionMode="Single"
-          ItemSelected="ProvinceSuggestionsList_ItemSelected">
-                <ListView.ItemTemplate>
-                    <DataTemplate>
-                        <TextCell Text="{Binding .}" />
-                    </DataTemplate>
-                </ListView.ItemTemplate>
-            </ListView>
+                    <Label Text="Titolo" FontAttributes="Bold" FontSize="18"/>
+                    <Entry x:Name="TitoloEntry" Placeholder="Inserisci il titolo" MaxLength="50" TextChanged="OnTitoloTextChanged"/>
+                    <Label x:Name="CaratteriRimanenti" FontSize="12" TextColor="Gray"/>
 
+                    <Label Text="Provincia" FontAttributes="Bold" FontSize="18"/>
+                    <Entry x:Name="ProvinciaEntry" Placeholder="Inizia a digitare la provincia" TextChanged="ProvinciaEntry_TextChanged"/>
+                    <ListView x:Name="ProvinceSuggestionsList"
+                              ItemsSource="{Binding FilteredProvinces}"
+                              IsVisible="False"
+                              SelectionMode="Single"
+                              HeightRequest="100"
+                              BackgroundColor="#f9f9f9"
+                              ItemSelected="ProvinceSuggestionsList_ItemSelected">
+                        <ListView.ItemTemplate>
+                            <DataTemplate>
+                                <TextCell Text="{Binding .}" />
+                            </DataTemplate>
+                        </ListView.ItemTemplate>
+                    </ListView>
 
-            <Label Text="Città:" FontAttributes="Bold"/>
-            <Entry x:Name="CittaEntry" Placeholder="Inserisci la città" TextChanged="OnCittaTextChanged"/>
-            <Label x:Name="CaratteriRimanentiCitta" Text="Caratteri rimanenti: 35"/>
+                    <Label Text="Città" FontAttributes="Bold" FontSize="18"/>
+                    <Entry x:Name="CittaEntry" Placeholder="Inserisci la città" MaxLength="35" TextChanged="OnCittaTextChanged"/>
+                    <Label x:Name="CaratteriRimanentiCitta" FontSize="12" TextColor="Gray"/>
 
-            <Label Text="Sport:" FontAttributes="Bold"/>
-            <Picker x:Name="SportPicker" Title="Seleziona uno sport" ItemsSource="{Binding SportOptions}"/>
+                    <Label Text="Sport" FontAttributes="Bold" FontSize="18"/>
+                    <Picker x:Name="SportPicker" Title="Seleziona uno sport" ItemsSource="{Binding SportOptions}"/>
 
-            <Label Text="Data partita:" FontAttributes="Bold"/>
-            <DatePicker x:Name="DataPartitaPicker" MinimumDate="{Binding CurrentDate}" MaximumDate="{Binding MaxDate}"/>
+                    <Label Text="Data partita" FontAttributes="Bold" FontSize="18"/>
+                    <DatePicker x:Name="DataPartitaPicker" MinimumDate="{Binding CurrentDate}" MaximumDate="{Binding MaxDate}"/>
 
-            <Label Text="Ora partita:" FontAttributes="Bold"/>
-            <TimePicker x:Name="OraPartitaPicker"/>
+                    <Label Text="Ora partita" FontAttributes="Bold" FontSize="18"/>
+                    <TimePicker x:Name="OraPartitaPicker"/>
 
-            <Label Text="Commento:" FontAttributes="Bold"/>
-            <Editor x:Name="CommentoEditor" Placeholder="Inserisci un commento" AutoSize="TextChanges" TextChanged="OnCommentoTextChanged"/>
-            <Label x:Name="CharCountLabel" Text="Caratteri rimanenti: 155"/>
+                    <Label Text="Commento" FontAttributes="Bold" FontSize="18"/>
+                    <Editor x:Name="CommentoEditor"
+                            Placeholder="Inserisci un commento"
+                            AutoSize="TextChanges"
+                            HeightRequest="100"
+                            TextChanged="OnCommentoTextChanged"/>
+                    <Label x:Name="CharCountLabel" FontSize="12" TextColor="Gray"/>
 
-            <Button Text="Crea Post" Clicked="OnCreatePostClicked"/>
+                    <Button Text="Crea Post"
+                            Clicked="OnCreatePostClicked"
+                            BackgroundColor="#4CAF50"
+                            TextColor="White"
+                            FontAttributes="Bold"
+                            CornerRadius="10"
+                            HeightRequest="50"/>
+                </VerticalStackLayout>
+            </Frame>
 
-        </StackLayout>
+        </VerticalStackLayout>
     </ScrollView>
 </ContentPage>

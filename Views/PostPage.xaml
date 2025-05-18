@@ -1,62 +1,216 @@
-<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
-             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             x:Class="trovagiocatoriApp.Views.PostPage"
-             Title="Risultati"
-             BackgroundColor="#F5F5F5">
-    <StackLayout Padding="20" Spacing="15">
-        <Label x:Name="TitleLabel"
-           FontAttributes="Bold"
-           FontSize="24"
-           HorizontalOptions="Center"
-           TextColor="#333"
-           Margin="0,10" />
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+ xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+ xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+ x:Class="trovagiocatoriApp.Views.PostPage"
+ Title="Risultati"
+ BackgroundColor="#F9FAFE"
+ Shell.NavBarIsVisible="False">
+    <ContentPage.Resources>
+        <ResourceDictionary>
+            <!-- Stili moderni -->
+            <Style x:Key="PageTitle" TargetType="Label">
+                <Setter Property="FontFamily" Value="OpenSansBold"/>
+                <Setter Property="FontSize" Value="24"/>
+                <Setter Property="TextColor" Value="#1D2637"/>
+                <Setter Property="HorizontalOptions" Value="Center"/>
+                <Setter Property="Margin" Value="0,0,0,16"/>
+            </Style>
+            <Style x:Key="CardTitle" TargetType="Label">
+                <Setter Property="FontFamily" Value="OpenSansSemiBold"/>
+                <Setter Property="FontSize" Value="18"/>
+                <Setter Property="TextColor" Value="#1D2637"/>
+                <Setter Property="LineHeight" Value="1.4"/>
+                <Setter Property="Margin" Value="0,0,0,6"/>
+            </Style>
+            <Style x:Key="CardLocation" TargetType="Label">
+                <Setter Property="FontFamily" Value="OpenSansMedium"/>
+                <Setter Property="FontSize" Value="14"/>
+                <Setter Property="TextColor" Value="#5B6A82"/>
+            </Style>
+            <Style x:Key="CardDateTime" TargetType="Label">
+                <Setter Property="FontFamily" Value="OpenSansRegular"/>
+                <Setter Property="FontSize" Value="13"/>
+                <Setter Property="TextColor" Value="#7F8C8D"/>
+            </Style>
+            <Style x:Key="CardComment" TargetType="Label">
+                <Setter Property="FontFamily" Value="OpenSansRegular"/>
+                <Setter Property="FontSize" Value="14"/>
+                <Setter Property="TextColor" Value="#4A5568"/>
+                <Setter Property="LineBreakMode" Value="TailTruncation"/>
+                <Setter Property="MaxLines" Value="2"/>
+                <Setter Property="LineHeight" Value="1.4"/>
+            </Style>
+            <Style x:Key="PostCard" TargetType="Frame">
+                <Setter Property="CornerRadius" Value="16"/>
+                <Setter Property="HasShadow" Value="True"/>
+                <Setter Property="Shadow">
+                    <Setter.Value>
+                        <Shadow Brush="#15000000" Offset="0,4" Radius="12" Opacity="0.1"/>
+                    </Setter.Value>
+                </Setter>
+                <Setter Property="Padding" Value="20"/>
+                <Setter Property="Margin" Value="0"/>
+                <!-- Nessun margine: gestito da ItemSpacing -->
+                <Setter Property="BackgroundColor" Value="White"/>
+            </Style>
+            <Style x:Key="IconStyle" TargetType="Image">
+                <Setter Property="WidthRequest" Value="16"/>
+                <Setter Property="HeightRequest" Value="16"/>
+                <Setter Property="VerticalOptions" Value="Center"/>
+                <Setter Property="Margin" Value="0,0,8,0"/>
+            </Style>
+            <Style x:Key="HeaderContainer" TargetType="Grid">
+                <Setter Property="BackgroundColor" Value="#404040"/>
+                <Setter Property="Padding" Value="20,32,20,24"/>
+            </Style>
 
-        <ListView x:Name="PostsListView"
-              SeparatorVisibility="None"
-              HasUnevenRows="True"
-              BackgroundColor="Transparent">
-            <ListView.ItemTemplate>
-                <DataTemplate>
-                    <ViewCell>
-                        <Frame CornerRadius="10"
-                   HasShadow="True"
-                   Padding="15"
-                   Margin="0,5"
-                   BackgroundColor="White">
-                            <StackLayout Spacing="5">
-                                <!-- Titolo del post -->
-                                <Label Text="{Binding titolo}"
-                       FontAttributes="Bold"
-                       FontSize="18"
-                       TextColor="#2C3E50" />
+            <Style x:Key="SearchBox" TargetType="Frame">
+                <Setter Property="CornerRadius" Value="12"/>
+                <Setter Property="HasShadow" Value="False"/>
+                <Setter Property="BackgroundColor" Value="White"/>
+                <Setter Property="Padding" Value="16,0"/>
+                <Setter Property="HeightRequest" Value="50"/>
+            </Style>
+            <Style x:Key="EmptyStateMessage" TargetType="Label">
+                <Setter Property="FontFamily" Value="OpenSansRegular"/>
+                <Setter Property="FontSize" Value="16"/>
+                <Setter Property="TextColor" Value="#7F8C8D"/>
+                <Setter Property="HorizontalOptions" Value="Center"/>
+                <Setter Property="VerticalOptions" Value="Center"/>
+                <Setter Property="HorizontalTextAlignment" Value="Center"/>
+            </Style>
+        </ResourceDictionary>
+    </ContentPage.Resources>
 
-                                <Grid ColumnDefinitions="*,Auto" VerticalOptions="Center">
-                                    <Label Text="{Binding citta}"
-                         FontSize="14"
-                         TextColor="#34495E" />
-                                    <StackLayout Orientation="Horizontal"
-                               HorizontalOptions="End"
-                               Spacing="10">
-                                        <Label Text="{Binding data_partita}"
-                           FontSize="12"
-                           TextColor="#7F8C8D" />
-                                        <Label Text="{Binding ora_partita}"
-                           FontSize="12"
-                           TextColor="#7F8C8D" />
-                                    </StackLayout>
-                                </Grid>
+    <Grid RowDefinitions="Auto,*">
+        <!-- Header con titolo principale e navigazione -->
+        <Grid Style="{StaticResource HeaderContainer}">
+            <Grid ColumnDefinitions="Auto,*,Auto" VerticalOptions="Center">
+                <Label Grid.Column="1"
+                   x:Name="TitleLabel"
+                   FontFamily="OpenSansBold"
+                   FontSize="22"
+                   TextColor="White"
+                   HorizontalOptions="Center"
+                   VerticalOptions="Center"/>
+                <ImageButton Grid.Column="2"
+                         Source="filter.png"
+                         BackgroundColor="Transparent"
+                         Clicked="OnFilterButtonClicked"
+                         VerticalOptions="Center"
+                         IsVisible="True"/>
+            </Grid>
+        </Grid>
 
-                                <Label Text="{Binding commento}"
+        <!-- Contenuto principale con ricerca e lista -->
+        <Grid Grid.Row="1" RowDefinitions="Auto,*" Padding="0">
+            <!-- Area di ricerca -->
+            <Frame Style="{StaticResource SearchBox}" 
+               Margin="20,-25,20,16"
+               VerticalOptions="Start">
+                <Grid ColumnDefinitions="Auto,*">
+                    <Image Grid.Column="0"
+                       Source="search.png"
+                       HeightRequest="18"
+                       WidthRequest="18"
+                       VerticalOptions="Center"/>
+                    <Entry Grid.Column="1"
+                       Placeholder="Cerca partite..."
+                       PlaceholderColor="#A0AEC0"
+                       FontFamily="OpenSansRegular"
                        FontSize="14"
-                       TextColor="#555"
-                       LineBreakMode="TailTruncation" />
+                       TextColor="#1D2637"
+                       VerticalOptions="Center"
+                       Margin="8,0,0,0"
+                       x:Name="SearchEntry"
+                       TextChanged="OnSearchTextChanged"/>
+                </Grid>
+            </Frame>
 
+            <!-- Lista dei post -->
+            <RefreshView Grid.Row="1" 
+                     x:Name="PostsRefreshView"
+                     Refreshing="OnRefreshing"
+                     Margin="20,0,20,20">
+                <CollectionView x:Name="PostsCollectionView"
+                            SelectionMode="Single"
+                            SelectionChanged="OnPostSelected"
+                            EmptyView="Nessuna partita disponibile al momento">
 
-                            </StackLayout>
-                        </Frame>
-                    </ViewCell>
-                </DataTemplate>
-            </ListView.ItemTemplate>
-        </ListView>
-    </StackLayout>
+                    <!-- Spazio tra i post -->
+                    <CollectionView.ItemsLayout>
+                        <LinearItemsLayout Orientation="Vertical" ItemSpacing="16"/>
+                    </CollectionView.ItemsLayout>
+
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate>
+                            <Frame Style="{StaticResource PostCard}">
+                                <Grid RowDefinitions="Auto,Auto,Auto,Auto" RowSpacing="10">
+                                    <!-- Titolo -->
+                                    <Label Text="{Binding titolo}"
+                                       Style="{StaticResource CardTitle}"
+                                       Grid.Row="0"/>
+
+                                    <!-- Località con icona -->
+                                    <Grid Grid.Row="1" ColumnDefinitions="Auto,*">
+                                        <Image Source="location_pin.png"
+                                           Style="{StaticResource IconStyle}"/>
+                                        <Label Text="{Binding citta}"
+                                           Grid.Column="1"
+                                           Style="{StaticResource CardLocation}"/>
+                                    </Grid>
+
+                                    <!-- Data e ora con icone -->
+                                    <Grid Grid.Row="2" ColumnDefinitions="Auto,*,Auto,*">
+                                        <Image Source="calendar.png"
+                                           Grid.Column="0"
+                                           Style="{StaticResource IconStyle}"/>
+                                        <Label Text="{Binding data_partita}"
+                                           Grid.Column="1"
+                                           Style="{StaticResource CardDateTime}"/>
+                                        <Image Source="clock.png"
+                                           Grid.Column="2"
+                                           Style="{StaticResource IconStyle}"
+                                           Margin="12,0,8,0"/>
+                                        <Label Text="{Binding ora_partita}"
+                                           Grid.Column="3"
+                                           Style="{StaticResource CardDateTime}"/>
+                                    </Grid>
+
+                                    <!-- Separatore -->
+                                    <BoxView Grid.Row="3" 
+                                         HeightRequest="1" 
+                                         Color="#F0F2F5" 
+                                         Margin="0,4,0,8"/>
+                                </Grid>
+                            </Frame>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+            </RefreshView>
+        </Grid>
+
+        <!-- Pulsante Floating Action Button per aggiungere nuovo post -->
+        <Button Text="+"
+            FontSize="24"
+            FontAttributes="Bold"
+            TextColor="White"
+            BackgroundColor="#4361EE"
+            WidthRequest="60"
+            HeightRequest="60"
+            CornerRadius="30"
+            HorizontalOptions="End"
+            VerticalOptions="End"
+            Margin="0,0,24,24"
+            Grid.Row="1"
+            Clicked="OnAddPostClicked">
+            <Button.Shadow>
+                <Shadow Brush="#664361EE" 
+                    Offset="0,4" 
+                    Radius="8" 
+                    Opacity="0.4"/>
+            </Button.Shadow>
+        </Button>
+    </Grid>
 </ContentPage>

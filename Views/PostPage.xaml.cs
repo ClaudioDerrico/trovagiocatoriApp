@@ -4,77 +4,102 @@ using System.Net.Http;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.Maui.Controls;
+using trovagiocatoriApp.Models;
 
 namespace trovagiocatoriApp.Views
 {
     public partial class PostPage : ContentPage
     {
-        // Criteri di ricerca
-        private string SelectedProvince { get; set; }
-        private string SelectedSport { get; set; }
+        private readonly string SelectedProvince;
+        private readonly string SelectedSport;
 
         public PostPage(string province, string sport)
         {
             InitializeComponent();
             SelectedProvince = province;
             SelectedSport = sport;
-            TitleLabel.Text = $"{SelectedProvince} - {SelectedSport}";
         }
 
         protected override async void OnAppearing()
         {
             base.OnAppearing();
-            await LoadPosts();
+            TitleLabel.Text = $"{SelectedProvince} - {SelectedSport}";
+            await LoadPostsAsync();
         }
 
-        // Classe per deserializzare la risposta JSON dal backend
-        public class PostResponse
-        {
-            public int id { get; set; }
-            public string titolo { get; set; }
-            public string provincia { get; set; }
-            public string citta { get; set; }
-            public string sport { get; set; }
-            public string data_partita { get; set; }
-            public string ora_partita { get; set; }
-            public string commento { get; set; }
-            public string autore_email { get; set; }
-        }
 
-        private async Task LoadPosts()
+
+        private async Task LoadPostsAsync()
         {
             try
             {
-                using (var client = new HttpClient())
+                using var client = new HttpClient();
+                var url = $"http://localhost:8000/posts/search?provincia={Uri.EscapeDataString(SelectedProvince)}&sport={Uri.EscapeDataString(SelectedSport)}";
+                var response = await client.GetAsync(url);
+
+                if (response.IsSuccessStatusCode)
                 {
-                    string url = $"http://localhost:8000/posts/search?provincia={Uri.EscapeDataString(SelectedProvince)}&sport={Uri.EscapeDataString(SelectedSport)}";
-                    var response = await client.GetAsync(url);
+                    var json = await response.Content.ReadAsStringAsync();
+                    var posts = JsonSerializer.Deserialize<List<PostResponse>>(json,
+                        new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
 
-                    if (response.IsSuccessStatusCode)
-                    {
-                        var json = await response.Content.ReadAsStringAsync();
-                        var posts = JsonSerializer.Deserialize<List<PostResponse>>(json, new JsonSerializerOptions
-                        {
-                            PropertyNameCaseInsensitive = true
-                        });
-
-                        if (posts != null && posts.Count > 0)
-                        {
-                            PostsListView.ItemsSource = posts;
-                        }
-
-                    }
-                    else
-                    {
-                        await DisplayAlert("Nessun risultato", "Non sono stati trovati post per i criteri selezionati.", "OK");
-                        PostsListView.ItemsSource = null;
-                    }
+                    PostsCollectionView.ItemsSource = posts;
+                }
+                else
+                {
+                    await DisplayAlert("Nessun risultato", "Nessun post trovato.", "OK");
+                    PostsCollectionView.ItemsSource = null;
                 }
             }
             catch (Exception ex)
             {
-                await DisplayAlert("Errore", $"Errore durante la ricerca dei post: {ex.Message}", "OK");
+                await DisplayAlert("Errore", $"Errore: {ex.Message}", "OK");
             }
+        }
+
+        private async void OnPostTapped(object sender, ItemTappedEventArgs e)
+        {
+            if (e.Item is PostResponse post)
+            {
+                ((ListView)sender).SelectedItem = null;  // deseleziona
+                await Navigation.PushAsync(new PostDetailPage(post.id));
+            }
+        }
+
+
+        private void OnFilterButtonClicked(object sender, EventArgs e)
+        {
+            // Implementa la logica di filtro
+        }
+
+        private void OnSearchTextChanged(object sender, TextChangedEventArgs e)
+        {
+            // Implementa la logica di ricerca
+        }
+
+        private async void OnRefreshing(object sender, EventArgs e)
+        {
+            // Aggiorna i dati
+            await LoadPostsAsync();
+            PostsRefreshView.IsRefreshing = false;
+        }
+
+        private async void OnPostSelected(object sender, SelectionChangedEventArgs e)
+        {
+            if (e.CurrentSelection.FirstOrDefault() is PostResponse selectedPost)
+            {
+                // Deseleziona l'elemento (importante per UX)
+                PostsCollectionView.SelectedItem = null;
+
+                // Naviga alla pagina di dettaglio
+                await Navigation.PushAsync(new PostDetailPage(selectedPost.id));
+            }
+        }
+
+        private async void OnAddPostClicked(object sender, EventArgs e)
+        {
+            // Naviga alla pagina di creazione post
+            // await Navigation.PushAsync(new CreatePostPage());
         }
     }
 }

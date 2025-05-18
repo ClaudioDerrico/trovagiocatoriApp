@@ -72,10 +72,7 @@
 
 	<ItemGroup>
 	  <Compile Remove="Models\UserModel.cs" />
-	</ItemGroup>
-
-	<ItemGroup>
-	  <None Include="Models\UserModel.cs" />
+	  <Compile Remove="Views\PostPage.xaml..cs" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -83,6 +80,12 @@
 	    <Generator>MSBuild:Compile</Generator>
 	  </MauiXaml>
 	  <MauiXaml Update="Views\LoginPage.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </MauiXaml>
+	  <MauiXaml Update="Views\PostDetailPage.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </MauiXaml>
+	  <MauiXaml Update="Views\PostPage.xaml">
 	    <Generator>MSBuild:Compile</Generator>
 	  </MauiXaml>
 	  <MauiXaml Update="Views\ProfilePage.xaml">

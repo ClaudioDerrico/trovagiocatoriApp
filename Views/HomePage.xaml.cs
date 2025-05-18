@@ -40,7 +40,7 @@ public partial class HomePage : ContentPage
         }
         ErrorLabel.IsVisible = false;
 
-        // Naviga alla pagina PostsListPage passando i criteri selezionati
+        //Naviga alla pagina PostsListPage passando i criteri selezionati
         await Navigation.PushAsync(new PostPage(province, sport));
     }
 

@@ -16,6 +16,8 @@ namespace trovagiocatoriApp
             Routing.RegisterRoute(nameof(RegisterPage), typeof(RegisterPage));
             Routing.RegisterRoute(nameof(ProfilePage), typeof(ProfilePage));
             Routing.RegisterRoute(nameof(HomePage), typeof(HomePage));
+            Routing.RegisterRoute(nameof(PostPage), typeof(PostPage));
+            Routing.RegisterRoute(nameof(PostDetailPage), typeof(PostDetailPage));
         }
 
         protected override async void OnAppearing()
