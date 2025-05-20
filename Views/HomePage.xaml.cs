@@ -9,7 +9,18 @@ public partial class HomePage : ContentPage
     public HomePage()
     {
         InitializeComponent();
-        BindingContext = new HomePageViewModel();
+
+        bool hasSession = Preferences.ContainsKey("session_id") &&
+                          !string.IsNullOrEmpty(Preferences.Get("session_id", ""));
+
+        if (hasSession)
+        {
+            BindingContext = new HomePageViewModel();
+        }
+        else
+        {
+            BindingContext = new NavigationPage(new LoginPage());
+        }
     }
 
     protected override void OnAppearing()

@@ -73,7 +73,6 @@
                                     <Entry Grid.Column="1" x:Name="EmailEntry" Placeholder="Inserisci la tua email" Keyboard="Email" BackgroundColor="Transparent" />
                                 </Grid>
                             </Frame>
-                            <Label Text="Ti verrà inviata un'email di conferma (controlla anche negli spam)." FontSize="12" TextColor="#757575" Margin="5,0,0,0" />
                             <Label x:Name="EmailError" Text="E-mail non valida" TextColor="#E53935" FontSize="12" IsVisible="False" Margin="5,0,0,0" />
                         </VerticalStackLayout>
 

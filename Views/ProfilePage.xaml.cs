@@ -12,7 +12,7 @@ namespace trovagiocatoriApp.Views
     public partial class ProfilePage : ContentPage
     {
         private readonly HttpClient _client = new HttpClient();
-        private readonly string _apiBaseUrl = "http://localhost:8080";
+        private readonly string apiBaseUrl = ApiConfig.BaseUrl;
 
         public ProfilePage()
         {
@@ -31,7 +31,7 @@ namespace trovagiocatoriApp.Views
             Debug.WriteLine("LoadProfile called");
             try
             {
-                var request = new HttpRequestMessage(HttpMethod.Get, $"{_apiBaseUrl}/profile");
+                var request = new HttpRequestMessage(HttpMethod.Get, $"{apiBaseUrl}/profile");
 
                 // Recupera il cookie di sessione salvato nelle Preferences
                 if (Preferences.ContainsKey("session_id"))
@@ -61,7 +61,7 @@ namespace trovagiocatoriApp.Views
 
                         // Se il profilo contiene un'immagine, la carichiamo; altrimenti, usiamo un'immagine predefinita
                         ProfileImage.Source = !string.IsNullOrEmpty(userProfile.ProfilePic)
-                            ? $"{_apiBaseUrl}/images/{userProfile.ProfilePic}"
+                            ? $"{apiBaseUrl}/images/{userProfile.ProfilePic}"
                             : "default_images.jpg";
                     }
                     else

@@ -3,9 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="trovagiocatoriApp.Views.PostDetailPage"
              Title="Dettaglio Post"
-             BackgroundColor="{StaticResource PageBackgroundColor}"
-             Shell.NavBarIsVisible="False"
-             ControlTemplate="{StaticResource PageWithBackButtonOnly}">
+             BackgroundColor="{StaticResource PageBackgroundColor}">
 
     <ContentPage.Resources>
         <ResourceDictionary>

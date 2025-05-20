@@ -4,11 +4,9 @@
              xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
              xmlns:vm="clr-namespace:trovagiocatoriApp.ViewModels"
              x:Class="trovagiocatoriApp.Views.ProfilePage"
-             Title="Profilo Utente"
-             BackgroundColor="#F0F2F5"
-             ControlTemplate="{StaticResource PageWithBackButtonOnly}">
-    
-    
+             Title="Profilo Utente">
+
+
     <ScrollView>
         <VerticalStackLayout Padding="20" Spacing="20">
 

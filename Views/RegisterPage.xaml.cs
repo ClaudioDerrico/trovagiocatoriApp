@@ -13,6 +13,8 @@ namespace trovagiocatoriApp.Views
     {
         private bool isPasswordVisible = false;
         private MemoryStream profilePhotoMemoryStream;
+        private readonly string apiBaseUrl = ApiConfig.BaseUrl;
+
 
         public RegisterPage()
         {
@@ -120,7 +122,7 @@ namespace trovagiocatoriApp.Views
             try
             {
                 using var client = new HttpClient();
-                var registerUrl = "http://localhost:8080/register";
+                var registerUrl = $"{apiBaseUrl}/register";
 
                 using var formData = new MultipartFormDataContent();
                 formData.Add(new StringContent(NomeEntry.Text), "nome");
@@ -158,8 +160,6 @@ namespace trovagiocatoriApp.Views
                     // Imposta l'AppShell come MainPage in modo da avere l'interfaccia completa
                     Application.Current.MainPage = new AppShell();
 
-                    // Naviga alla ProfilePage
-                    await Shell.Current.GoToAsync("//ProfilePage");
                 }
                 else
                 {
