@@ -20,8 +20,7 @@
             <VerticalStackLayout Grid.Row="1" Spacing="24" Padding="24,32" HorizontalOptions="FillAndExpand" VerticalOptions="Center" MaximumWidthRequest="460">
 
                 <!-- Intestazione -->
-                <VerticalStackLayout Spacing="8" Margin="0,0,0,12">
-                    <Label Text="LOGIN" FontSize="32" FontAttributes="Bold" TextColor="#333" HorizontalOptions="Start" />
+                <VerticalStackLayout >
                     <Label Text="Bentornato! Inserisci i tuoi dati." FontSize="16" TextColor="#666" HorizontalOptions="Start" />
                     <Label x:Name="ErrorMessage" Text="" FontSize="14" TextColor="#E53935" IsVisible="False" HorizontalOptions="Start" />
                 </VerticalStackLayout>

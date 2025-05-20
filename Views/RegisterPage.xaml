@@ -21,7 +21,6 @@
 
                 <!-- Intestazione -->
                 <VerticalStackLayout Spacing="8" Margin="0,0,0,12">
-                    <Label Text="REGISTRAZIONE" FontSize="32" FontAttributes="Bold" TextColor="#333" HorizontalOptions="Start" />
                     <Label Text="Inserisci i tuoi dati per creare un nuovo account" FontSize="16" TextColor="#666" HorizontalOptions="Start" />
                     <Label x:Name="ErrorMessage" Text="" FontSize="14" TextColor="#E53935" IsVisible="False" HorizontalOptions="Start" />
                 </VerticalStackLayout>

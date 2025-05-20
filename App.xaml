@@ -106,19 +106,7 @@
                 <Setter Property="HorizontalOptions" Value="Start"/>
             </Style>
 
-            <!-- 8) ControlTemplate che sovrappone SOLO il back‑button -->
-            <ControlTemplate x:Key="PageWithBackButtonOnly">
-                <Grid>
-                    <!-- Contenuto della pagina -->
-                    <ContentPresenter />
 
-                    <!-- Pulsante indietro in alto a sinistra -->
-                    <ImageButton
-            Style="{StaticResource HeaderBackButtonStyle}"
-            Clicked="OnBackButtonClicked"
-            Margin="23,23,0,0" />
-                </Grid>
-            </ControlTemplate>
 
         </ResourceDictionary>
     </Application.Resources>

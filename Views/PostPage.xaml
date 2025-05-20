@@ -4,10 +4,8 @@
  xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
  x:Class="trovagiocatoriApp.Views.PostPage"
  Title="Risultati"
- BackgroundColor="#F9FAFE"
- Shell.NavBarIsVisible="False"
- ControlTemplate="{StaticResource PageWithBackButtonOnly}">
-    
+ BackgroundColor="#F9FAFE">
+
     <ContentPage.Resources>
         <ResourceDictionary>
             <!-- Stili moderni -->

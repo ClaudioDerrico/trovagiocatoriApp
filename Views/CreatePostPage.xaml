@@ -1,69 +1,159 @@
+<?xml version="1.0" encoding="utf-8" ?>
 <ContentPage 
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     x:Class="trovagiocatoriApp.Views.CreatePostPage"
-    Title="Crea Post"
-    BackgroundColor="#f4f4f4"
+    Title="Nuovo Post"
+    BackgroundColor="#f8f9fa"
     ControlTemplate="{StaticResource PageWithBackButtonOnly}">
 
+    <Grid RowDefinitions="Auto,*,Auto" RowSpacing="0">
+        <!-- Header -->
+        <Grid Grid.Row="0" BackgroundColor="#4CAF50" Padding="20,15">
+            <Label Text="Crea un nuovo evento sportivo" 
+                   TextColor="White" 
+                   FontSize="20" 
+                   FontAttributes="Bold" 
+                   HorizontalOptions="Start"
+                   VerticalOptions="Center"/>
+        </Grid>
 
-    <ScrollView>
-        <VerticalStackLayout Padding="20" Spacing="20">
+        <!-- Form Content -->
+        <ScrollView Grid.Row="1">
+            <VerticalStackLayout Padding="16" Spacing="12">
+                <!-- Sport Selector -->
+                <Label Text="Sport" FontSize="14" TextColor="#555555" Margin="0,0,0,-5"/>
+                <Frame Padding="0" CornerRadius="8" HasShadow="False" BorderColor="#e0e0e0">
+                    <Picker x:Name="SportPicker" 
+                            Title="Seleziona uno sport" 
+                            ItemsSource="{Binding SportOptions}"
+                            Margin="12,0" 
+                            HeightRequest="48"/>
+                </Frame>
 
-            <Frame CornerRadius="20" Padding="20" BackgroundColor="White" HasShadow="True">
-                <VerticalStackLayout Spacing="15">
+                <!-- Titolo -->
+                <Label Text="Titolo evento" FontSize="14" TextColor="#555555" Margin="0,0,0,-5"/>
+                <Frame Padding="0" CornerRadius="8" HasShadow="False" BorderColor="#e0e0e0">
+                    <Grid ColumnDefinitions="*, Auto">
+                        <Entry x:Name="TitoloEntry" 
+                               Placeholder="Es: Cerco giocatori per partita amichevole" 
+                               MaxLength="50" 
+                               TextChanged="OnTitoloTextChanged"
+                               Margin="12,0" 
+                               HeightRequest="48"
+                               VerticalOptions="Center"/>
+                        <Label x:Name="CaratteriRimanenti" 
+                               Grid.Column="1" 
+                               FontSize="12" 
+                               TextColor="#757575"
+                               Margin="0,0,12,0"
+                               VerticalOptions="Center"/>
+                    </Grid>
+                </Frame>
 
-                    <Label Text="Titolo" FontAttributes="Bold" FontSize="18"/>
-                    <Entry x:Name="TitoloEntry" Placeholder="Inserisci il titolo" MaxLength="50" TextChanged="OnTitoloTextChanged"/>
-                    <Label x:Name="CaratteriRimanenti" FontSize="12" TextColor="Gray"/>
+                <!-- Località -->
+                <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+                    <VerticalStackLayout Grid.Column="0" Spacing="2">
+                        <Label Text="Provincia" FontSize="14" TextColor="#555555" Margin="0,0,0,-5"/>
+                        <Frame Padding="0" CornerRadius="8" HasShadow="False" BorderColor="#e0e0e0">
+                            <Entry x:Name="ProvinciaEntry" 
+                                   Placeholder="Provincia" 
+                                   TextChanged="ProvinciaEntry_TextChanged"
+                                   Margin="12,0" 
+                                   HeightRequest="48"/>
+                        </Frame>
+                        <ListView x:Name="ProvinceSuggestionsList"
+                                  ItemsSource="{Binding FilteredProvinces}"
+                                  IsVisible="False"
+                                  SelectionMode="Single"
+                                  HeightRequest="120"
+                                  BackgroundColor="White"
+                                  ItemSelected="ProvinceSuggestionsList_ItemSelected"
+                                  Margin="0,2">
+                            <ListView.ItemTemplate>
+                                <DataTemplate>
+                                    <ViewCell>
+                                        <Grid Padding="12,8">
+                                            <Label Text="{Binding .}" FontSize="14" TextColor="#333333"/>
+                                        </Grid>
+                                    </ViewCell>
+                                </DataTemplate>
+                            </ListView.ItemTemplate>
+                        </ListView>
+                    </VerticalStackLayout>
 
-                    <Label Text="Provincia" FontAttributes="Bold" FontSize="18"/>
-                    <Entry x:Name="ProvinciaEntry" Placeholder="Inizia a digitare la provincia" TextChanged="ProvinciaEntry_TextChanged"/>
-                    <ListView x:Name="ProvinceSuggestionsList"
-                              ItemsSource="{Binding FilteredProvinces}"
-                              IsVisible="False"
-                              SelectionMode="Single"
-                              HeightRequest="100"
-                              BackgroundColor="#f9f9f9"
-                              ItemSelected="ProvinceSuggestionsList_ItemSelected">
-                        <ListView.ItemTemplate>
-                            <DataTemplate>
-                                <TextCell Text="{Binding .}" />
-                            </DataTemplate>
-                        </ListView.ItemTemplate>
-                    </ListView>
+                    <VerticalStackLayout Grid.Column="1" Spacing="2">
+                        <Label Text="Città" FontSize="14" TextColor="#555555" Margin="0,0,0,-5"/>
+                        <Frame Padding="0" CornerRadius="8" HasShadow="False" BorderColor="#e0e0e0">
+                            <Grid ColumnDefinitions="*, Auto">
+                                <Entry x:Name="CittaEntry" 
+                                       Placeholder="Città" 
+                                       MaxLength="35" 
+                                       TextChanged="OnCittaTextChanged"
+                                       Margin="12,0" 
+                                       HeightRequest="48"
+                                       VerticalOptions="Center"/>
+                                <Label x:Name="CaratteriRimanentiCitta" 
+                                       Grid.Column="1" 
+                                       FontSize="10" 
+                                       TextColor="#757575"
+                                       Margin="0,0,8,0"
+                                       VerticalOptions="Center"/>
+                            </Grid>
+                        </Frame>
+                    </VerticalStackLayout>
+                </Grid>
 
-                    <Label Text="Città" FontAttributes="Bold" FontSize="18"/>
-                    <Entry x:Name="CittaEntry" Placeholder="Inserisci la città" MaxLength="35" TextChanged="OnCittaTextChanged"/>
-                    <Label x:Name="CaratteriRimanentiCitta" FontSize="12" TextColor="Gray"/>
+                <!-- Data e Ora -->
+                <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+                    <VerticalStackLayout Grid.Column="0" Spacing="2">
+                        <Label Text="Data" FontSize="14" TextColor="#555555" Margin="0,0,0,-5"/>
+                        <Frame Padding="0" CornerRadius="8" HasShadow="False" BorderColor="#e0e0e0">
+                            <DatePicker x:Name="DataPartitaPicker" 
+                                        MinimumDate="{Binding CurrentDate}" 
+                                        MaximumDate="{Binding MaxDate}" 
+                                        Margin="12,0" 
+                                        HeightRequest="48"/>
+                        </Frame>
+                    </VerticalStackLayout>
 
-                    <Label Text="Sport" FontAttributes="Bold" FontSize="18"/>
-                    <Picker x:Name="SportPicker" Title="Seleziona uno sport" ItemsSource="{Binding SportOptions}"/>
+                    <VerticalStackLayout Grid.Column="1" Spacing="2">
+                        <Label Text="Ora" FontSize="14" TextColor="#555555" Margin="0,0,0,-5"/>
+                        <Frame Padding="0" CornerRadius="8" HasShadow="False" BorderColor="#e0e0e0">
+                            <TimePicker x:Name="OraPartitaPicker" 
+                                        Margin="12,0" 
+                                        HeightRequest="48"/>
+                        </Frame>
+                    </VerticalStackLayout>
+                </Grid>
 
-                    <Label Text="Data partita" FontAttributes="Bold" FontSize="18"/>
-                    <DatePicker x:Name="DataPartitaPicker" MinimumDate="{Binding CurrentDate}" MaximumDate="{Binding MaxDate}"/>
+                <!-- Commento -->
+                <Label Text="Descrizione" FontSize="14" TextColor="#555555" Margin="0,0,0,-5"/>
+                <Frame Padding="12,8" CornerRadius="8" HasShadow="False" BorderColor="#e0e0e0">
+                    <VerticalStackLayout Spacing="5">
+                        <Editor x:Name="CommentoEditor"
+                                Placeholder="Inserisci ulteriori dettagli sull'evento..."
+                                AutoSize="TextChanges"
+                                HeightRequest="100"
+                                TextChanged="OnCommentoTextChanged"/>
+                        <Label x:Name="CharCountLabel" 
+                               FontSize="12" 
+                               TextColor="#757575" 
+                               HorizontalOptions="End"/>
+                    </VerticalStackLayout>
+                </Frame>
+            </VerticalStackLayout>
+        </ScrollView>
 
-                    <Label Text="Ora partita" FontAttributes="Bold" FontSize="18"/>
-                    <TimePicker x:Name="OraPartitaPicker"/>
-
-                    <Label Text="Commento" FontAttributes="Bold" FontSize="18"/>
-                    <Editor x:Name="CommentoEditor"
-                            Placeholder="Inserisci un commento"
-                            AutoSize="TextChanges"
-                            HeightRequest="100"
-                            TextChanged="OnCommentoTextChanged"/>
-                    <Label x:Name="CharCountLabel" FontSize="12" TextColor="Gray"/>
-
-                    <Button Text="Crea Post"
-                            Clicked="OnCreatePostClicked"
-                            BackgroundColor="#4CAF50"
-                            TextColor="White"
-                            FontAttributes="Bold"
-                            CornerRadius="10"
-                            HeightRequest="50"/>
-                </VerticalStackLayout>
-            </Frame>
-
-        </VerticalStackLayout>
-    </ScrollView>
+        <!-- Footer with Button -->
+        <Grid Grid.Row="2" BackgroundColor="White" Padding="16">
+            <Button Text="PUBBLICA"
+                    Clicked="OnCreatePostClicked"
+                    BackgroundColor="{StaticResource PrimaryButtonStyle}"
+                    TextColor="White"
+                    FontAttributes="Bold"
+                    CornerRadius="25"
+                    HeightRequest="50"/>
+        </Grid>
+    </Grid>
 </ContentPage>

@@ -1,9 +1,19 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
-	<application android:allowBackup="true" android:supportsRtl="true" android:label="trovagiocatoriApp">
-		<meta-data android:name="android.app.default_searchable" android:value=".MainActivity" />
-	</application>
-	<!-- Permessi -->
-	<uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-	<uses-permission android:name="android.permission.INTERNET" />
+  
+  <!-- Permessi -->
+  <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+  <uses-permission android:name="android.permission.INTERNET" />
+
+  <application
+      android:allowBackup="true"
+      android:supportsRtl="true"
+      android:label="trovagiocatoriApp"
+      android:usesCleartextTraffic="true">
+      
+      <!-- Se servirà un'entry point per la ricerca -->
+      <meta-data
+          android:name="android.app.default_searchable"
+          android:value=".MainActivity" />
+  </application>
 </manifest>

@@ -1,8 +1,8 @@
 ﻿using System.Text.Json;
 using System.Text;
 using Microsoft.Maui.Storage; // Per Preferences
-using trovagiocatoriApp;
-using System.Diagnostics;     // Per AppShell
+using System.Diagnostics;     // Per Debug
+using Microsoft.Maui.Devices;  // Per DeviceInfo
 
 namespace trovagiocatoriApp.Views
 {
@@ -26,14 +26,13 @@ namespace trovagiocatoriApp.Views
         {
             isPasswordVisible = !isPasswordVisible;
             PasswordEntry.IsPassword = !isPasswordVisible;
-
             var button = sender as ImageButton;
             button.Source = isPasswordVisible ? "eye_close.png" : "eye_open.png";
         }
 
         private async void OnLoginClicked(object sender, EventArgs e)
         {
-            // Raccogli i dati del login (ad esempio email/username e password)
+            // Raccogli i dati del login
             var loginData = new
             {
                 email_or_username = EmailEntry.Text,
@@ -41,34 +40,43 @@ namespace trovagiocatoriApp.Views
             };
 
             string json = JsonSerializer.Serialize(loginData);
-
-            using var client = new HttpClient();
             var content = new StringContent(json, Encoding.UTF8, "application/json");
-            var response = await client.PostAsync("http://localhost:8080/login", content);
 
-            if (response.IsSuccessStatusCode)
+            var baseUrl = ApiConfig.BaseUrl;
+
+            try
             {
-                // Legge il cookie dalla risposta e lo salva nelle Preferences
-                if (response.Headers.TryGetValues("Set-Cookie", out var cookieValues))
+                using var client = new HttpClient();
+                var response = await client.PostAsync($"{baseUrl}/login", content);
+
+                if (response.IsSuccessStatusCode)
                 {
-                    var sessionCookie = cookieValues.FirstOrDefault(c => c.StartsWith("session_id="));
-                    if (sessionCookie != null)
+                    // Salva il cookie di sessione
+                    if (response.Headers.TryGetValues("Set-Cookie", out var cookies))
                     {
-                        var sessionId = sessionCookie.Split(';')[0].Split('=')[1];
-                        Preferences.Set("session_id", sessionId);
-                        Debug.WriteLine($"Session id salvata: {sessionId}");
+                        var sessionCookie = cookies.FirstOrDefault(c => c.StartsWith("session_id="));
+                        if (sessionCookie != null)
+                        {
+                            var sessionId = sessionCookie.Split(';')[0].Split('=')[1];
+                            Preferences.Set("session_id", sessionId);
+                            Debug.WriteLine($"Session id salvata: {sessionId}");
+                        }
                     }
+
+                    await DisplayAlert("Login", "Login eseguito con successo!", "OK");
+                    Application.Current.MainPage = new AppShell();
                 }
-
-                await DisplayAlert("Login", "Login eseguito con successo!", "OK");
-
-                // Dopo il login riuscito, imposta l'AppShell come nuova MainPage
-                Application.Current.MainPage = new AppShell();
+                else
+                {
+                    var errorMsg = await response.Content.ReadAsStringAsync();
+                    await DisplayAlert("Errore Login", errorMsg, "OK");
+                }
             }
-            else
+            catch (Exception ex)
             {
-                string errorMsg = await response.Content.ReadAsStringAsync();
-                await DisplayAlert("Errore Login", errorMsg, "OK");
+                Debug.WriteLine($"Errore HTTP: {ex}");
+                await DisplayAlert("Errore di connessione",
+                    "Impossibile raggiungere il server. Controlla le impostazioni di rete.", "OK");
             }
         }
 
