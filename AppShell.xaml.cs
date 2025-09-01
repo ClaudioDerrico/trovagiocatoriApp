@@ -12,6 +12,16 @@ namespace trovagiocatoriApp
         {
             InitializeComponent();
 
+            // Registra tutte le route necessarie
+            Routing.RegisterRoute("LoginPage", typeof(LoginPage));
+            Routing.RegisterRoute("RegisterPage", typeof(RegisterPage));
+            Routing.RegisterRoute("HomePage", typeof(HomePage));
+            Routing.RegisterRoute("ProfilePage", typeof(ProfilePage));
+            Routing.RegisterRoute("PostPage", typeof(PostPage));
+            Routing.RegisterRoute("PostDetailPage", typeof(PostDetailPage));
+            Routing.RegisterRoute("CreatePostPage", typeof(CreatePostPage));
+            Routing.RegisterRoute("AboutAppPage", typeof(AboutAppPage));
+            Routing.RegisterRoute("ChangePasswordPage", typeof(ChangePasswordPage));
         }
 
         protected override async void OnAppearing()
@@ -20,13 +30,14 @@ namespace trovagiocatoriApp
 
             bool hasSession = Preferences.ContainsKey("session_id") &&
                               !string.IsNullOrEmpty(Preferences.Get("session_id", ""));
-            // Se non c'è sessione, naviga alla LoginPage (utilizziamo percorso relativo)
+
+            // Se non c'è sessione, naviga alla LoginPage
             if (!hasSession)
             {
-                await Shell.Current.GoToAsync("LoginPage");
+                // Usa MainPage invece della navigazione relativa per evitare problemi
+                Application.Current.MainPage = new NavigationPage(new LoginPage());
             }
         }
-
 
         private async void OnLogoutClicked(object sender, EventArgs e)
         {
@@ -39,13 +50,10 @@ namespace trovagiocatoriApp
                 }
                 Debug.WriteLine($"Session_id AFTER REMOVE: {Preferences.Get("session_id", "")}");
 
-
                 Application.Current.MainPage = new NavigationPage(new LoginPage());
 
                 await DisplayAlert("Logout", "Sei stato disconnesso con successo.", "OK");
             }
         }
-
-
     }
 }

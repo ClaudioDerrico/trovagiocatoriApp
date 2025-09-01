@@ -12,5 +12,12 @@ namespace trovagiocatoriApp
             DeviceInfo.Platform == DevicePlatform.Android
                 ? "http://10.0.2.2:8080"
                 : "http://localhost:8080";
+
+
+        public static string SpecificPostUrl =>
+            DeviceInfo.Platform == DevicePlatform.Android
+                ? "http://10.0.2.2:8000"
+                : "http://localhost:8000";
+
     }
 }
