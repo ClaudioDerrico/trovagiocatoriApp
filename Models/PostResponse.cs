@@ -18,6 +18,6 @@ namespace trovagiocatoriApp.Models
         public string commento { get; set; }
         public string autore_email { get; set; }
         public int? campo_id { get; set; }
-        public FootballField campo { get; set; }
+        public SportField campo { get; set; }
     }
 }

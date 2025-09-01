@@ -33,17 +33,17 @@ namespace trovagiocatoriApp.Views
         public ObservableCollection<string> FilteredProvinces { get; set; } = new ObservableCollection<string>();
 
         // Lista dei campi da calcio
-        public ObservableCollection<FootballField> FootballFields { get; set; } = new ObservableCollection<FootballField>();
-        public ObservableCollection<FootballField> FilteredFootballFields { get; set; } = new ObservableCollection<FootballField>();
+        public ObservableCollection<SportField> SportFields { get; set; } = new ObservableCollection<SportField>();
+        public ObservableCollection<SportField> FilteredSportFields { get; set; } = new ObservableCollection<SportField>();
 
         // Campo selezionato
-        private FootballField _selectedFootballField;
-        public FootballField SelectedFootballField
+        private SportField _selectedSportField;
+        public SportField SelectedSportField
         {
-            get => _selectedFootballField;
+            get => _selectedSportField;
             set
             {
-                _selectedFootballField = value;
+                _selectedSportField = value;
                 OnPropertyChanged();
                 UpdateFormWithSelectedField();
             }
@@ -83,34 +83,34 @@ namespace trovagiocatoriApp.Views
             BindingContext = this;
 
             // Carica i campi da calcio
-            _ = LoadFootballFields();
+            _ = LoadSportFields();
         }
 
         protected override async void OnAppearing()
         {
             base.OnAppearing();
-            await LoadFootballFields();
+            await LoadSportFields();
         }
 
-        private async Task LoadFootballFields()
+        private async Task LoadSportFields()
         {
             try
             {
-                var response = await _httpClient.GetAsync($"{_pythonApiUrl}/football-fields/");
+                var response = await _httpClient.GetAsync($"{_pythonApiUrl}/fields/");
                 if (response.IsSuccessStatusCode)
                 {
                     var json = await response.Content.ReadAsStringAsync();
-                    var fields = JsonSerializer.Deserialize<List<FootballField>>(json,
+                    var fields = JsonSerializer.Deserialize<List<SportField>>(json,
                         new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
 
-                    FootballFields.Clear();
-                    foreach (var field in fields ?? new List<FootballField>())
+                    SportFields.Clear();
+                    foreach (var field in fields ?? new List<SportField>())
                     {
-                        FootballFields.Add(field);
+                        SportFields.Add(field);
                     }
 
                     // Inizialmente mostra tutti i campi
-                    UpdateFilteredFootballFields();
+                    UpdateFilteredSportFields();
                 }
             }
             catch (Exception ex)
@@ -119,26 +119,36 @@ namespace trovagiocatoriApp.Views
             }
         }
 
-        private void UpdateFilteredFootballFields(string provinciaFilter = null)
+        private void UpdateFilteredSportFields(string provinciaFilter = null, string sportFilter = null)
         {
-            FilteredFootballFields.Clear();
+            FilteredSportFields.Clear();
 
-            var fieldsToShow = string.IsNullOrEmpty(provinciaFilter)
-                ? FootballFields
-                : FootballFields.Where(f => f.Provincia.Equals(provinciaFilter, StringComparison.OrdinalIgnoreCase));
+            var fieldsToShow = SportFields.AsEnumerable();
+
+            // Filtra per provincia se specificata
+            if (!string.IsNullOrEmpty(provinciaFilter))
+            {
+                fieldsToShow = fieldsToShow.Where(f => f.Provincia.Equals(provinciaFilter, StringComparison.OrdinalIgnoreCase));
+            }
+
+            // Filtra per sport se specificato
+            if (!string.IsNullOrEmpty(sportFilter))
+            {
+                fieldsToShow = fieldsToShow.Where(f => f.SupportsSport(sportFilter));
+            }
 
             foreach (var field in fieldsToShow)
             {
-                FilteredFootballFields.Add(field);
+                FilteredSportFields.Add(field);
             }
         }
 
         private void UpdateFormWithSelectedField()
         {
-            if (SelectedFootballField != null)
+            if (SelectedSportField != null)
             {
-                ProvinciaEntry.Text = SelectedFootballField.Provincia;
-                CittaEntry.Text = SelectedFootballField.Citta;
+                ProvinciaEntry.Text = SelectedSportField.Provincia;
+                CittaEntry.Text = SelectedSportField.Citta;
             }
         }
 
@@ -188,8 +198,9 @@ namespace trovagiocatoriApp.Views
             // Mostra la ListView solo se ci sono suggerimenti e l'utente ha digitato almeno 1 carattere
             ProvinceSuggestionsList.IsVisible = !string.IsNullOrWhiteSpace(text) && FilteredProvinces.Any();
 
-            // Filtra anche i campi da calcio in base alla provincia
-            UpdateFilteredFootballFields(text);
+            // Filtra anche i campi sportivi in base alla provincia e allo sport selezionato
+            var selectedSport = SportPicker.SelectedItem?.ToString();
+            UpdateFilteredSportFields(text, selectedSport);
         }
 
         // Gestione della selezione di un suggerimento dalla ListView
@@ -199,22 +210,29 @@ namespace trovagiocatoriApp.Views
             {
                 ProvinciaEntry.Text = selectedProvince;
                 ProvinceSuggestionsList.IsVisible = false;
-                UpdateFilteredFootballFields(selectedProvince);
+                var selectedSport = SportPicker.SelectedItem?.ToString();
+                UpdateFilteredSportFields(selectedProvince, selectedSport);
             }
         }
 
-        // Gestione selezione campo da calcio
-        private void OnFootballFieldSelected(object sender, SelectionChangedEventArgs e)
+        // Gestione cambio sport nel picker
+        private void OnSportPickerSelectedIndexChanged(object sender, EventArgs e)
         {
-            if (e.CurrentSelection.FirstOrDefault() is FootballField selectedField)
+            var selectedSport = SportPicker.SelectedItem?.ToString();
+            var selectedProvince = ProvinciaEntry.Text;
+            UpdateFilteredSportFields(selectedProvince, selectedSport);
+        }
+
+        // Gestione selezione campo da calcio
+        private void OnSportFieldSelected(object sender, SelectionChangedEventArgs e)
+        {
+            if (e.CurrentSelection.FirstOrDefault() is SportField selectedField)
             {
-                SelectedFootballField = selectedField;
+                SelectedSportField = selectedField;
                 // Deseleziona per evitare evidenziazione permanente
                 ((CollectionView)sender).SelectedItem = null;
             }
         }
-
-
 
         private async void OnCreatePostClicked(object sender, EventArgs e)
         {
@@ -253,7 +271,7 @@ namespace trovagiocatoriApp.Views
                 data_partita = DataPartitaPicker.Date.ToString("dd-MM-yyyy"),
                 ora_partita = formattedTime,
                 commento = CommentoEditor.Text,
-                campo_id = SelectedFootballField?.Id // Nuovo campo per il campo da calcio
+                campo_id = SelectedSportField?.Id // Nuovo campo per il campo da calcio
             };
 
             try
@@ -280,8 +298,8 @@ namespace trovagiocatoriApp.Views
 
                 if (response.IsSuccessStatusCode)
                 {
-                    var successMessage = SelectedFootballField != null
-                        ? $"Il tuo post è stato creato!\n\nCampo selezionato: {SelectedFootballField.Nome}"
+                    var successMessage = SelectedSportField != null
+                        ? $"Il tuo post è stato creato!\n\nCampo selezionato: {SelectedSportField.Nome}"
                         : "Il tuo post è stato creato!";
 
                     await DisplayAlert("Post creato", successMessage, "OK");

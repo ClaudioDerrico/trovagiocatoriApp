@@ -26,8 +26,8 @@ namespace trovagiocatoriApp.Views
         public ObservableCollection<Comment> Comments { get; set; } = new ObservableCollection<Comment>();
 
         // Proprietà per il campo da calcio
-        private FootballField _campo;
-        public FootballField Campo
+        private SportField _campo;
+        public SportField Campo
         {
             get => _campo;
             set
@@ -73,7 +73,7 @@ namespace trovagiocatoriApp.Views
                 // 3. Carica le informazioni del campo se presente
                 if (post.campo_id.HasValue)
                 {
-                    Campo = await LoadFootballFieldAsync(post.campo_id.Value);
+                    Campo = await LoadSportFieldAsync(post.campo_id.Value);
                 }
 
                 // 4. Aggiorna la UI
@@ -111,15 +111,15 @@ namespace trovagiocatoriApp.Views
                 json, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
         }
 
-        private async Task<FootballField> LoadFootballFieldAsync(int fieldId)
+        private async Task<SportField> LoadSportFieldAsync(int fieldId)
         {
             try
             {
-                var response = await _sharedClient.GetAsync($"{_pythonApiBaseUrl}/football-fields/{fieldId}");
+                var response = await _sharedClient.GetAsync($"{_pythonApiBaseUrl}/fields/{fieldId}");
                 if (response.IsSuccessStatusCode)
                 {
                     var json = await response.Content.ReadAsStringAsync();
-                    return JsonSerializer.Deserialize<FootballField>(
+                    return JsonSerializer.Deserialize<SportField>(
                         json, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
                 }
             }
@@ -144,15 +144,6 @@ namespace trovagiocatoriApp.Views
             TitoloLabel.Text = post.titolo;
             DataOraLabel.Text = $"{post.data_partita} alle {post.ora_partita}";
 
-            // Se c'è un campo da calcio, mostra le sue informazioni, altrimenti mostra città e provincia
-            if (Campo != null)
-            {
-                PosizioneLabel.Text = $"{Campo.Nome}, {Campo.Indirizzo}";
-            }
-            else
-            {
-                PosizioneLabel.Text = $"{post.citta} ({post.provincia})";
-            }
 
             CommentoLabel.Text = post.commento;
         }

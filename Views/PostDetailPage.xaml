@@ -130,17 +130,16 @@
                                 <Image Grid.Row="0" Grid.Column="0" Source="calendar.png" Style="{StaticResource DetailIconImageStyle}" />
                                 <Label Grid.Row="0" Grid.Column="1" x:Name="DataOraLabel" Text="Dom 19 Mag, 18:30" Style="{StaticResource InfoValueTextStyle}" VerticalOptions="Center"/>
 
-                                <Image Grid.Row="1" Grid.Column="0" Source="location_pin.png" Style="{StaticResource DetailIconImageStyle}" />
-                                <Label Grid.Row="1" Grid.Column="1" x:Name="PosizioneLabel" Text="Campo Sportivo XYZ, Via Roma 123" Style="{StaticResource InfoValueTextStyle}" VerticalOptions="Center"/>
+                               
                             </Grid>
                         </VerticalStackLayout>
 
-                        <!-- Sezione Campo da Calcio (da aggiungere dopo la sezione "Dettagli Partita") -->
+                        <!-- Sezione Campo da Calcio -->
                         <BoxView HeightRequest="1" Color="{StaticResource SeparatorColor}" Margin="0,6,0,0" 
-         IsVisible="{Binding Campo, Converter={StaticResource IsNotNullConverter}}" />
+                         IsVisible="{Binding Campo, Converter={StaticResource IsNotNullConverter}}" />
 
                         <VerticalStackLayout Spacing="12" IsVisible="{Binding Campo, Converter={StaticResource IsNotNullConverter}}">
-                            <Label Text="Campo da Calcio" Style="{StaticResource SectionTitleTextStyle}" />
+                     
 
                             <!-- Informazioni del campo -->
                             <Frame BackgroundColor="#f8f9fa" 

@@ -33,6 +33,7 @@
                     <Picker x:Name="SportPicker" 
                             Title="Seleziona uno sport" 
                             ItemsSource="{Binding SportOptions}"
+                            SelectedIndexChanged="OnSportPickerSelectedIndexChanged"
                             Margin="12,0" 
                             HeightRequest="48"/>
                 </Frame>
@@ -57,31 +58,31 @@
                     </Grid>
                 </Frame>
 
-                <!-- Selezione Campo da Calcio -->
-                <Label Text="Campo da Calcio" FontSize="14" TextColor="#555555" Margin="0,10,0,-5"/>
+                <!-- Selezione Campo Sportivo -->
+                <Label Text="Campo Sportivo" FontSize="14" TextColor="#555555" Margin="0,10,0,-5"/>
                 <Frame Padding="12" CornerRadius="8" HasShadow="False" BorderColor="#e0e0e0" BackgroundColor="#f8f9fa">
                     <VerticalStackLayout Spacing="10">
 
                         <!-- Campo selezionato (se presente) -->
                         <Frame x:Name="SelectedFieldFrame" 
-                               IsVisible="{Binding SelectedFootballField, Converter={StaticResource IsNotNullConverter}}"
+                               IsVisible="{Binding SelectedSportField, Converter={StaticResource IsNotNullConverter}}"
                                BackgroundColor="#e8f5e8" 
                                BorderColor="#4CAF50" 
                                CornerRadius="8" 
                                Padding="12"
                                HasShadow="False">
                             <VerticalStackLayout Spacing="4">
-                                <Label Text="{Binding SelectedFootballField.Nome}" 
+                                <Label Text="{Binding SelectedSportField.Nome}" 
                                        FontAttributes="Bold" 
                                        FontSize="16" 
                                        TextColor="#2e7d32"/>
-                                <Label Text="{Binding SelectedFootballField.Indirizzo}" 
+                                <Label Text="{Binding SelectedSportField.Indirizzo}" 
                                        FontSize="14" 
                                        TextColor="#555"/>
-                                <Label Text="{Binding SelectedFootballField.Tipo, StringFormat='🏟️ {0}'}" 
+                                <Label Text="{Binding SelectedSportField.Tipo, StringFormat='🏟️ {0}'}" 
                                        FontSize="12" 
                                        TextColor="#777"/>
-                                <Label Text="{Binding SelectedFootballField.Descrizione}" 
+                                <Label Text="{Binding SelectedSportField.Descrizione}" 
                                        FontSize="12" 
                                        TextColor="#666"
                                        LineBreakMode="WordWrap"/>
@@ -120,11 +121,11 @@
 
                         <!-- Lista campi disponibili -->
                         <VerticalStackLayout Spacing="5">
-                            <Label Text="Campi disponibili:" FontSize="12" TextColor="#666"/>
-                            <CollectionView x:Name="FootballFieldsCollectionView"
-                                            ItemsSource="{Binding FilteredFootballFields}"
+                            <Label Text="Campi disponibili per lo sport selezionato:" FontSize="12" TextColor="#666"/>
+                            <CollectionView x:Name="SportFieldsCollectionView"
+                                            ItemsSource="{Binding FilteredSportFields}"
                                             SelectionMode="Single"
-                                            SelectionChanged="OnFootballFieldSelected"
+                                            SelectionChanged="OnSportFieldSelected"
                                             HeightRequest="200"
                                             BackgroundColor="White">
                                 <CollectionView.ItemsLayout>
@@ -137,7 +138,7 @@
                                                 BackgroundColor="White"
                                                 StrokeShape="RoundRectangle 8"
                                                 Padding="12">
-                                            <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto,Auto">
+                                            <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto,Auto,Auto">
                                                 <Label Grid.Row="0" Grid.Column="0"
                                                        Text="{Binding Nome}" 
                                                        FontAttributes="Bold" 
@@ -151,6 +152,11 @@
                                                        Text="{Binding Tipo, StringFormat='🏟️ {0}'}" 
                                                        FontSize="11" 
                                                        TextColor="#888"/>
+                                                <Label Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2"
+                                                       Text="{Binding SportsText, StringFormat='⚽ Sports: {0}'}" 
+                                                       FontSize="10" 
+                                                       TextColor="#FC4C02"
+                                                       FontAttributes="Bold"/>
                                                 <Label Grid.Row="0" Grid.Column="1"
                                                        Text="📍" 
                                                        FontSize="16" 
@@ -160,11 +166,18 @@
                                     </DataTemplate>
                                 </CollectionView.ItemTemplate>
                                 <CollectionView.EmptyView>
-                                    <Label Text="Nessun campo disponibile per questa provincia" 
-                                           HorizontalOptions="Center" 
-                                           VerticalOptions="Center"
-                                           FontSize="14" 
-                                           TextColor="#999"/>
+                                    <StackLayout>
+                                        <Label Text="🏟️" FontSize="30" HorizontalOptions="Center" TextColor="#ccc" Margin="0,10,0,5"/>
+                                        <Label Text="Nessun campo disponibile" 
+                                               HorizontalOptions="Center" 
+                                               FontSize="14" 
+                                               TextColor="#999"/>
+                                        <Label Text="Prova a selezionare prima uno sport e una provincia" 
+                                               HorizontalOptions="Center" 
+                                               FontSize="12" 
+                                               TextColor="#bbb"
+                                               HorizontalTextAlignment="Center"/>
+                                    </StackLayout>
                                 </CollectionView.EmptyView>
                             </CollectionView>
                         </VerticalStackLayout>

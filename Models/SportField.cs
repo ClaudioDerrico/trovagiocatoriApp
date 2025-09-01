@@ -2,7 +2,7 @@
 
 namespace trovagiocatoriApp.Models
 {
-    public class FootballField
+    public class SportField
     {
         [JsonPropertyName("id")]
         public int Id { get; set; }
@@ -31,7 +31,21 @@ namespace trovagiocatoriApp.Models
         [JsonPropertyName("descrizione")]
         public string Descrizione { get; set; }
 
+        [JsonPropertyName("sports_disponibili")]
+        public List<string> SportsDisponibili { get; set; } = new List<string>();
+
         // Proprietà computed per il display
         public string DisplayName => $"{Nome} - {Indirizzo}";
+
+        // Proprietà computed per mostrare gli sport supportati
+        public string SportsText => SportsDisponibili != null && SportsDisponibili.Any()
+            ? string.Join(", ", SportsDisponibili)
+            : "Non specificato";
+
+        // Metodo per verificare se il campo supporta uno sport specifico
+        public bool SupportsSport(string sport)
+        {
+            return SportsDisponibili != null && SportsDisponibili.Contains(sport, StringComparer.OrdinalIgnoreCase);
+        }
     }
 }
