@@ -1,16 +1,17 @@
-﻿using System;
+﻿using Microsoft.Maui.Controls;
+using Microsoft.Maui.Storage;
+using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Diagnostics;
+using System.Globalization;
+using System.Linq;
 using System.Net.Http;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
-using System.Collections.Generic;
-using System.Linq;
-using System.ComponentModel;
-using System.Runtime.CompilerServices;
-using Microsoft.Maui.Controls;
-using Microsoft.Maui.Storage;
 using trovagiocatoriApp.Models;
 
 namespace trovagiocatoriApp.Views
@@ -232,24 +233,47 @@ namespace trovagiocatoriApp.Views
         // Handler per visualizzare il campo sulla mappa
         private async void OnViewOnMapClicked(object sender, EventArgs e)
         {
-            if (Campo != null)
+            if (Campo == null)
             {
-                try
-                {
-                    // Apri l'app mappe con le coordinate del campo
-                    var location = new Microsoft.Maui.Devices.Sensors.Location(Campo.Lat, Campo.Lng);
-                    var options = new Microsoft.Maui.ApplicationModel.MapLaunchOptions
-                    {
-                        Name = Campo.Nome,
-                        NavigationMode = Microsoft.Maui.ApplicationModel.NavigationMode.None
-                    };
+                await DisplayAlert("Info", "Coordinate o indirizzo del campo non disponibili.", "OK");
+                return;
+            }
 
-                    await Microsoft.Maui.ApplicationModel.Map.Default.OpenAsync(location, options);
-                }
-                catch (Exception ex)
+            // Preferisci usare le coordinate se presenti
+            bool hasCoords = Campo.Lat != 0 && Campo.Lng != 0; // o altra condizione valida per te
+            string nameEscaped = Uri.EscapeDataString(Campo.Nome ?? "Posizione");
+
+
+            try
+            {
+                string uriString;
+
+                if (hasCoords)
                 {
-                    await DisplayAlert("Errore", $"Impossibile aprire la mappa: {ex.Message}", "OK");
+                    // Apri Google Maps con coordinate (funziona sempre)
+                    string latStr = Campo.Lat.ToString(CultureInfo.InvariantCulture);
+                    string lngStr = Campo.Lng.ToString(CultureInfo.InvariantCulture);
+                    uriString = $"https://www.google.com/maps/search/?api=1&query={latStr},{lngStr}";
                 }
+                else
+                {
+                    // Se non hai coordinate, usa l'indirizzo
+                    string address = Campo.Indirizzo ?? Campo.Nome ?? "";
+                    if (string.IsNullOrWhiteSpace(address))
+                    {
+                        await DisplayAlert("Info", "Impossibile ottenere posizione o indirizzo del campo.", "OK");
+                        return;
+                    }
+
+                    uriString = $"https://www.google.com/maps/search/?api=1&query={Uri.EscapeDataString(address)}";
+                }
+
+                await Launcher.OpenAsync(new Uri(uriString));
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Fallback map open failed: {ex.Message}");
+                await DisplayAlert("Errore", $"Impossibile aprire la mappa: {ex.Message}", "OK");
             }
         }
 
