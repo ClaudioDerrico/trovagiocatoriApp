@@ -1,16 +1,17 @@
-﻿using System;
+﻿using Microsoft.Maui.Controls;
+using Microsoft.Maui.Storage;
+using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Diagnostics;
+using System.Globalization;
+using System.Linq;
 using System.Net.Http;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
-using System.Collections.Generic;
-using System.Linq;
-using System.ComponentModel;
-using System.Runtime.CompilerServices;
-using Microsoft.Maui.Controls;
-using Microsoft.Maui.Storage;
 using trovagiocatoriApp.Models;
 
 namespace trovagiocatoriApp.Views
@@ -151,24 +152,53 @@ namespace trovagiocatoriApp.Views
         // Handler per visualizzare il campo sulla mappa
         private async void OnViewOnMapClicked(object sender, EventArgs e)
         {
-            if (Campo != null)
+            if (Campo == null)
+            {
+                await DisplayAlert("Info", "Coordinate del campo non disponibili.", "OK");
+                return;
+            }
+
+            double lat = Campo.Lat;
+            double lng = Campo.Lng;
+
+            string latStr = lat.ToString(CultureInfo.InvariantCulture);
+            string lngStr = lng.ToString(CultureInfo.InvariantCulture);
+            string placeNameEscaped = Uri.EscapeDataString(Campo.Nome ?? "Posizione");
+
+            // Se sei su Windows, fai direttamente fallback al browser (più affidabile)
+            bool preferBrowserFallback = DeviceInfo.Platform == DevicePlatform.WinUI;
+
+            if (!preferBrowserFallback)
             {
                 try
                 {
-                    // Apri l'app mappe con le coordinate del campo
-                    var location = new Microsoft.Maui.Devices.Sensors.Location(Campo.Lat, Campo.Lng);
-                    var options = new Microsoft.Maui.ApplicationModel.MapLaunchOptions
+                    var location = new Location(lat, lng);
+                    var options = new MapLaunchOptions
                     {
-                        Name = Campo.Nome,
+                        Name = Campo.Nome ?? "Posizione",
                         NavigationMode = Microsoft.Maui.ApplicationModel.NavigationMode.None
                     };
 
-                    await Microsoft.Maui.ApplicationModel.Map.Default.OpenAsync(location, options);
+                    await Map.Default.OpenAsync(location, options);
+                    return; // tutto ok
                 }
                 catch (Exception ex)
                 {
-                    await DisplayAlert("Errore", $"Impossibile aprire la mappa: {ex.Message}", "OK");
+                    Debug.WriteLine($"Map.Default failed (will fallback to browser): {ex.Message}");
+                    // prosegui al fallback
                 }
+            }
+
+            // Fallback: apri Google Maps nel browser (funziona sempre)
+            try
+            {
+                var googleMapsUri = new Uri($"https://www.google.com/maps/search/?api=1&query={latStr},{lngStr}");
+                await Launcher.OpenAsync(googleMapsUri);
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Fallback browser open failed: {ex.Message}");
+                await DisplayAlert("Errore", $"Impossibile aprire la mappa: {ex.Message}", "OK");
             }
         }
 
