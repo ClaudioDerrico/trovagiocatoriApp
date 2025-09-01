@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Net.Http;
+using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.Maui.Controls;
@@ -12,12 +14,17 @@ namespace trovagiocatoriApp.Views
     {
         private readonly int _postId;
         private static readonly HttpClient _sharedClient = CreateHttpClient();
-        private readonly string _apiBaseUrl = "http://localhost:8080";
+        private readonly string _apiBaseUrl = ApiConfig.BaseUrl;
+        private readonly string _pythonApiBaseUrl = ApiConfig.PythonApiUrl; // o SpecificPostUrl se non hai rinominato
+
+        // ObservableCollection per i commenti
+        public ObservableCollection<Comment> Comments { get; set; } = new ObservableCollection<Comment>();
 
         public PostDetailPage(int postId)
         {
             InitializeComponent();
             _postId = postId;
+            BindingContext = this;
         }
 
         private static HttpClient CreateHttpClient()
@@ -33,6 +40,7 @@ namespace trovagiocatoriApp.Views
         {
             base.OnAppearing();
             await LoadPostDetailAsync();
+            await LoadCommentsAsync();
         }
 
         private async Task LoadPostDetailAsync()
@@ -56,7 +64,7 @@ namespace trovagiocatoriApp.Views
 
         private async Task<PostResponse> LoadPostDataAsync()
         {
-            var response = await _sharedClient.GetAsync($"http://localhost:8000/posts/{_postId}");
+            var response = await _sharedClient.GetAsync($"{_pythonApiBaseUrl}/posts/{_postId}");
             if (!response.IsSuccessStatusCode)
                 throw new Exception("Post non trovato");
 
@@ -65,14 +73,12 @@ namespace trovagiocatoriApp.Views
                 json, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
         }
 
-
-
         private async Task<User> LoadUserDataAsync(string email)
         {
             var encodedEmail = Uri.EscapeDataString(email);
 
             var response = await _sharedClient.GetAsync(
-                $"http://localhost:8080/api/user/by-email?email={encodedEmail}");
+                $"{_apiBaseUrl}/api/user/by-email?email={encodedEmail}");
 
             if (!response.IsSuccessStatusCode)
                 throw new Exception("Utente non trovato");
@@ -85,12 +91,7 @@ namespace trovagiocatoriApp.Views
         private void UpdateUI(PostResponse post, User user)
         {
             // Dati utente
-
             AutoreLabel.Text = $"{user.Username}";
-
-            // Stampa tutte le info contenute in user come JSON
-            string userJson = JsonSerializer.Serialize(user, new JsonSerializerOptions { WriteIndented = true });
-            Debug.WriteLine("[DEBUG] USER INFO:\n" + userJson);
 
             ProfileImage.Source = !string.IsNullOrEmpty(user.ProfilePic)
                 ? $"{_apiBaseUrl}/images/{user.ProfilePic}"
@@ -103,28 +104,129 @@ namespace trovagiocatoriApp.Views
             CommentoLabel.Text = post.commento;
         }
 
+        private async Task LoadCommentsAsync()
+        {
+            try
+            {
+                // Aggiungi il cookie di sessione alla richiesta
+                var request = new HttpRequestMessage(HttpMethod.Get, $"{_pythonApiBaseUrl}/posts/{_postId}/comments/");
 
+                if (Preferences.ContainsKey("session_id"))
+                {
+                    string sessionId = Preferences.Get("session_id", "");
+                    request.Headers.Add("Cookie", $"session_id={sessionId}");
+                }
 
-        private void OnInviaRispostaClicked(object sender, EventArgs e)
+                var response = await _sharedClient.SendAsync(request);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var json = await response.Content.ReadAsStringAsync();
+                    var comments = JsonSerializer.Deserialize<List<Comment>>(json,
+                        new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+                    // Aggiorna la collezione dei commenti
+                    Comments.Clear();
+                    foreach (var comment in comments)
+                    {
+                        // Recupera il username per ogni commento
+                        comment.autore_username = await GetUsernameByEmail(comment.autore_email);
+                        Comments.Add(comment);
+                    }
+                }
+            }
+            catch (Exception)
+            {
+                // Fallback silenzioso - i commenti non si caricano ma l'app non crasha
+            }
+        }
+
+        private async Task<string> GetUsernameByEmail(string email)
+        {
+            try
+            {
+                var encodedEmail = Uri.EscapeDataString(email);
+
+                // QUI! Chiamo l'auth-service Go per ottenere i dati utente
+                var response = await _sharedClient.GetAsync($"{_apiBaseUrl}/api/user/by-email?email={encodedEmail}");
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var json = await response.Content.ReadAsStringAsync();
+                    var user = JsonSerializer.Deserialize<User>(json, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                    return user?.Username ?? email; // Fallback alla mail se non trova username
+                }
+
+                return email; // Fallback alla mail
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Errore nel recupero username per {email}: {ex.Message}");
+                return email; // Fallback alla mail
+            }
+        }
+
+        private async void OnInviaRispostaClicked(object sender, EventArgs e)
         {
             string messaggio = RispostaEditor.Text;
             if (string.IsNullOrWhiteSpace(messaggio))
             {
-                DisplayAlert("Attenzione", "Il messaggio non può essere vuoto.", "OK");
+                await DisplayAlert("Attenzione", "Il messaggio non può essere vuoto.", "OK");
                 return;
             }
-            // Qui logica per inviare il messaggio/risposta
-            DisplayAlert("Successo", "Messaggio inviato!", "OK"); // Esempio
-            RispostaEditor.Text = string.Empty; // Pulisci l'editor
-        }
 
-        // Qui potresti avere il costruttore che accetta un oggetto Post
-        // public PostDetailPage(MyPostObject post)
-        // {
-        //     InitializeComponent();
-        //     BindingContext = post; // Se usi il binding
-        //     // o assegna manualmente i valori come sopra
-        // }
-   
+            try
+            {
+                // Crea l'oggetto commento
+                var commentCreate = new CommentCreate
+                {
+                    contenuto = messaggio
+                };
+
+                // Crea la richiesta HTTP
+                var request = new HttpRequestMessage(HttpMethod.Post, $"{_pythonApiBaseUrl}/posts/{_postId}/comments/");
+
+                // Aggiungi il cookie di sessione
+                if (Preferences.ContainsKey("session_id"))
+                {
+                    string sessionId = Preferences.Get("session_id", "");
+                    request.Headers.Add("Cookie", $"session_id={sessionId}");
+                }
+                else
+                {
+                    await DisplayAlert("Errore", "Sessione non trovata. Effettua di nuovo il login.", "OK");
+                    return;
+                }
+
+                // Serializza il contenuto
+                var json = JsonSerializer.Serialize(commentCreate);
+                request.Content = new StringContent(json, Encoding.UTF8, "application/json");
+
+                // Invia la richiesta
+                var response = await _sharedClient.SendAsync(request);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    await DisplayAlert("Successo", "Commento inviato!", "OK");
+                    RispostaEditor.Text = string.Empty; // Pulisci l'editor
+
+                    // Ricarica i commenti per mostrare quello appena aggiunto
+                    await LoadCommentsAsync();
+                }
+                else
+                {
+                    var responseContent = await response.Content.ReadAsStringAsync();
+                    await DisplayAlert("Errore", "Impossibile inviare il commento.", "OK");
+                }
+            }
+            catch (HttpRequestException)
+            {
+                await DisplayAlert("Errore di Connessione", "Impossibile raggiungere il server.", "OK");
+            }
+            catch (Exception ex)
+            {
+                await DisplayAlert("Errore", $"Errore: {ex.Message}", "OK");
+            }
+        }
     }
 }

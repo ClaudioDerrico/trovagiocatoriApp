@@ -155,16 +155,56 @@
                             <Editor x:Name="RispostaEditor"
                                     Placeholder="Scrivi il tuo messaggio qui..."
                                     AutoSize="TextChanges"
-
                                     TextColor="{StaticResource PrimaryTextColor}"
                                     PlaceholderColor="{StaticResource MutedTextColor}"
                                     FontFamily="OpenSansRegular"
                                     FontSize="15"
                                     Margin="1"
-
                                     BackgroundColor="Transparent"/>
                         </Border>
                         <Button x:Name="InviaRispostaButton" Text="Invia Messaggio" Style="{StaticResource ModernActionButtonStyle}" Clicked="OnInviaRispostaClicked" />
+                    </VerticalStackLayout>
+                </Frame>
+
+                <!-- Sezione Commenti -->
+                <Frame Style="{StaticResource ModernCardFrameStyle}">
+                    <VerticalStackLayout Spacing="16">
+                        <Label Text="Commenti" Style="{StaticResource SectionTitleTextStyle}" />
+
+                        <!-- Lista Commenti -->
+                        <CollectionView x:Name="CommentsCollectionView" 
+                                        ItemsSource="{Binding Comments}"
+                                        EmptyView="Nessun commento ancora...">
+                            <CollectionView.ItemsLayout>
+                                <LinearItemsLayout Orientation="Vertical" ItemSpacing="12"/>
+                            </CollectionView.ItemsLayout>
+
+                            <CollectionView.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Stroke="{StaticResource BorderColor}" 
+                                            StrokeThickness="1" 
+                                            StrokeShape="RoundRectangle 8" 
+                                            BackgroundColor="{StaticResource EditorBackgroundColor}"
+                                            Padding="12">
+                                        <VerticalStackLayout Spacing="6">
+                                            <HorizontalStackLayout Spacing="8" VerticalOptions="Center">
+                                                <Label Text="{Binding autore_username}" 
+                                                       FontFamily="OpenSansSemiBold" 
+                                                       FontSize="14" 
+                                                       TextColor="{StaticResource PrimaryAccentColor}" />
+                                                <Label Text="{Binding created_at, StringFormat='{0:dd/MM/yyyy HH:mm}'}" 
+                                                       FontSize="12" 
+                                                       TextColor="{StaticResource MutedTextColor}" />
+                                            </HorizontalStackLayout>
+                                            <Label Text="{Binding contenuto}" 
+                                                   FontSize="14" 
+                                                   TextColor="{StaticResource SecondaryTextColor}"
+                                                   LineBreakMode="WordWrap" />
+                                        </VerticalStackLayout>
+                                    </Border>
+                                </DataTemplate>
+                            </CollectionView.ItemTemplate>
+                        </CollectionView>
                     </VerticalStackLayout>
                 </Frame>
 
