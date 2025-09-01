@@ -5,20 +5,37 @@ using System.Net.Http;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
+using System.Collections.Generic;
+using System.Linq;
+using System.ComponentModel;
+using System.Runtime.CompilerServices;
 using Microsoft.Maui.Controls;
+using Microsoft.Maui.Storage;
 using trovagiocatoriApp.Models;
 
 namespace trovagiocatoriApp.Views
 {
-    public partial class PostDetailPage : ContentPage
+    public partial class PostDetailPage : ContentPage, INotifyPropertyChanged
     {
         private readonly int _postId;
         private static readonly HttpClient _sharedClient = CreateHttpClient();
         private readonly string _apiBaseUrl = ApiConfig.BaseUrl;
-        private readonly string _pythonApiBaseUrl = ApiConfig.PythonApiUrl; // o SpecificPostUrl se non hai rinominato
+        private readonly string _pythonApiBaseUrl = ApiConfig.PythonApiUrl;
 
         // ObservableCollection per i commenti
         public ObservableCollection<Comment> Comments { get; set; } = new ObservableCollection<Comment>();
+
+        // Proprietà per il campo da calcio
+        private FootballField _campo;
+        public FootballField Campo
+        {
+            get => _campo;
+            set
+            {
+                _campo = value;
+                OnPropertyChanged();
+            }
+        }
 
         public PostDetailPage(int postId)
         {
@@ -53,7 +70,13 @@ namespace trovagiocatoriApp.Views
                 // 2. Carica i dati dell'utente
                 var user = await LoadUserDataAsync(post.autore_email);
 
-                // 3. Aggiorna la UI
+                // 3. Carica le informazioni del campo se presente
+                if (post.campo_id.HasValue)
+                {
+                    Campo = await LoadFootballFieldAsync(post.campo_id.Value);
+                }
+
+                // 4. Aggiorna la UI
                 UpdateUI(post, user);
             }
             catch (Exception ex)
@@ -88,6 +111,26 @@ namespace trovagiocatoriApp.Views
                 json, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
         }
 
+        private async Task<FootballField> LoadFootballFieldAsync(int fieldId)
+        {
+            try
+            {
+                var response = await _sharedClient.GetAsync($"{_pythonApiBaseUrl}/football-fields/{fieldId}");
+                if (response.IsSuccessStatusCode)
+                {
+                    var json = await response.Content.ReadAsStringAsync();
+                    return JsonSerializer.Deserialize<FootballField>(
+                        json, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Errore nel caricamento del campo: {ex.Message}");
+            }
+
+            return null;
+        }
+
         private void UpdateUI(PostResponse post, User user)
         {
             // Dati utente
@@ -100,8 +143,42 @@ namespace trovagiocatoriApp.Views
             // Dati post
             TitoloLabel.Text = post.titolo;
             DataOraLabel.Text = $"{post.data_partita} alle {post.ora_partita}";
-            PosizioneLabel.Text = $"{post.citta} ({post.provincia})";
+
+            // Se c'è un campo da calcio, mostra le sue informazioni, altrimenti mostra città e provincia
+            if (Campo != null)
+            {
+                PosizioneLabel.Text = $"{Campo.Nome}, {Campo.Indirizzo}";
+            }
+            else
+            {
+                PosizioneLabel.Text = $"{post.citta} ({post.provincia})";
+            }
+
             CommentoLabel.Text = post.commento;
+        }
+
+        // Handler per visualizzare il campo sulla mappa
+        private async void OnViewOnMapClicked(object sender, EventArgs e)
+        {
+            if (Campo != null)
+            {
+                try
+                {
+                    // Apri l'app mappe con le coordinate del campo
+                    var location = new Microsoft.Maui.Devices.Sensors.Location(Campo.Lat, Campo.Lng);
+                    var options = new Microsoft.Maui.ApplicationModel.MapLaunchOptions
+                    {
+                        Name = Campo.Nome,
+                        NavigationMode = Microsoft.Maui.ApplicationModel.NavigationMode.None
+                    };
+
+                    await Microsoft.Maui.ApplicationModel.Map.Default.OpenAsync(location, options);
+                }
+                catch (Exception ex)
+                {
+                    await DisplayAlert("Errore", $"Impossibile aprire la mappa: {ex.Message}", "OK");
+                }
+            }
         }
 
         private async Task LoadCommentsAsync()
@@ -127,7 +204,7 @@ namespace trovagiocatoriApp.Views
 
                     // Aggiorna la collezione dei commenti
                     Comments.Clear();
-                    foreach (var comment in comments)
+                    foreach (var comment in comments ?? new List<Comment>())
                     {
                         // Recupera il username per ogni commento
                         comment.autore_username = await GetUsernameByEmail(comment.autore_email);
@@ -147,22 +224,21 @@ namespace trovagiocatoriApp.Views
             {
                 var encodedEmail = Uri.EscapeDataString(email);
 
-                // QUI! Chiamo l'auth-service Go per ottenere i dati utente
                 var response = await _sharedClient.GetAsync($"{_apiBaseUrl}/api/user/by-email?email={encodedEmail}");
 
                 if (response.IsSuccessStatusCode)
                 {
                     var json = await response.Content.ReadAsStringAsync();
                     var user = JsonSerializer.Deserialize<User>(json, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-                    return user?.Username ?? email; // Fallback alla mail se non trova username
+                    return user?.Username ?? email;
                 }
 
-                return email; // Fallback alla mail
+                return email;
             }
             catch (Exception ex)
             {
                 Debug.WriteLine($"Errore nel recupero username per {email}: {ex.Message}");
-                return email; // Fallback alla mail
+                return email;
             }
         }
 
@@ -227,6 +303,14 @@ namespace trovagiocatoriApp.Views
             {
                 await DisplayAlert("Errore", $"Errore: {ex.Message}", "OK");
             }
+        }
+
+        // Implementazione INotifyPropertyChanged
+        public new event PropertyChangedEventHandler PropertyChanged;
+
+        protected new void OnPropertyChanged([CallerMemberName] string propertyName = null)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
     }
 }

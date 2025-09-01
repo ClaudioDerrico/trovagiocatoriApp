@@ -17,5 +17,7 @@ namespace trovagiocatoriApp.Models
         public string ora_partita { get; set; }
         public string commento { get; set; }
         public string autore_email { get; set; }
+        public int? campo_id { get; set; }
+        public FootballField campo { get; set; }
     }
 }

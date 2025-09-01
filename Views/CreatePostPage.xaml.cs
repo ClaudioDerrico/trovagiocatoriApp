@@ -8,11 +8,17 @@ using System.Text;
 using System.Text.Json;
 using Microsoft.Maui.Controls;
 using Microsoft.Maui.Storage;
+using System.ComponentModel;
+using System.Runtime.CompilerServices;
+using trovagiocatoriApp.Models;
 
 namespace trovagiocatoriApp.Views
 {
-    public partial class CreatePostPage : ContentPage
+    public partial class CreatePostPage : ContentPage, INotifyPropertyChanged
     {
+        private readonly HttpClient _httpClient = new HttpClient();
+        private readonly string _pythonApiUrl = ApiConfig.PythonApiUrl;
+
         // Proprietà per date
         public DateTime CurrentDate { get; set; }
         public DateTime MaxDate { get; set; }
@@ -23,8 +29,25 @@ namespace trovagiocatoriApp.Views
         // Lista completa delle province italiane
         public List<string> ProvinceOptions { get; set; }
 
-        // Lista filtrata in base al testo inserito nella Entry per provincia (ObservableCollection per notificare la UI)
+        // Lista filtrata in base al testo inserito nella Entry per provincia
         public ObservableCollection<string> FilteredProvinces { get; set; } = new ObservableCollection<string>();
+
+        // Lista dei campi da calcio
+        public ObservableCollection<FootballField> FootballFields { get; set; } = new ObservableCollection<FootballField>();
+        public ObservableCollection<FootballField> FilteredFootballFields { get; set; } = new ObservableCollection<FootballField>();
+
+        // Campo selezionato
+        private FootballField _selectedFootballField;
+        public FootballField SelectedFootballField
+        {
+            get => _selectedFootballField;
+            set
+            {
+                _selectedFootballField = value;
+                OnPropertyChanged();
+                UpdateFormWithSelectedField();
+            }
+        }
 
         public CreatePostPage()
         {
@@ -56,8 +79,67 @@ namespace trovagiocatoriApp.Views
                 "Trieste", "Udine", "Varese", "Venezia", "Verbano-Cusio-Ossola", "Vercelli", "Verona", "Vibo Valentia", "Vicenza", "Viterbo"
             };
 
-            // Imposta il BindingContext affinché i controlli possano leggere le proprietà
+            // Imposta il BindingContext
             BindingContext = this;
+
+            // Carica i campi da calcio
+            _ = LoadFootballFields();
+        }
+
+        protected override async void OnAppearing()
+        {
+            base.OnAppearing();
+            await LoadFootballFields();
+        }
+
+        private async Task LoadFootballFields()
+        {
+            try
+            {
+                var response = await _httpClient.GetAsync($"{_pythonApiUrl}/football-fields/");
+                if (response.IsSuccessStatusCode)
+                {
+                    var json = await response.Content.ReadAsStringAsync();
+                    var fields = JsonSerializer.Deserialize<List<FootballField>>(json,
+                        new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+                    FootballFields.Clear();
+                    foreach (var field in fields ?? new List<FootballField>())
+                    {
+                        FootballFields.Add(field);
+                    }
+
+                    // Inizialmente mostra tutti i campi
+                    UpdateFilteredFootballFields();
+                }
+            }
+            catch (Exception ex)
+            {
+                await DisplayAlert("Errore", $"Impossibile caricare i campi da calcio: {ex.Message}", "OK");
+            }
+        }
+
+        private void UpdateFilteredFootballFields(string provinciaFilter = null)
+        {
+            FilteredFootballFields.Clear();
+
+            var fieldsToShow = string.IsNullOrEmpty(provinciaFilter)
+                ? FootballFields
+                : FootballFields.Where(f => f.Provincia.Equals(provinciaFilter, StringComparison.OrdinalIgnoreCase));
+
+            foreach (var field in fieldsToShow)
+            {
+                FilteredFootballFields.Add(field);
+            }
+        }
+
+        private void UpdateFormWithSelectedField()
+        {
+            if (SelectedFootballField != null)
+            {
+                ProvinciaEntry.Text = SelectedFootballField.Provincia;
+                CittaEntry.Text = SelectedFootballField.Citta;
+            }
         }
 
         // Aggiorna il contatore dei caratteri per il titolo
@@ -105,6 +187,9 @@ namespace trovagiocatoriApp.Views
 
             // Mostra la ListView solo se ci sono suggerimenti e l'utente ha digitato almeno 1 carattere
             ProvinceSuggestionsList.IsVisible = !string.IsNullOrWhiteSpace(text) && FilteredProvinces.Any();
+
+            // Filtra anche i campi da calcio in base alla provincia
+            UpdateFilteredFootballFields(text);
         }
 
         // Gestione della selezione di un suggerimento dalla ListView
@@ -114,12 +199,26 @@ namespace trovagiocatoriApp.Views
             {
                 ProvinciaEntry.Text = selectedProvince;
                 ProvinceSuggestionsList.IsVisible = false;
+                UpdateFilteredFootballFields(selectedProvince);
             }
         }
 
+        // Gestione selezione campo da calcio
+        private void OnFootballFieldSelected(object sender, SelectionChangedEventArgs e)
+        {
+            if (e.CurrentSelection.FirstOrDefault() is FootballField selectedField)
+            {
+                SelectedFootballField = selectedField;
+                // Deseleziona per evitare evidenziazione permanente
+                ((CollectionView)sender).SelectedItem = null;
+            }
+        }
+
+
+
         private async void OnCreatePostClicked(object sender, EventArgs e)
         {
-            //  nessun campo può essere vuoto
+            // Validazione dei campi obbligatori
             if (string.IsNullOrWhiteSpace(TitoloEntry.Text) ||
                 string.IsNullOrWhiteSpace(ProvinciaEntry.Text) ||
                 string.IsNullOrWhiteSpace(CittaEntry.Text) ||
@@ -141,9 +240,10 @@ namespace trovagiocatoriApp.Views
                 await DisplayAlert("Errore", "Seleziona uno sport dalla lista", "OK");
                 return;
             }
+
             var formattedTime = OraPartitaPicker.Time.ToString(@"hh\:mm");
 
-            // Costruzione dell'oggetto post
+            // Costruzione dell'oggetto post con il campo da calcio selezionato
             var post = new
             {
                 titolo = TitoloEntry.Text,
@@ -152,12 +252,13 @@ namespace trovagiocatoriApp.Views
                 sport = SportPicker.SelectedItem.ToString(),
                 data_partita = DataPartitaPicker.Date.ToString("dd-MM-yyyy"),
                 ora_partita = formattedTime,
-                commento = CommentoEditor.Text
+                commento = CommentoEditor.Text,
+                campo_id = SelectedFootballField?.Id // Nuovo campo per il campo da calcio
             };
 
             try
             {
-                // Recupera il cookie di sessione salvato nelle Preferences
+                // Recupera il cookie di sessione
                 var sessionCookie = Preferences.Get("session_id", string.Empty);
                 if (string.IsNullOrEmpty(sessionCookie))
                 {
@@ -165,33 +266,44 @@ namespace trovagiocatoriApp.Views
                     return;
                 }
 
-                // Crea un HttpClientHandler con un CookieContainer per gestire il cookie
-                var handler = new HttpClientHandler();
-                var baseUri = new Uri("http://localhost:8000/"); // Modifica l'URL se usi emulator o ambiente Docker
-                handler.CookieContainer.Add(baseUri, new Cookie("session_id", sessionCookie));
+                // Crea la richiesta HTTP
+                var request = new HttpRequestMessage(HttpMethod.Post, $"{_pythonApiUrl}/posts/");
 
-                using (var client = new HttpClient(handler))
+                // Aggiungi il cookie di sessione
+                request.Headers.Add("Cookie", $"session_id={sessionCookie}");
+
+                // Aggiungi il contenuto JSON
+                var json = JsonSerializer.Serialize(post);
+                request.Content = new StringContent(json, Encoding.UTF8, "application/json");
+
+                var response = await _httpClient.SendAsync(request);
+
+                if (response.IsSuccessStatusCode)
                 {
-                    var content = new StringContent(JsonSerializer.Serialize(post), Encoding.UTF8, "application/json");
+                    var successMessage = SelectedFootballField != null
+                        ? $"Il tuo post è stato creato!\n\nCampo selezionato: {SelectedFootballField.Nome}"
+                        : "Il tuo post è stato creato!";
 
-                    var response = await client.PostAsync("http://localhost:8000/posts/", content);
-
-                    if (response.IsSuccessStatusCode)
-                    {
-                        await DisplayAlert("Post creato", "Il tuo post è stato creato!", "OK");
-                        await Shell.Current.GoToAsync("//HomePage");
-
-                    }
-                    else
-                    {
-                        await DisplayAlert("Errore", "Si è verificato un errore nel creare il post.", "OK");
-                    }
+                    await DisplayAlert("Post creato", successMessage, "OK");
+                    await Shell.Current.GoToAsync("//HomePage");
+                }
+                else
+                {
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    await DisplayAlert("Errore", $"Si è verificato un errore nel creare il post: {errorContent}", "OK");
                 }
             }
             catch (Exception ex)
             {
                 await DisplayAlert("Errore", $"Errore durante la creazione del post: {ex.Message}", "OK");
             }
+        }
+
+        public new event PropertyChangedEventHandler PropertyChanged;
+
+        protected override void OnPropertyChanged([CallerMemberName] string propertyName = null)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
     }
 }

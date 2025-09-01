@@ -2,15 +2,21 @@
 <ContentPage 
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:converters="clr-namespace:trovagiocatoriApp.Converters"
     x:Class="trovagiocatoriApp.Views.CreatePostPage"
     Title="Nuovo Post"
-    BackgroundColor="#f8f9fa"
-    ControlTemplate="{StaticResource PageWithBackButtonOnly}">
+    BackgroundColor="#f8f9fa">
+
+    <ContentPage.Resources>
+        <ResourceDictionary>
+            <converters:IsNotNullConverter x:Key="IsNotNullConverter"/>
+        </ResourceDictionary>
+    </ContentPage.Resources>
 
     <Grid RowDefinitions="Auto,*,Auto" RowSpacing="0">
         <!-- Header -->
         <Grid Grid.Row="0" BackgroundColor="#404040" Padding="20,15">
-            <Label Text="Crea un nuovo evento sportivo" 
+            <Label Text="🏟️ Crea un nuovo evento sportivo" 
                    TextColor="White" 
                    FontSize="20" 
                    FontAttributes="Bold" 
@@ -51,58 +57,142 @@
                     </Grid>
                 </Frame>
 
-                <!-- Località -->
-                <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
-                    <VerticalStackLayout Grid.Column="0" Spacing="2">
-                        <Label Text="Provincia" FontSize="14" TextColor="#555555" Margin="0,0,0,-5"/>
-                        <Frame Padding="0" CornerRadius="8" HasShadow="False" BorderColor="#e0e0e0">
-                            <Entry x:Name="ProvinciaEntry" 
-                                   Placeholder="Provincia" 
-                                   TextChanged="ProvinciaEntry_TextChanged"
-                                   Margin="12,0" 
-                                   HeightRequest="48"/>
-                        </Frame>
-                        <ListView x:Name="ProvinceSuggestionsList"
-                                  ItemsSource="{Binding FilteredProvinces}"
-                                  IsVisible="False"
-                                  SelectionMode="Single"
-                                  HeightRequest="120"
-                                  BackgroundColor="White"
-                                  ItemSelected="ProvinceSuggestionsList_ItemSelected"
-                                  Margin="0,2">
-                            <ListView.ItemTemplate>
-                                <DataTemplate>
-                                    <ViewCell>
-                                        <Grid Padding="12,8">
-                                            <Label Text="{Binding .}" FontSize="14" TextColor="#333333"/>
-                                        </Grid>
-                                    </ViewCell>
-                                </DataTemplate>
-                            </ListView.ItemTemplate>
-                        </ListView>
-                    </VerticalStackLayout>
+                <!-- Selezione Campo da Calcio -->
+                <Label Text="Campo da Calcio" FontSize="14" TextColor="#555555" Margin="0,10,0,-5"/>
+                <Frame Padding="12" CornerRadius="8" HasShadow="False" BorderColor="#e0e0e0" BackgroundColor="#f8f9fa">
+                    <VerticalStackLayout Spacing="10">
 
-                    <VerticalStackLayout Grid.Column="1" Spacing="2">
-                        <Label Text="Città" FontSize="14" TextColor="#555555" Margin="0,0,0,-5"/>
-                        <Frame Padding="0" CornerRadius="8" HasShadow="False" BorderColor="#e0e0e0">
-                            <Grid ColumnDefinitions="*, Auto">
-                                <Entry x:Name="CittaEntry" 
-                                       Placeholder="Città" 
-                                       MaxLength="35" 
-                                       TextChanged="OnCittaTextChanged"
-                                       Margin="12,0" 
-                                       HeightRequest="48"
-                                       VerticalOptions="Center"/>
-                                <Label x:Name="CaratteriRimanentiCitta" 
-                                       Grid.Column="1" 
-                                       FontSize="10" 
-                                       TextColor="#757575"
-                                       Margin="0,0,8,0"
-                                       VerticalOptions="Center"/>
-                            </Grid>
+                        <!-- Campo selezionato (se presente) -->
+                        <Frame x:Name="SelectedFieldFrame" 
+                               IsVisible="{Binding SelectedFootballField, Converter={StaticResource IsNotNullConverter}}"
+                               BackgroundColor="#e8f5e8" 
+                               BorderColor="#4CAF50" 
+                               CornerRadius="8" 
+                               Padding="12"
+                               HasShadow="False">
+                            <VerticalStackLayout Spacing="4">
+                                <Label Text="{Binding SelectedFootballField.Nome}" 
+                                       FontAttributes="Bold" 
+                                       FontSize="16" 
+                                       TextColor="#2e7d32"/>
+                                <Label Text="{Binding SelectedFootballField.Indirizzo}" 
+                                       FontSize="14" 
+                                       TextColor="#555"/>
+                                <Label Text="{Binding SelectedFootballField.Tipo, StringFormat='🏟️ {0}'}" 
+                                       FontSize="12" 
+                                       TextColor="#777"/>
+                                <Label Text="{Binding SelectedFootballField.Descrizione}" 
+                                       FontSize="12" 
+                                       TextColor="#666"
+                                       LineBreakMode="WordWrap"/>
+                            </VerticalStackLayout>
                         </Frame>
+
+                        <!-- Filtro per provincia -->
+                        <VerticalStackLayout Spacing="5">
+                            <Label Text="Filtra per provincia:" FontSize="12" TextColor="#666"/>
+                            <Entry x:Name="ProvinciaEntry" 
+                                   Placeholder="Digita una provincia..." 
+                                   TextChanged="ProvinciaEntry_TextChanged"
+                                   BackgroundColor="White"
+                                   HeightRequest="40"/>
+
+                            <!-- Suggerimenti province -->
+                            <ListView x:Name="ProvinceSuggestionsList"
+                                      ItemsSource="{Binding FilteredProvinces}"
+                                      IsVisible="False"
+                                      SelectionMode="Single"
+                                      HeightRequest="120"
+                                      BackgroundColor="White"
+                                      ItemSelected="ProvinceSuggestionsList_ItemSelected"
+                                      Margin="0,2">
+                                <ListView.ItemTemplate>
+                                    <DataTemplate>
+                                        <ViewCell>
+                                            <Grid Padding="12,8">
+                                                <Label Text="{Binding .}" FontSize="14" TextColor="#333333"/>
+                                            </Grid>
+                                        </ViewCell>
+                                    </DataTemplate>
+                                </ListView.ItemTemplate>
+                            </ListView>
+                        </VerticalStackLayout>
+
+                        <!-- Lista campi disponibili -->
+                        <VerticalStackLayout Spacing="5">
+                            <Label Text="Campi disponibili:" FontSize="12" TextColor="#666"/>
+                            <CollectionView x:Name="FootballFieldsCollectionView"
+                                            ItemsSource="{Binding FilteredFootballFields}"
+                                            SelectionMode="Single"
+                                            SelectionChanged="OnFootballFieldSelected"
+                                            HeightRequest="200"
+                                            BackgroundColor="White">
+                                <CollectionView.ItemsLayout>
+                                    <LinearItemsLayout Orientation="Vertical" ItemSpacing="8"/>
+                                </CollectionView.ItemsLayout>
+                                <CollectionView.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border Stroke="#e0e0e0" 
+                                                StrokeThickness="1" 
+                                                BackgroundColor="White"
+                                                StrokeShape="RoundRectangle 8"
+                                                Padding="12">
+                                            <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto,Auto">
+                                                <Label Grid.Row="0" Grid.Column="0"
+                                                       Text="{Binding Nome}" 
+                                                       FontAttributes="Bold" 
+                                                       FontSize="14" 
+                                                       TextColor="#333"/>
+                                                <Label Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2"
+                                                       Text="{Binding Indirizzo}" 
+                                                       FontSize="12" 
+                                                       TextColor="#666"/>
+                                                <Label Grid.Row="2" Grid.Column="0"
+                                                       Text="{Binding Tipo, StringFormat='🏟️ {0}'}" 
+                                                       FontSize="11" 
+                                                       TextColor="#888"/>
+                                                <Label Grid.Row="0" Grid.Column="1"
+                                                       Text="📍" 
+                                                       FontSize="16" 
+                                                       VerticalOptions="Center"/>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </CollectionView.ItemTemplate>
+                                <CollectionView.EmptyView>
+                                    <Label Text="Nessun campo disponibile per questa provincia" 
+                                           HorizontalOptions="Center" 
+                                           VerticalOptions="Center"
+                                           FontSize="14" 
+                                           TextColor="#999"/>
+                                </CollectionView.EmptyView>
+                            </CollectionView>
+                        </VerticalStackLayout>
+
                     </VerticalStackLayout>
-                </Grid>
+                </Frame>
+
+                <!-- Città (popolata automaticamente dal campo selezionato) -->
+                <Label Text="Città" FontSize="14" TextColor="#555555" Margin="0,0,0,-5"/>
+                <Frame Padding="0" CornerRadius="8" HasShadow="False" BorderColor="#e0e0e0">
+                    <Grid ColumnDefinitions="*, Auto">
+                        <Entry x:Name="CittaEntry" 
+                               Placeholder="Seleziona prima un campo..." 
+                               IsReadOnly="True"
+                               BackgroundColor="#f5f5f5"
+                               MaxLength="35" 
+                               TextChanged="OnCittaTextChanged"
+                               Margin="12,0" 
+                               HeightRequest="48"
+                               VerticalOptions="Center"/>
+                        <Label x:Name="CaratteriRimanentiCitta" 
+                               Grid.Column="1" 
+                               FontSize="10" 
+                               TextColor="#757575"
+                               Margin="0,0,8,0"
+                               VerticalOptions="Center"/>
+                    </Grid>
+                </Frame>
 
                 <!-- Data e Ora -->
                 <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
@@ -147,13 +237,17 @@
 
         <!-- Footer with Button -->
         <Grid Grid.Row="2" BackgroundColor="White" Padding="16">
-            <Button Text="PUBBLICA"
+            <Button Text="⚽ PUBBLICA EVENTO"
                     Clicked="OnCreatePostClicked"
                     BackgroundColor="#FC4C02"
                     TextColor="White"
                     FontAttributes="Bold"
                     CornerRadius="25"
-                    HeightRequest="50"/>
+                    HeightRequest="50">
+                <Button.Shadow>
+                    <Shadow Brush="#80FC4C02" Offset="0,4" Radius="8" Opacity="0.3"/>
+                </Button.Shadow>
+            </Button>
         </Grid>
     </Grid>
 </ContentPage>

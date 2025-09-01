@@ -135,6 +135,70 @@
                             </Grid>
                         </VerticalStackLayout>
 
+                        <!-- Sezione Campo da Calcio (da aggiungere dopo la sezione "Dettagli Partita") -->
+                        <BoxView HeightRequest="1" Color="{StaticResource SeparatorColor}" Margin="0,6,0,0" 
+         IsVisible="{Binding Campo, Converter={StaticResource IsNotNullConverter}}" />
+
+                        <VerticalStackLayout Spacing="12" IsVisible="{Binding Campo, Converter={StaticResource IsNotNullConverter}}">
+                            <Label Text="Campo da Calcio" Style="{StaticResource SectionTitleTextStyle}" />
+
+                            <!-- Informazioni del campo -->
+                            <Frame BackgroundColor="#f8f9fa" 
+                           CornerRadius="12" 
+                           Padding="16" 
+                           HasShadow="False" 
+                           BorderColor="{StaticResource BorderColor}">
+                                                <VerticalStackLayout Spacing="8">
+                                                    <Label x:Name="CampoNomeLabel" 
+                                   Text="{Binding Campo.Nome}"
+                                   FontFamily="OpenSansSemiBold"
+                                   FontSize="16"
+                                   TextColor="{StaticResource PrimaryAccentColor}" />
+
+                                                    <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto" RowSpacing="4">
+                                                        <Image Grid.Row="0" Grid.Column="0" 
+                                       Source="location_pin.png" 
+                                       Style="{StaticResource DetailIconImageStyle}" />
+                                                        <Label Grid.Row="0" Grid.Column="1" 
+                                       x:Name="CampoIndirizzoLabel" 
+                                       Text="{Binding Campo.Indirizzo}"
+                                       Style="{StaticResource InfoValueTextStyle}" 
+                                       VerticalOptions="Center"/>
+
+                                                        <Image Grid.Row="1" Grid.Column="0" 
+                                       Source="field_type.png" 
+                                       Style="{StaticResource DetailIconImageStyle}" />
+                                                        <Label Grid.Row="1" Grid.Column="1" 
+                                       x:Name="CampoTipoLabel" 
+                                       Text="{Binding Campo.Tipo, StringFormat='🏟️ {0}'}"
+                                       Style="{StaticResource InfoValueTextStyle}" 
+                                       VerticalOptions="Center"/>
+
+                                                        <Image Grid.Row="2" Grid.Column="0" 
+                                       Source="info.png" 
+                                       Style="{StaticResource DetailIconImageStyle}" />
+                                                        <Label Grid.Row="2" Grid.Column="1" 
+                                       x:Name="CampoDescrizioneLabel" 
+                                       Text="{Binding Campo.Descrizione}"
+                                       Style="{StaticResource CommentTextStyle}" 
+                                       VerticalOptions="Center"
+                                       LineBreakMode="WordWrap"/>
+                                                    </Grid>
+
+                                                    <!-- Coordinate per mappe (opzionale) -->
+                                    <Button Text="📍 Visualizza su Mappa" 
+                                    x:Name="ViewOnMapButton"
+                                    BackgroundColor="{StaticResource PrimaryAccentColor}"
+                                    TextColor="White"
+                                    CornerRadius="20"
+                                    FontSize="12"
+                                    HeightRequest="35"
+                                    Clicked="OnViewOnMapClicked"
+                                    Margin="0,8,0,0"/>
+                                </VerticalStackLayout>
+                            </Frame>
+                        </VerticalStackLayout>
+
                         <BoxView HeightRequest="1" Color="{StaticResource SeparatorColor}" Margin="0,6,0,0" />
 
                         <VerticalStackLayout Spacing="10">
