@@ -84,22 +84,21 @@ namespace trovagiocatoriApp.Views
             PostsRefreshView.IsRefreshing = false;
         }
 
+        private async void OnAddPostClicked(object sender, EventArgs e)
+        {
+            // CAMBIA DA Shell.GoToAsync A Navigation.PushAsync
+            await Navigation.PushAsync(new CreatePostPage());
+        }
+
         private async void OnPostSelected(object sender, SelectionChangedEventArgs e)
         {
             if (e.CurrentSelection.FirstOrDefault() is PostResponse selectedPost)
             {
-                // Deseleziona l'elemento (importante per UX)
                 PostsCollectionView.SelectedItem = null;
 
-                // Naviga alla pagina di dettaglio
+                // QUESTO È GIÀ CORRETTO - mantienilo così
                 await Navigation.PushAsync(new PostDetailPage(selectedPost.id));
             }
-        }
-
-        private async void OnAddPostClicked(object sender, EventArgs e)
-        {
-            // Naviga alla pagina di creazione post
-            // await Navigation.PushAsync(new CreatePostPage());
         }
     }
 }

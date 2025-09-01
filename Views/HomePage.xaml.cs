@@ -38,11 +38,10 @@ public partial class HomePage : ContentPage
 
     private async void PostPageClicked(object sender, EventArgs e)
     {
-        var region = RegionPicker.SelectedItem?.ToString(); // Ho aggiunto anche la regione, se serve
+        var region = RegionPicker.SelectedItem?.ToString();
         var province = ProvincePicker.SelectedItem?.ToString();
         var sport = SportPicker.SelectedItem?.ToString();
 
-        // Potresti voler validare anche la regione se diventa obbligatoria
         if (string.IsNullOrEmpty(province) || string.IsNullOrEmpty(sport) || string.IsNullOrEmpty(region))
         {
             ErrorLabel.IsVisible = true;
@@ -51,18 +50,16 @@ public partial class HomePage : ContentPage
         }
         ErrorLabel.IsVisible = false;
 
-        // Naviga alla pagina PostsListPage passando i criteri selezionati
-        // Assumendo che PostPage accetti anche la regione
-        await Navigation.PushAsync(new PostPage(province, sport)); // Modifica PostPage se devi passare anche la regione
+        // USA NAVIGATION TRADIZIONALE
+        await Navigation.PushAsync(new PostPage(province, sport));
     }
 
     private async void OnCreatePostButtonClicked(object sender, EventArgs e)
     {
-        // Naviga alla pagina CreatePostPage
+        // USA NAVIGATION TRADIZIONALE
         await Navigation.PushAsync(new CreatePostPage());
     }
 
-    // NUOVI METODI PER LA NAVIGAZIONE
     private async void OnAboutAppTapped(object sender, EventArgs e)
     {
         await Navigation.PushAsync(new AboutAppPage());

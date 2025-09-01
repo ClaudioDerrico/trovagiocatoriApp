@@ -1,17 +1,16 @@
-﻿using Microsoft.Maui.Controls;
-using Microsoft.Maui.Storage;
-using System;
-using System.Collections.Generic;
+﻿using System;
 using System.Collections.ObjectModel;
-using System.ComponentModel;
 using System.Diagnostics;
-using System.Globalization;
-using System.Linq;
 using System.Net.Http;
-using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
+using System.Collections.Generic;
+using System.Linq;
+using System.ComponentModel;
+using System.Runtime.CompilerServices;
+using Microsoft.Maui.Controls;
+using Microsoft.Maui.Storage;
 using trovagiocatoriApp.Models;
 
 namespace trovagiocatoriApp.Views
@@ -22,6 +21,9 @@ namespace trovagiocatoriApp.Views
         private static readonly HttpClient _sharedClient = CreateHttpClient();
         private readonly string _apiBaseUrl = ApiConfig.BaseUrl;
         private readonly string _pythonApiBaseUrl = ApiConfig.PythonApiUrl;
+
+        // Stato del preferito
+        private bool _isFavorite = false;
 
         // ObservableCollection per i commenti
         public ObservableCollection<Comment> Comments { get; set; } = new ObservableCollection<Comment>();
@@ -59,6 +61,7 @@ namespace trovagiocatoriApp.Views
             base.OnAppearing();
             await LoadPostDetailAsync();
             await LoadCommentsAsync();
+            await CheckFavoriteStatusAsync();
         }
 
         private async Task LoadPostDetailAsync()
@@ -144,61 +147,109 @@ namespace trovagiocatoriApp.Views
             // Dati post
             TitoloLabel.Text = post.titolo;
             DataOraLabel.Text = $"{post.data_partita} alle {post.ora_partita}";
-
-
             CommentoLabel.Text = post.commento;
+        }
+
+        // NUOVE FUNZIONI PER I PREFERITI
+
+        private async Task CheckFavoriteStatusAsync()
+        {
+            try
+            {
+                var request = new HttpRequestMessage(HttpMethod.Get, $"{_apiBaseUrl}/favorites/check/{_postId}");
+
+                if (Preferences.ContainsKey("session_id"))
+                {
+                    string sessionId = Preferences.Get("session_id", "");
+                    request.Headers.Add("Cookie", $"session_id={sessionId}");
+                }
+
+                var response = await _sharedClient.SendAsync(request);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var json = await response.Content.ReadAsStringAsync();
+                    var result = JsonSerializer.Deserialize<Dictionary<string, object>>(json);
+
+                    if (result.ContainsKey("is_favorite") && result["is_favorite"] is JsonElement element)
+                    {
+                        _isFavorite = element.GetBoolean();
+                        UpdateFavoriteIcon();
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Errore nel controllo preferiti: {ex.Message}");
+            }
+        }
+
+        private async void OnFavoriteButtonClicked(object sender, EventArgs e)
+        {
+            try
+            {
+                var request = new HttpRequestMessage(
+                    HttpMethod.Post,
+                    _isFavorite ? $"{_apiBaseUrl}/favorites/remove" : $"{_apiBaseUrl}/favorites/add"
+                );
+
+                if (Preferences.ContainsKey("session_id"))
+                {
+                    string sessionId = Preferences.Get("session_id", "");
+                    request.Headers.Add("Cookie", $"session_id={sessionId}");
+                }
+
+                var payload = new { post_id = _postId };
+                var json = JsonSerializer.Serialize(payload);
+                request.Content = new StringContent(json, Encoding.UTF8, "application/json");
+
+                var response = await _sharedClient.SendAsync(request);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    _isFavorite = !_isFavorite;
+                    UpdateFavoriteIcon();
+
+                    var message = _isFavorite ? "Aggiunto ai preferiti!" : "Rimosso dai preferiti!";
+                    await DisplayAlert("Preferiti", message, "OK");
+                }
+                else
+                {
+                    await DisplayAlert("Errore", "Impossibile aggiornare i preferiti", "OK");
+                }
+            }
+            catch (Exception ex)
+            {
+                await DisplayAlert("Errore", $"Errore: {ex.Message}", "OK");
+            }
+        }
+
+        private void UpdateFavoriteIcon()
+        {
+            FavoriteButton.Source = _isFavorite ? "heart_filled.png" : "heart_empty.png";
         }
 
         // Handler per visualizzare il campo sulla mappa
         private async void OnViewOnMapClicked(object sender, EventArgs e)
         {
-            if (Campo == null)
-            {
-                await DisplayAlert("Info", "Coordinate del campo non disponibili.", "OK");
-                return;
-            }
-
-            double lat = Campo.Lat;
-            double lng = Campo.Lng;
-
-            string latStr = lat.ToString(CultureInfo.InvariantCulture);
-            string lngStr = lng.ToString(CultureInfo.InvariantCulture);
-            string placeNameEscaped = Uri.EscapeDataString(Campo.Nome ?? "Posizione");
-
-            // Se sei su Windows, fai direttamente fallback al browser (più affidabile)
-            bool preferBrowserFallback = DeviceInfo.Platform == DevicePlatform.WinUI;
-
-            if (!preferBrowserFallback)
+            if (Campo != null)
             {
                 try
                 {
-                    var location = new Location(lat, lng);
-                    var options = new MapLaunchOptions
+                    // Apri l'app mappe con le coordinate del campo
+                    var location = new Microsoft.Maui.Devices.Sensors.Location(Campo.Lat, Campo.Lng);
+                    var options = new Microsoft.Maui.ApplicationModel.MapLaunchOptions
                     {
-                        Name = Campo.Nome ?? "Posizione",
+                        Name = Campo.Nome,
                         NavigationMode = Microsoft.Maui.ApplicationModel.NavigationMode.None
                     };
 
-                    await Map.Default.OpenAsync(location, options);
-                    return; // tutto ok
+                    await Microsoft.Maui.ApplicationModel.Map.Default.OpenAsync(location, options);
                 }
                 catch (Exception ex)
                 {
-                    Debug.WriteLine($"Map.Default failed (will fallback to browser): {ex.Message}");
-                    // prosegui al fallback
+                    await DisplayAlert("Errore", $"Impossibile aprire la mappa: {ex.Message}", "OK");
                 }
-            }
-
-            // Fallback: apri Google Maps nel browser (funziona sempre)
-            try
-            {
-                var googleMapsUri = new Uri($"https://www.google.com/maps/search/?api=1&query={latStr},{lngStr}");
-                await Launcher.OpenAsync(googleMapsUri);
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine($"Fallback browser open failed: {ex.Message}");
-                await DisplayAlert("Errore", $"Impossibile aprire la mappa: {ex.Message}", "OK");
             }
         }
 
@@ -324,6 +375,11 @@ namespace trovagiocatoriApp.Views
             {
                 await DisplayAlert("Errore", $"Errore: {ex.Message}", "OK");
             }
+        }
+
+        private async void OnBackButtonClicked(object sender, EventArgs e)
+        {
+            await Navigation.PopAsync();
         }
 
         // Implementazione INotifyPropertyChanged

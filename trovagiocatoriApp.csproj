@@ -78,7 +78,15 @@
 	</ItemGroup>
 
 	<ItemGroup>
+	  <MauiImage Remove="Resources\Images\HeartFilled.png" />
+	</ItemGroup>
+
+	<ItemGroup>
 	  <MauiXaml Remove="Views\ChangePassword.xaml" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <None Remove="Resources\Images\HeartFilled.png" />
 	</ItemGroup>
 
 	<ItemGroup>

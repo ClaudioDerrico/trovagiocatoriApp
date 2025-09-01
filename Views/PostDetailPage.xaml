@@ -101,7 +101,37 @@
                 <Shadow Brush="#99AAB8" Offset="0,2" Radius="6" Opacity="0.1"/>
             </Grid.Shadow>
 
-            <Label Grid.Column="1" Text="Dettaglio Partita" FontFamily="OpenSansSemiBold" FontSize="18" TextColor="{StaticResource HeaderBarTextColor}" VerticalOptions="Center" HorizontalOptions="CenterAndExpand" Margin="0,0,52,0"/>
+            <!-- Pulsante Indietro (opzionale) -->
+            <ImageButton Grid.Column="0"
+                 Source="back_arrow.png"
+                 BackgroundColor="Transparent"
+                 WidthRequest="40"
+                 HeightRequest="40"
+                 Margin="10,0,0,0"
+                 VerticalOptions="Center"
+                 Clicked="OnBackButtonClicked"
+                 IsVisible="False"/>
+
+            <!-- Titolo -->
+            <Label Grid.Column="1" 
+           Text="Dettaglio Partita" 
+           FontFamily="OpenSansSemiBold" 
+           FontSize="18" 
+           TextColor="{StaticResource HeaderBarTextColor}" 
+           VerticalOptions="Center" 
+           HorizontalOptions="CenterAndExpand" 
+           Margin="0,0,52,0"/>
+
+            <!-- Pulsante Preferiti (IL CUORE) -->
+            <ImageButton Grid.Column="2"
+                 x:Name="FavoriteButton"
+                 Source="heart_empty.png"
+                 BackgroundColor="Transparent"
+                 WidthRequest="50"
+                 HeightRequest="50"
+                 Margin="0,0,15,0"
+                 VerticalOptions="Center"
+                 Clicked="OnFavoriteButtonClicked"/>
         </Grid>
 
         <ScrollView Grid.Row="1">

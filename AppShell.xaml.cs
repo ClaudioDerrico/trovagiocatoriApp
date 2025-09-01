@@ -12,16 +12,18 @@ namespace trovagiocatoriApp
         {
             InitializeComponent();
 
-            // Registra tutte le route necessarie
-            Routing.RegisterRoute("LoginPage", typeof(LoginPage));
-            Routing.RegisterRoute("RegisterPage", typeof(RegisterPage));
-            Routing.RegisterRoute("HomePage", typeof(HomePage));
-            Routing.RegisterRoute("ProfilePage", typeof(ProfilePage));
-            Routing.RegisterRoute("PostPage", typeof(PostPage));
-            Routing.RegisterRoute("PostDetailPage", typeof(PostDetailPage));
-            Routing.RegisterRoute("CreatePostPage", typeof(CreatePostPage));
-            Routing.RegisterRoute("AboutAppPage", typeof(AboutAppPage));
-            Routing.RegisterRoute("ChangePasswordPage", typeof(ChangePasswordPage));
+            // RIMUOVI TUTTE QUESTE ROUTE:
+            // Routing.RegisterRoute("LoginPage", typeof(LoginPage));
+            // Routing.RegisterRoute("RegisterPage", typeof(RegisterPage));
+            // Routing.RegisterRoute("HomePage", typeof(HomePage));
+            // Routing.RegisterRoute("ProfilePage", typeof(ProfilePage));
+            // Routing.RegisterRoute("PostPage", typeof(PostPage));
+            // Routing.RegisterRoute("CreatePostPage", typeof(CreatePostPage));
+            // Routing.RegisterRoute("AboutAppPage", typeof(AboutAppPage));
+            // Routing.RegisterRoute("ChangePasswordPage", typeof(ChangePasswordPage));
+
+            // LASCIA SOLO QUESTO COMMENTO:
+            // Usando solo Navigation tradizionale per evitare route duplicate
         }
 
         protected override async void OnAppearing()
