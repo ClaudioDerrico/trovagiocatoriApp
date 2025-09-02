@@ -130,7 +130,7 @@
                         </HorizontalStackLayout>
 
                         <!-- Info Evento in Grid -->
-                        <Grid RowDefinitions="Auto,Auto,Auto" ColumnDefinitions="*,*" RowSpacing="16" ColumnSpacing="16">
+                        <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto" ColumnDefinitions="*,*" RowSpacing="16" ColumnSpacing="16">
 
                             <!-- Data e Ora -->
                             <HorizontalStackLayout Grid.Row="0" Grid.Column="0" Spacing="12">
@@ -171,8 +171,35 @@
                                 </VerticalStackLayout>
                             </HorizontalStackLayout>
 
+                            <!-- Livello -->
+                            <HorizontalStackLayout Grid.Row="1" Grid.Column="1" Spacing="12">
+                                <Label Text="🏆" FontSize="20"/>
+                                <VerticalStackLayout Spacing="2">
+                                    <Label Text="Livello" Style="{StaticResource SecondaryTextStyle}" FontSize="12"/>
+                                    <Label x:Name="LivelloLabel" 
+                                           Text="🟡 Intermedio" 
+                                           Style="{StaticResource InfoLabelStyle}" 
+                                           FontAttributes="Bold"
+                                           FontSize="14"/>
+                                </VerticalStackLayout>
+                            </HorizontalStackLayout>
+
+                            <!-- NUOVO: Numero Giocatori -->
+                            <HorizontalStackLayout Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" Spacing="12">
+                                <Label Text="👥" FontSize="20"/>
+                                <VerticalStackLayout Spacing="2">
+                                    <Label Text="Giocatori richiesti" Style="{StaticResource SecondaryTextStyle}" FontSize="12"/>
+                                    <Label x:Name="NumeroGiocatoriLabel" 
+                                           Text="Cerco 5 giocatori" 
+                                           Style="{StaticResource InfoLabelStyle}" 
+                                           FontAttributes="Bold"
+                                           FontSize="14"
+                                           TextColor="#2196F3"/>
+                                </VerticalStackLayout>
+                            </HorizontalStackLayout>
+
                             <!-- Campo Sportivo -->
-                            <HorizontalStackLayout Grid.Row="1" Grid.Column="1" Spacing="12"
+                            <HorizontalStackLayout Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2" Spacing="12"
                                                    IsVisible="{Binding Campo, Converter={StaticResource IsNotNullConverter}}">
                                 <Label Text="🏟️" FontSize="20"/>
                                 <VerticalStackLayout Spacing="2">
@@ -187,7 +214,7 @@
                             </HorizontalStackLayout>
 
                             <!-- Dettagli Campo (span su 2 colonne) -->
-                            <VerticalStackLayout Grid.Row="2" Grid.ColumnSpan="2" Spacing="12" 
+                            <VerticalStackLayout Grid.Row="4" Grid.ColumnSpan="2" Spacing="12" 
                                                  IsVisible="{Binding Campo, Converter={StaticResource IsNotNullConverter}}">
                                 <Frame BackgroundColor="{StaticResource InputColor}" 
                                        CornerRadius="12" 

@@ -5,6 +5,7 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.Maui.Controls;
 using trovagiocatoriApp.Models;
+using System.Linq;
 
 namespace trovagiocatoriApp.Views
 {
@@ -12,6 +13,8 @@ namespace trovagiocatoriApp.Views
     {
         private readonly string SelectedProvince;
         private readonly string SelectedSport;
+        private List<PostResponse> _allPosts = new List<PostResponse>();
+        private List<PostResponse> _filteredPosts = new List<PostResponse>();
 
         public PostPage(string province, string sport)
         {
@@ -27,14 +30,12 @@ namespace trovagiocatoriApp.Views
             await LoadPostsAsync();
         }
 
-
-
         private async Task LoadPostsAsync()
         {
             try
             {
                 using var client = new HttpClient();
-                var url = $"http://localhost:8000/posts/search?provincia={Uri.EscapeDataString(SelectedProvince)}&sport={Uri.EscapeDataString(SelectedSport)}";
+                var url = $"{ApiConfig.PythonApiUrl}/posts/search?provincia={Uri.EscapeDataString(SelectedProvince)}&sport={Uri.EscapeDataString(SelectedSport)}";
                 var response = await client.GetAsync(url);
 
                 if (response.IsSuccessStatusCode)
@@ -43,7 +44,9 @@ namespace trovagiocatoriApp.Views
                     var posts = JsonSerializer.Deserialize<List<PostResponse>>(json,
                         new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
 
-                    PostsCollectionView.ItemsSource = posts;
+                    _allPosts = posts ?? new List<PostResponse>();
+                    _filteredPosts = new List<PostResponse>(_allPosts);
+                    PostsCollectionView.ItemsSource = _filteredPosts;
                 }
                 else
                 {
@@ -57,24 +60,61 @@ namespace trovagiocatoriApp.Views
             }
         }
 
-        private async void OnPostTapped(object sender, ItemTappedEventArgs e)
+        private async void OnFilterButtonClicked(object sender, EventArgs e)
         {
-            if (e.Item is PostResponse post)
+            // Mostra un action sheet per filtrare per livello
+            string action = await DisplayActionSheet("Filtra per livello", "Annulla", null,
+                "Tutti i livelli", "🟢 Principiante", "🟡 Intermedio", "🔴 Avanzato");
+
+            if (action != null && action != "Annulla")
             {
-                ((ListView)sender).SelectedItem = null;  // deseleziona
-                await Navigation.PushAsync(new PostDetailPage(post.id));
+                ApplyLevelFilter(action);
             }
         }
 
-
-        private void OnFilterButtonClicked(object sender, EventArgs e)
+        private void ApplyLevelFilter(string selectedFilter)
         {
-            // Implementa la logica di filtro
+            switch (selectedFilter)
+            {
+                case "Tutti i livelli":
+                    _filteredPosts = new List<PostResponse>(_allPosts);
+                    break;
+                case "🟢 Principiante":
+                    _filteredPosts = _allPosts.Where(p => p.livello == "Principiante").ToList();
+                    break;
+                case "🟡 Intermedio":
+                    _filteredPosts = _allPosts.Where(p => p.livello == "Intermedio").ToList();
+                    break;
+                case "🔴 Avanzato":
+                    _filteredPosts = _allPosts.Where(p => p.livello == "Avanzato").ToList();
+                    break;
+            }
+
+            PostsCollectionView.ItemsSource = _filteredPosts;
+
+            // Aggiorna il titolo per mostrare il filtro applicato
+            var filterText = selectedFilter == "Tutti i livelli" ? "" : $" - {selectedFilter}";
+            TitleLabel.Text = $"{SelectedProvince} - {SelectedSport}{filterText}";
         }
 
         private void OnSearchTextChanged(object sender, TextChangedEventArgs e)
         {
-            // Implementa la logica di ricerca
+            var searchText = e.NewTextValue?.ToLower() ?? "";
+
+            if (string.IsNullOrWhiteSpace(searchText))
+            {
+                PostsCollectionView.ItemsSource = _filteredPosts;
+            }
+            else
+            {
+                var searchResults = _filteredPosts.Where(p =>
+                    p.titolo.ToLower().Contains(searchText) ||
+                    p.commento.ToLower().Contains(searchText) ||
+                    p.citta.ToLower().Contains(searchText)
+                ).ToList();
+
+                PostsCollectionView.ItemsSource = searchResults;
+            }
         }
 
         private async void OnRefreshing(object sender, EventArgs e)
@@ -86,7 +126,6 @@ namespace trovagiocatoriApp.Views
 
         private async void OnAddPostClicked(object sender, EventArgs e)
         {
-            // CAMBIA DA Shell.GoToAsync A Navigation.PushAsync
             await Navigation.PushAsync(new CreatePostPage());
         }
 
@@ -95,8 +134,6 @@ namespace trovagiocatoriApp.Views
             if (e.CurrentSelection.FirstOrDefault() is PostResponse selectedPost)
             {
                 PostsCollectionView.SelectedItem = null;
-
-                // QUESTO È GIÀ CORRETTO - mantienilo così
                 await Navigation.PushAsync(new PostDetailPage(selectedPost.id));
             }
         }

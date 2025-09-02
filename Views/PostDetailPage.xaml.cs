@@ -148,7 +148,56 @@ namespace trovagiocatoriApp.Views
             // Dati post
             TitoloLabel.Text = post.titolo;
             DataOraLabel.Text = $"{post.data_partita} alle {post.ora_partita}";
+            LocalitaLabel.Text = $"{post.citta}, {post.provincia}";
+            SportLabel.Text = post.sport;
             CommentoLabel.Text = post.commento;
+
+            // NUOVO: Gestione numero giocatori
+            if (post.numero_giocatori > 0)
+            {
+                NumeroGiocatoriLabel.Text = post.numero_giocatori == 1
+                    ? "Cerco 1 giocatore"
+                    : $"Cerco {post.numero_giocatori} giocatori";
+            }
+            else
+            {
+                NumeroGiocatoriLabel.Text = "Cerco giocatori";
+            }
+
+            // NUOVO: Gestione del livello
+            if (!string.IsNullOrEmpty(post.livello))
+            {
+                LivelloLabel.Text = post.livello switch
+                {
+                    "Principiante" => "🟢 Principiante",
+                    "Intermedio" => "🟡 Intermedio",
+                    "Avanzato" => "🔴 Avanzato",
+                    _ => "🟡 Intermedio"
+                };
+
+                // Imposta il colore del livello
+                LivelloLabel.TextColor = post.livello switch
+                {
+                    "Principiante" => Colors.Green,
+                    "Intermedio" => Colors.Orange,
+                    "Avanzato" => Colors.Red,
+                    _ => Colors.Orange
+                };
+            }
+            else
+            {
+                LivelloLabel.Text = "🟡 Intermedio";
+                LivelloLabel.TextColor = Colors.Orange;
+            }
+
+            // Aggiorna le informazioni del campo se presente
+            if (Campo != null)
+            {
+                CampoNomeLabel.Text = Campo.Nome;
+                CampoIndirizzoLabel.Text = Campo.Indirizzo;
+                CampoTipoLabel.Text = Campo.Tipo ?? "Non specificato";
+                CampoDescrizioneLabel.Text = Campo.Descrizione ?? "Nessuna descrizione disponibile";
+            }
         }
 
         // NUOVE FUNZIONI PER I PREFERITI

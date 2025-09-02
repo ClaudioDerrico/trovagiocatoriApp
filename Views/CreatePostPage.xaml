@@ -38,8 +38,49 @@
                             HeightRequest="55"/>
                 </Frame>
 
+                <!-- Livello Selector -->
+                <Label Text="Livello di gioco" FontSize="14" TextColor="#555555" Margin="0,10,0,-5"/>
+                <Frame Padding="0" CornerRadius="8" HasShadow="False" BorderColor="#e0e0e0">
+                    <Picker x:Name="LivelloPicker" 
+                            Title="Seleziona il livello" 
+                            ItemsSource="{Binding LivelloOptions}"
+                            SelectedItem="{Binding SelectedLivello}"
+                            Margin="12,0" 
+                            HeightRequest="55"/>
+                </Frame>
+                <Label Text="💡 Aiuta gli altri giocatori a capire il livello richiesto" 
+                       FontSize="12" 
+                       TextColor="#666" 
+                       Margin="0,-5,0,0"/>
+
+                <!-- NUOVO: Numero Giocatori Selector -->
+                <Label Text="Quanti giocatori ti servono?" FontSize="14" TextColor="#555555" Margin="0,10,0,-5"/>
+                <Frame Padding="0" CornerRadius="8" HasShadow="False" BorderColor="#e0e0e0">
+                    <Grid ColumnDefinitions="*, Auto">
+                        <Stepper x:Name="NumeroGiocatoriStepper"
+                                 Grid.Column="0"
+                                 Minimum="1"
+                                 Maximum="50"
+                                 Value="{Binding NumeroGiocatori}"
+                                 Increment="1"
+                                 Margin="12,0"
+                                 ValueChanged="OnNumeroGiocatoriChanged"/>
+                        <Label x:Name="NumeroGiocatoriLabel"
+                               Grid.Column="1"
+                               Text="1 giocatore"
+                               FontSize="14"
+                               TextColor="#333"
+                               VerticalOptions="Center"
+                               Margin="0,0,12,0"/>
+                    </Grid>
+                </Frame>
+                <Label Text="🏃‍♂️ Indica quanti giocatori mancano per completare la squadra" 
+                       FontSize="12" 
+                       TextColor="#666" 
+                       Margin="0,-5,0,0"/>
+
                 <!-- Titolo -->
-                <Label Text="Titolo evento" FontSize="14" TextColor="#555555" Margin="0,0,0,-5"/>
+                <Label Text="Titolo evento" FontSize="14" TextColor="#555555" Margin="0,10,0,-5"/>
                 <Frame Padding="0" CornerRadius="8" HasShadow="False" BorderColor="#e0e0e0">
                     <Grid ColumnDefinitions="*, Auto">
                         <Entry x:Name="TitoloEntry" 

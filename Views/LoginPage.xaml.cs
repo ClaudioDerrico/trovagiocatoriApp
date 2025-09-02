@@ -46,7 +46,7 @@ namespace trovagiocatoriApp.Views
 
             try
             {
-                using var client = new HttpClient();
+                using var client = new HttpClient(); //il postino che invia tramite la rete i dati al server    
                 var response = await client.PostAsync($"{baseUrl}/login", content);
 
                 if (response.IsSuccessStatusCode)
