@@ -9,7 +9,34 @@
             <!-- Converters -->
             <converters:IsNotNullConverter x:Key="IsNotNullConverter"/>
             <converters:IsNullConverter x:Key="IsNullConverter"/>
+            <converters:IsGreaterThanZeroConverter x:Key="IsGreaterThanZeroConverter"/>
+            <converters:AvailabilityColorConverter x:Key="AvailabilityColorConverter"/>
+            <converters:AvailabilityTextConverter x:Key="AvailabilityTextConverter"/>
+            <Style x:Key="ParticipantCardStyle" TargetType="Frame">
+                <Setter Property="BackgroundColor" Value="White"/>
+                <Setter Property="CornerRadius" Value="12"/>
+                <Setter Property="HasShadow" Value="True"/>
+                <Setter Property="BorderColor" Value="#E0E0E0"/>
+                <Setter Property="Padding" Value="12"/>
+                <Setter Property="Margin" Value="0,4"/>
+            </Style>
 
+            <Style x:Key="AvailabilityBadgeStyle" TargetType="Frame">
+                <Setter Property="CornerRadius" Value="10"/>
+                <Setter Property="Padding" Value="8,4"/>
+                <Setter Property="HasShadow" Value="False"/>
+                <Setter Property="BorderColor" Value="Transparent"/>
+            </Style>
+
+            <Style x:Key="ParticipantAvatarStyle" TargetType="Frame">
+                <Setter Property="WidthRequest" Value="40"/>
+                <Setter Property="HeightRequest" Value="40"/>
+                <Setter Property="CornerRadius" Value="20"/>
+                <Setter Property="Padding" Value="0"/>
+                <Setter Property="IsClippedToBounds" Value="True"/>
+                <Setter Property="BorderColor" Value="#E0E0E0"/>
+                <Setter Property="HasShadow" Value="False"/>
+            </Style>
             <!-- 1) Stile Globale per ContentPage -->
             <Style TargetType="ContentPage">
                 <Setter Property="Padding" Value="20" />

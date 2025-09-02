@@ -1,4 +1,5 @@
-﻿using System;
+﻿
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -18,11 +19,15 @@ namespace trovagiocatoriApp.Models
         public string commento { get; set; }
         public string autore_email { get; set; }
         public int? campo_id { get; set; }
-        public SportField campo { get; set; }
-        public string livello { get; set; } = "Intermedio"; // NUOVO CAMPO LIVELLO
-        public int numero_giocatori { get; set; } = 1; // NUOVO CAMPO NUMERO GIOCATORI
+        public CampoInfo campo { get; set; }
+        public string livello { get; set; } = "Intermedio";
+        public int numero_giocatori { get; set; } = 1;
 
-        // Proprietà computed per visualizzare il livello con emoji
+        // NUOVO: Proprietà per i partecipanti
+        public int partecipanti_iscritti { get; set; } = 0;
+        public int posti_disponibili { get; set; } = 1;
+
+        // Proprietà computed per la UI
         public string LivelloDisplayText => livello switch
         {
             "Principiante" => "🟢 Principiante",
@@ -31,18 +36,22 @@ namespace trovagiocatoriApp.Models
             _ => "🟡 Intermedio"
         };
 
-        // Colore per il livello
         public string LivelloColor => livello switch
         {
             "Principiante" => "#4CAF50",   // Verde
-            "Intermedio" => "#FF9800",   // Arancione
-            "Avanzato" => "#F44336",    // Rosso
+            "Intermedio" => "#FF9800",     // Arancione
+            "Avanzato" => "#F44336",       // Rosso
             _ => "#FF9800"
         };
 
-        // Testo per numero giocatori
         public string NumeroGiocatoriText => numero_giocatori == 1
             ? "Cerco 1 giocatore"
             : $"Cerco {numero_giocatori} giocatori";
+    }
+
+    public class CampoInfo
+    {
+        public string nome { get; set; }
+        public string indirizzo { get; set; }
     }
 }

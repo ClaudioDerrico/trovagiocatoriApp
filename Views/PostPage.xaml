@@ -2,12 +2,18 @@
 <ContentPage
  xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
  xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+ xmlns:converters="clr-namespace:trovagiocatoriApp.Converters"
  x:Class="trovagiocatoriApp.Views.PostPage"
  Title="Risultati"
  BackgroundColor="#F9FAFE">
 
     <ContentPage.Resources>
         <ResourceDictionary>
+            <!-- Converters -->
+            <converters:IsGreaterThanZeroConverter x:Key="IsGreaterThanZeroConverter"/>
+            <converters:AvailabilityColorConverter x:Key="AvailabilityColorConverter"/>
+            <converters:AvailabilityTextConverter x:Key="AvailabilityTextConverter"/>
+
             <!-- Stili moderni -->
             <Style x:Key="PageTitle" TargetType="Label">
                 <Setter Property="FontFamily" Value="OpenSansBold"/>
@@ -146,7 +152,7 @@
                     <CollectionView.ItemTemplate>
                         <DataTemplate>
                             <Frame Style="{StaticResource PostCard}">
-                                <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto" RowSpacing="10">
+                                <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto" RowSpacing="10">
                                     <!-- Titolo e Livello -->
                                     <Grid Grid.Row="0" ColumnDefinitions="*,Auto">
                                         <Label Text="{Binding titolo}"
@@ -199,25 +205,73 @@
                                                Style="{StaticResource IconStyle}"/>
                                         <Label Grid.Column="1"
                                                Style="{StaticResource CardDateTime}">
-                                            <Label.Text>
-                                                <MultiBinding StringFormat="{}{0}{1}">
-                                                    <Binding Path="sport"/>
-                                                    <Binding Path="campo.nome" StringFormat=" - {0}"/>
-                                                </MultiBinding>
-                                            </Label.Text>
+                                            <Label.FormattedText>
+                                                <FormattedString>
+                                                    <Span Text="{Binding sport}"/>
+                                                    <Span Text="{Binding campo.nome, StringFormat=' - {0}'}"/>
+                                                </FormattedString>
+                                            </Label.FormattedText>
                                         </Label>
                                     </Grid>
 
-                                    <!-- NUOVO: Numero Giocatori -->
-                                    <Grid Grid.Row="4" ColumnDefinitions="Auto,*">
+                                    <!-- AGGIORNATO: Numero Giocatori con stato partecipanti -->
+                                    <Grid Grid.Row="4" ColumnDefinitions="Auto,*,Auto">
                                         <Image Source="people_icon.png"
                                                Grid.Column="0"
                                                Style="{StaticResource IconStyle}"/>
-                                        <Label Text="{Binding NumeroGiocatoriText}"
-                                               Grid.Column="1"
-                                               Style="{StaticResource CardDateTime}"
-                                               TextColor="#2196F3"
-                                               FontAttributes="Bold"/>
+
+                                        <VerticalStackLayout Grid.Column="1" Spacing="2">
+                                            <Label Text="{Binding NumeroGiocatoriText}"
+                                                   Style="{StaticResource CardDateTime}"
+                                                   TextColor="#2196F3"
+                                                   FontAttributes="Bold"/>
+                                            <!-- NUOVO: Mostra partecipanti iscritti -->
+                                            <Label FontSize="11" TextColor="#666">
+                                                <Label.FormattedText>
+                                                    <FormattedString>
+                                                        <Span Text="👥 "/>
+                                                        <Span Text="{Binding partecipanti_iscritti}"/>
+                                                        <Span Text=" iscritti • "/>
+                                                        <Span Text="{Binding posti_disponibili}"/>
+                                                        <Span Text=" liberi"/>
+                                                    </FormattedString>
+                                                </Label.FormattedText>
+                                            </Label>
+                                        </VerticalStackLayout>
+
+                                        <!-- NUOVO: Badge disponibilità -->
+                                        <Frame Grid.Column="2"
+                                               CornerRadius="10"
+                                               Padding="6,3"
+                                               HasShadow="False"
+                                               VerticalOptions="Start">
+                                            <Frame.Triggers>
+                                                <DataTrigger TargetType="Frame" Binding="{Binding posti_disponibili}" Value="0">
+                                                    <Setter Property="BackgroundColor" Value="#FF5252"/>
+                                                </DataTrigger>
+                                            </Frame.Triggers>
+
+                                            <!-- Default: Verde per disponibile -->
+                                            <Frame.BackgroundColor>
+                                                <Binding Path="posti_disponibili">
+                                                    <Binding.Converter>
+                                                        <converters:AvailabilityColorConverter/>
+                                                    </Binding.Converter>
+                                                </Binding>
+                                            </Frame.BackgroundColor>
+
+                                            <Label FontSize="10" 
+                                                   FontAttributes="Bold" 
+                                                   TextColor="White">
+                                                <Label.Text>
+                                                    <Binding Path="posti_disponibili">
+                                                        <Binding.Converter>
+                                                            <converters:AvailabilityTextConverter/>
+                                                        </Binding.Converter>
+                                                    </Binding>
+                                                </Label.Text>
+                                            </Label>
+                                        </Frame>
                                     </Grid>
 
                                     <!-- Separatore -->
@@ -225,12 +279,30 @@
                                              HeightRequest="1" 
                                              Color="#F0F2F5" 
                                              Margin="0,4,0,8"/>
+
+                                    <!-- NUOVO: Anteprima partecipanti (solo se ci sono iscritti) -->
+                                    <Grid Grid.Row="6" 
+                                          ColumnDefinitions="Auto,*"
+                                          IsVisible="{Binding partecipanti_iscritti, Converter={StaticResource IsGreaterThanZeroConverter}}">
+                                        <Image Source="group_icon.png"
+                                               Grid.Column="0"
+                                               Style="{StaticResource IconStyle}"/>
+                                        <Label Grid.Column="1"
+                                               FontSize="11"
+                                               TextColor="#888">
+                                            <Label.FormattedText>
+                                                <FormattedString>
+                                                    <Span Text="Partecipano: "/>
+                                                    <Span Text="{Binding partecipanti_iscritti}"/>
+                                                    <Span Text=" giocatori"/>
+                                                </FormattedString>
+                                            </Label.FormattedText>
+                                        </Label>
+                                    </Grid>
                                 </Grid>
                             </Frame>
                         </DataTemplate>
                     </CollectionView.ItemTemplate>
-
-                    <!-- RIMOSSO IL TEMPLATE DUPLICATO -->
 
                 </CollectionView>
             </RefreshView>

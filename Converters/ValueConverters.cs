@@ -29,4 +29,63 @@ namespace trovagiocatoriApp.Converters
             throw new NotImplementedException();
         }
     }
+
+    // NUOVO: Converter per controllare se un numero è maggiore di zero
+    public class IsGreaterThanZeroConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            if (value is int intValue)
+                return intValue > 0;
+            if (value is double doubleValue)
+                return doubleValue > 0;
+            if (value is float floatValue)
+                return floatValue > 0;
+            if (value is decimal decimalValue)
+                return decimalValue > 0;
+
+            return false;
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
+    // NUOVO: Converter per mostrare il colore in base alla disponibilità
+    public class AvailabilityColorConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            if (value is int postiDisponibili)
+            {
+                return postiDisponibili > 0 ? Colors.Green : Colors.Red;
+            }
+            return Colors.Gray;
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
+    // NUOVO: Converter per il testo della disponibilità
+    public class AvailabilityTextConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            if (value is int postiDisponibili)
+            {
+                return postiDisponibili > 0 ? "DISPONIBILE" : "COMPLETO";
+            }
+            return "N/A";
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            throw new NotImplementedException();
+        }
+    }
 }

@@ -26,13 +26,24 @@ namespace trovagiocatoriApp.Views
         // Stato del preferito
         private bool _isFavorite = false;
 
-        // NUOVO: Salva l'email dell'autore del post per confronto
+        //  Stato della partecipazione
+        private bool _isParticipant = false;
+        private int _participantsCount = 0;
+        private int _postiDisponibili = 0;
+        private bool _isEventFull = false;
+        private List<ParticipantInfo> _participants = new List<ParticipantInfo>();
+
+        //  Dati del post per riferimento
+        private PostResponse _currentPost;
+
+        //  Salva l'email dell'autore del post per confronto
         private string _postAuthorEmail = "";
 
-        // ObservableCollection per i commenti
+        // ObservableCollection per i commenti e partecipanti
         public ObservableCollection<Comment> Comments { get; set; } = new ObservableCollection<Comment>();
+        public ObservableCollection<ParticipantInfo> Participants { get; set; } = new ObservableCollection<ParticipantInfo>();
 
-        // Proprietà per il campo da calcio
+        // Proprietà per il campo sportivo
         private SportField _campo;
         public SportField Campo
         {
@@ -66,6 +77,8 @@ namespace trovagiocatoriApp.Views
             await LoadPostDetailAsync();
             await LoadCommentsAsync();
             await CheckFavoriteStatusAsync();
+            await CheckParticipationStatusAsync(); // O
+            await LoadParticipantsAsync(); // O
         }
 
         private async Task LoadPostDetailAsync()
@@ -74,8 +87,9 @@ namespace trovagiocatoriApp.Views
             {
                 // 1. Carica i dati del post
                 var post = await LoadPostDataAsync();
+                _currentPost = post; // SALVA IL POST PER RIFERIMENTO
 
-                // NUOVO: Salva l'email dell'autore del post
+                // O: Salva l'email dell'autore del post
                 _postAuthorEmail = post.autore_email;
 
                 // 2. Carica i dati dell'utente
@@ -158,7 +172,7 @@ namespace trovagiocatoriApp.Views
             SportLabel.Text = post.sport;
             CommentoLabel.Text = post.commento;
 
-            // NUOVO: Gestione numero giocatori
+            // O: Gestione numero giocatori
             if (post.numero_giocatori > 0)
             {
                 NumeroGiocatoriLabel.Text = post.numero_giocatori == 1
@@ -170,7 +184,7 @@ namespace trovagiocatoriApp.Views
                 NumeroGiocatoriLabel.Text = "Cerco giocatori";
             }
 
-            // NUOVO: Gestione del livello
+            // O: Gestione del livello
             if (!string.IsNullOrEmpty(post.livello))
             {
                 LivelloLabel.Text = post.livello switch
@@ -206,7 +220,7 @@ namespace trovagiocatoriApp.Views
             }
         }
 
-        // FUNZIONI PER I PREFERITI
+        // ========== FUNZIONI PER I PREFERITI ==========
 
         private async Task CheckFavoriteStatusAsync()
         {
@@ -285,42 +299,216 @@ namespace trovagiocatoriApp.Views
             FavoriteButton.Source = _isFavorite ? "heart_filled.png" : "heart_empty.png";
         }
 
-        // Handler per visualizzare il campo sulla mappa
-        private async void OnViewOnMapClicked(object sender, EventArgs e)
-        {
-            if (Campo == null)
-            {
-                await DisplayAlert("Info", "Coordinate o indirizzo del campo non disponibili.", "OK");
-                return;
-            }
+        // ========== FUNZIONI PER LA PARTECIPAZIONE ==========
 
+        private async Task CheckParticipationStatusAsync()
+        {
             try
             {
-                string uriString;
+                var request = new HttpRequestMessage(HttpMethod.Get, $"{_apiBaseUrl}/events/check/{_postId}");
 
-     
- 
-        
-                string latStr = Campo.Lat.ToString(CultureInfo.InvariantCulture);
-                string lngStr = Campo.Lng.ToString(CultureInfo.InvariantCulture);
-                uriString = $"https://www.google.com/maps/search/?api=1&query={latStr},{lngStr}";
-       
+                if (Preferences.ContainsKey("session_id"))
+                {
+                    string sessionId = Preferences.Get("session_id", "");
+                    request.Headers.Add("Cookie", $"session_id={sessionId}");
+                }
 
-                await Launcher.OpenAsync(new Uri(uriString));
+                var response = await _sharedClient.SendAsync(request);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var json = await response.Content.ReadAsStringAsync();
+                    var result = JsonSerializer.Deserialize<ParticipationResponse>(json,
+                        new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+                    _isParticipant = result.is_participant;
+                    UpdateParticipationUI();
+                }
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"Fallback map open failed: {ex.Message}");
-                await DisplayAlert("Errore", $"Impossibile aprire la mappa: {ex.Message}", "OK");
+                Debug.WriteLine($"Errore nel controllo partecipazione: {ex.Message}");
             }
         }
 
-        // MODIFICATO: Carica i commenti con badge autore
+        private async Task LoadParticipantsAsync()
+        {
+            try
+            {
+                // Carica i partecipanti e la disponibilità
+                var participantsResponse = await _sharedClient.GetAsync($"{_pythonApiBaseUrl}/posts/{_postId}/participants-count");
+                var availabilityResponse = await _sharedClient.GetAsync($"{_pythonApiBaseUrl}/posts/{_postId}/availability");
+
+                if (participantsResponse.IsSuccessStatusCode && availabilityResponse.IsSuccessStatusCode)
+                {
+                    var participantsJson = await participantsResponse.Content.ReadAsStringAsync();
+                    var availabilityJson = await availabilityResponse.Content.ReadAsStringAsync();
+
+                    var participantsData = JsonSerializer.Deserialize<EventParticipantsResponse>(participantsJson,
+                        new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                    var availabilityData = JsonSerializer.Deserialize<PostAvailabilityResponse>(availabilityJson,
+                        new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+                    _participantsCount = participantsData.count;
+                    _postiDisponibili = availabilityData.posti_disponibili;
+                    _isEventFull = availabilityData.is_full;
+
+                    // Aggiorna la collezione dei partecipanti
+                    Participants.Clear();
+                    foreach (var participant in participantsData.participants ?? new List<ParticipantInfo>())
+                    {
+                        // Aggiungi flag per identificare l'organizzatore
+                        participant.IsOrganizer = participant.email.Equals(_postAuthorEmail, StringComparison.OrdinalIgnoreCase);
+                        Participants.Add(participant);
+                    }
+
+                    UpdateParticipationUI();
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Errore nel caricamento partecipanti: {ex.Message}");
+            }
+        }
+
+        private async void OnJoinLeaveEventClicked(object sender, EventArgs e)
+        {
+            try
+            {
+                string endpoint = _isParticipant ? "/events/leave" : "/events/join";
+                var request = new HttpRequestMessage(HttpMethod.Post, $"{_apiBaseUrl}{endpoint}");
+
+                if (Preferences.ContainsKey("session_id"))
+                {
+                    string sessionId = Preferences.Get("session_id", "");
+                    request.Headers.Add("Cookie", $"session_id={sessionId}");
+                }
+                else
+                {
+                    await DisplayAlert("Errore", "Effettua il login per partecipare agli eventi.", "OK");
+                    return;
+                }
+
+                var payload = new ParticipationRequest { post_id = _postId };
+                var json = JsonSerializer.Serialize(payload);
+                request.Content = new StringContent(json, Encoding.UTF8, "application/json");
+
+                var response = await _sharedClient.SendAsync(request);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var responseJson = await response.Content.ReadAsStringAsync();
+                    var result = JsonSerializer.Deserialize<ParticipationResponse>(responseJson,
+                        new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+                    _isParticipant = result.is_participant;
+
+                    await DisplayAlert("Successo", result.message, "OK");
+
+                    // Ricarica i dati dei partecipanti
+                    await LoadParticipantsAsync();
+                }
+                else
+                {
+                    await DisplayAlert("Errore", "Impossibile aggiornare la partecipazione", "OK");
+                }
+            }
+            catch (Exception ex)
+            {
+                await DisplayAlert("Errore", $"Errore: {ex.Message}", "OK");
+            }
+        }
+
+        private void UpdateParticipationUI()
+        {
+            if (_currentPost == null) return;
+
+            // Aggiorna il testo del numero di giocatori con informazioni sui partecipanti
+            var baseText = _currentPost.numero_giocatori == 1
+                ? "Cerco 1 giocatore"
+                : $"Cerco {_currentPost.numero_giocatori} giocatori";
+
+            if (_participantsCount > 0)
+            {
+                NumeroGiocatoriLabel.Text = $"{baseText} • {_participantsCount}/{_currentPost.numero_giocatori} iscritti";
+
+                if (_postiDisponibili > 0)
+                {
+                    NumeroGiocatoriLabel.Text += $" • {_postiDisponibili} posti liberi";
+                    NumeroGiocatoriLabel.TextColor = Colors.Green;
+                }
+                else
+                {
+                    NumeroGiocatoriLabel.Text += " • COMPLETO";
+                    NumeroGiocatoriLabel.TextColor = Colors.Red;
+                }
+            }
+            else
+            {
+                NumeroGiocatoriLabel.Text = baseText;
+                NumeroGiocatoriLabel.TextColor = Colors.Blue;
+            }
+
+            // Aggiorna le informazioni sui posti disponibili
+            if (PostiDisponibiliLabel != null)
+            {
+                if (_isEventFull)
+                {
+                    PostiDisponibiliLabel.Text = "Evento completo";
+                    PostiDisponibiliLabel.TextColor = Colors.Red;
+                }
+                else
+                {
+                    PostiDisponibiliLabel.Text = $"{_postiDisponibili} posti disponibili su {_currentPost.numero_giocatori}";
+                    PostiDisponibiliLabel.TextColor = Colors.Green;
+                }
+            }
+
+            // Aggiorna lo status di partecipazione
+            if (StatusPartecipazioneLabel != null)
+            {
+                if (_isParticipant)
+                {
+                    StatusPartecipazioneLabel.Text = "✅ Sei iscritto a questo evento";
+                    StatusPartecipazioneLabel.TextColor = Colors.Green;
+                }
+                else
+                {
+                    StatusPartecipazioneLabel.Text = "Non sei ancora iscritto a questo evento";
+                    StatusPartecipazioneLabel.TextColor = Colors.Gray;
+                }
+            }
+
+            // Aggiorna il pulsante di partecipazione
+            if (JoinLeaveButton != null)
+            {
+                if (_isEventFull && !_isParticipant)
+                {
+                    JoinLeaveButton.Text = "EVENTO COMPLETO";
+                    JoinLeaveButton.IsEnabled = false;
+                    JoinLeaveButton.BackgroundColor = Colors.Gray;
+                }
+                else
+                {
+                    JoinLeaveButton.Text = _isParticipant ? "DISISCRIVITI" : "PARTECIPA ALL'EVENTO";
+                    JoinLeaveButton.IsEnabled = true;
+                    JoinLeaveButton.BackgroundColor = _isParticipant ? Colors.Orange : Colors.Green;
+                }
+            }
+
+            // Aggiorna il badge contatore partecipanti
+            if (ParticipantsCountBadge != null)
+            {
+                ParticipantsCountBadge.Text = _participantsCount.ToString();
+            }
+        }
+
+        // ========== FUNZIONI PER I COMMENTI ==========
+
         private async Task LoadCommentsAsync()
         {
             try
             {
-                // Aggiungi il cookie di sessione alla richiesta
                 var request = new HttpRequestMessage(HttpMethod.Get, $"{_pythonApiBaseUrl}/posts/{_postId}/comments/");
 
                 if (Preferences.ContainsKey("session_id"))
@@ -337,23 +525,18 @@ namespace trovagiocatoriApp.Views
                     var comments = JsonSerializer.Deserialize<List<Comment>>(json,
                         new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
 
-                    // Aggiorna la collezione dei commenti
                     Comments.Clear();
                     foreach (var comment in comments ?? new List<Comment>())
                     {
-                        // Recupera il username per ogni commento
                         comment.autore_username = await GetUsernameByEmail(comment.autore_email);
-
-                        // NUOVO: Determina se il commento è dell'autore del post
                         comment.IsAuthorComment = comment.autore_email.Equals(_postAuthorEmail, StringComparison.OrdinalIgnoreCase);
-
                         Comments.Add(comment);
                     }
                 }
             }
             catch (Exception)
             {
-                // Fallback silenzioso - i commenti non si caricano ma l'app non crasha
+                // Fallback silenzioso
             }
         }
 
@@ -392,16 +575,13 @@ namespace trovagiocatoriApp.Views
 
             try
             {
-                // Crea l'oggetto commento
                 var commentCreate = new CommentCreate
                 {
                     contenuto = messaggio
                 };
 
-                // Crea la richiesta HTTP
                 var request = new HttpRequestMessage(HttpMethod.Post, $"{_pythonApiBaseUrl}/posts/{_postId}/comments/");
 
-                // Aggiungi il cookie di sessione
                 if (Preferences.ContainsKey("session_id"))
                 {
                     string sessionId = Preferences.Get("session_id", "");
@@ -413,24 +593,19 @@ namespace trovagiocatoriApp.Views
                     return;
                 }
 
-                // Serializza il contenuto
                 var json = JsonSerializer.Serialize(commentCreate);
                 request.Content = new StringContent(json, Encoding.UTF8, "application/json");
 
-                // Invia la richiesta
                 var response = await _sharedClient.SendAsync(request);
 
                 if (response.IsSuccessStatusCode)
                 {
                     await DisplayAlert("Successo", "Commento inviato!", "OK");
-                    RispostaEditor.Text = string.Empty; // Pulisci l'editor
-
-                    // Ricarica i commenti per mostrare quello appena aggiunto
+                    RispostaEditor.Text = string.Empty;
                     await LoadCommentsAsync();
                 }
                 else
                 {
-                    var responseContent = await response.Content.ReadAsStringAsync();
                     await DisplayAlert("Errore", "Impossibile inviare il commento.", "OK");
                 }
             }
@@ -441,6 +616,32 @@ namespace trovagiocatoriApp.Views
             catch (Exception ex)
             {
                 await DisplayAlert("Errore", $"Errore: {ex.Message}", "OK");
+            }
+        }
+
+        // ========== ALTRE FUNZIONI ==========
+
+        private async void OnViewOnMapClicked(object sender, EventArgs e)
+        {
+            if (Campo == null)
+            {
+                await DisplayAlert("Info", "Coordinate o indirizzo del campo non disponibili.", "OK");
+                return;
+            }
+
+            try
+            {
+                string uriString;
+                string latStr = Campo.Lat.ToString(CultureInfo.InvariantCulture);
+                string lngStr = Campo.Lng.ToString(CultureInfo.InvariantCulture);
+                uriString = $"https://www.google.com/maps/search/?api=1&query={latStr},{lngStr}";
+
+                await Launcher.OpenAsync(new Uri(uriString));
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Fallback map open failed: {ex.Message}");
+                await DisplayAlert("Errore", $"Impossibile aprire la mappa: {ex.Message}", "OK");
             }
         }
 

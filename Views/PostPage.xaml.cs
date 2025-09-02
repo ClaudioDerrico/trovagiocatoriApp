@@ -35,16 +35,39 @@ namespace trovagiocatoriApp.Views
             try
             {
                 using var client = new HttpClient();
+
+                // Usa l'endpoint che include i partecipanti
                 var url = $"{ApiConfig.PythonApiUrl}/posts/search?provincia={Uri.EscapeDataString(SelectedProvince)}&sport={Uri.EscapeDataString(SelectedSport)}";
                 var response = await client.GetAsync(url);
 
                 if (response.IsSuccessStatusCode)
                 {
                     var json = await response.Content.ReadAsStringAsync();
-                    var posts = JsonSerializer.Deserialize<List<PostResponse>>(json,
-                        new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
 
-                    _allPosts = posts ?? new List<PostResponse>();
+                    // Deserializza come lista di JsonElement per gestire le proprietà aggiuntive
+                    var jsonElements = JsonSerializer.Deserialize<List<JsonElement>>(json);
+
+                    _allPosts = jsonElements.Select(post => new PostResponse
+                    {
+                        id = GetIntProperty(post, "id"),
+                        titolo = GetStringProperty(post, "titolo"),
+                        provincia = GetStringProperty(post, "provincia"),
+                        citta = GetStringProperty(post, "citta"),
+                        sport = GetStringProperty(post, "sport"),
+                        data_partita = GetStringProperty(post, "data_partita"),
+                        ora_partita = GetStringProperty(post, "ora_partita"),
+                        commento = GetStringProperty(post, "commento"),
+                        autore_email = GetStringProperty(post, "autore_email"),
+                        campo_id = GetNullableIntProperty(post, "campo_id"),
+                        campo = GetCampoProperty(post),
+                        livello = GetStringProperty(post, "livello", "Intermedio"),
+                        numero_giocatori = GetIntProperty(post, "numero_giocatori", 1),
+
+                        // NUOVO: Proprietà per i partecipanti (se le hai aggiunte a PostResponse)
+                        partecipanti_iscritti = GetIntProperty(post, "partecipanti_iscritti", 0),
+                        posti_disponibili = GetIntProperty(post, "posti_disponibili", 1)
+                    }).ToList();
+
                     _filteredPosts = new List<PostResponse>(_allPosts);
                     PostsCollectionView.ItemsSource = _filteredPosts;
                 }
@@ -57,6 +80,73 @@ namespace trovagiocatoriApp.Views
             catch (Exception ex)
             {
                 await DisplayAlert("Errore", $"Errore: {ex.Message}", "OK");
+            }
+        }
+
+        // Metodi helper per estrarre proprietà dal JsonElement
+        private string GetStringProperty(JsonElement element, string propertyName, string defaultValue = "")
+        {
+            try
+            {
+                return element.TryGetProperty(propertyName, out var prop) && prop.ValueKind != JsonValueKind.Null
+                    ? prop.GetString() ?? defaultValue
+                    : defaultValue;
+            }
+            catch
+            {
+                return defaultValue;
+            }
+        }
+
+        private int GetIntProperty(JsonElement element, string propertyName, int defaultValue = 0)
+        {
+            try
+            {
+                return element.TryGetProperty(propertyName, out var prop) && prop.ValueKind != JsonValueKind.Null
+                    ? prop.GetInt32()
+                    : defaultValue;
+            }
+            catch
+            {
+                return defaultValue;
+            }
+        }
+
+        private int? GetNullableIntProperty(JsonElement element, string propertyName)
+        {
+            try
+            {
+                if (element.TryGetProperty(propertyName, out var prop))
+                {
+                    if (prop.ValueKind == JsonValueKind.Null)
+                        return null;
+                    return prop.GetInt32();
+                }
+                return null;
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        private CampoInfo GetCampoProperty(JsonElement element)
+        {
+            try
+            {
+                if (element.TryGetProperty("campo", out var campoProp) && campoProp.ValueKind != JsonValueKind.Null)
+                {
+                    return new CampoInfo
+                    {
+                        nome = GetStringProperty(campoProp, "nome"),
+                        indirizzo = GetStringProperty(campoProp, "indirizzo")
+                    };
+                }
+                return null;
+            }
+            catch
+            {
+                return null;
             }
         }
 

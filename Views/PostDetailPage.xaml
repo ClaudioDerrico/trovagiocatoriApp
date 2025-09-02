@@ -6,10 +6,9 @@
              BackgroundColor="#F8FAFC">
 
     <ContentPage.Resources>
+        <!-- I tuoi stili esistenti rimangono uguali -->
         <ResourceDictionary>
-            <!-- Colori aggiornati -->
             <Color x:Key="PrimaryColor">#24292F</Color>
-            <!-- GitHub dark color -->
             <Color x:Key="SecondaryColor">#6366F1</Color>
             <Color x:Key="AccentColor">#F59E0B</Color>
             <Color x:Key="SuccessColor">#10B981</Color>
@@ -21,7 +20,7 @@
             <Color x:Key="TextSecondary">#64748B</Color>
             <Color x:Key="BorderColor">#E2E8F0</Color>
 
-            <!-- Stili Puliti -->
+            <!-- Tutti i tuoi stili esistenti -->
             <Style x:Key="CleanCardStyle" TargetType="Frame">
                 <Setter Property="BackgroundColor" Value="{StaticResource CardColor}"/>
                 <Setter Property="CornerRadius" Value="16"/>
@@ -66,7 +65,6 @@
                 </Setter>
             </Style>
 
-            <!-- NUOVO: Stile per il badge autore -->
             <Style x:Key="AuthorBadgeStyle" TargetType="Frame">
                 <Setter Property="BackgroundColor" Value="#FF6B35"/>
                 <Setter Property="CornerRadius" Value="10"/>
@@ -84,85 +82,46 @@
         <ScrollView Grid.Row="1" BackgroundColor="{StaticResource BackgroundColor}">
             <VerticalStackLayout Spacing="0" Padding="0,0,0,32">
 
-                <!-- Informazioni Principali -->
+                <!-- 1. Informazioni Principali (la tua sezione esistente) -->
                 <Frame Style="{StaticResource CleanCardStyle}">
                     <VerticalStackLayout Spacing="24">
-
                         <!-- Titolo con Cuore Preferiti -->
                         <Grid ColumnDefinitions="*,Auto" ColumnSpacing="16">
-                            <Label Grid.Column="0"
-                                   x:Name="TitoloLabel"
-                                   FontFamily="OpenSansBold"
-                                   FontSize="24"
-                                   TextColor="{StaticResource TextPrimary}"
-                                   LineBreakMode="WordWrap"
-                                   VerticalOptions="Center"
-                                   Text="Partita di Calcio al Tramonto" />
-
-                            <!-- Pulsante Preferiti integrato -->
-                            <ImageButton Grid.Column="1"
-                                         x:Name="FavoriteButton"
-                                         Source="heart_empty.png"
-                                         BackgroundColor="{StaticResource ErrorColor}"
-                                         WidthRequest="44"
-                                         HeightRequest="44"
-                                         CornerRadius="22"
-                                         Padding="10"
-                                         VerticalOptions="Start"
-                                         Clicked="OnFavoriteButtonClicked"/>
+                            <Label Grid.Column="0" x:Name="TitoloLabel" FontFamily="OpenSansBold" FontSize="24" TextColor="{StaticResource TextPrimary}" LineBreakMode="WordWrap" VerticalOptions="Center" Text="Partita di Calcio al Tramonto" />
+                            <ImageButton Grid.Column="1" x:Name="FavoriteButton" Source="heart_empty.png" BackgroundColor="{StaticResource ErrorColor}" WidthRequest="44" HeightRequest="44" CornerRadius="22" Padding="10" VerticalOptions="Start" Clicked="OnFavoriteButtonClicked"/>
                         </Grid>
 
                         <!-- Autore -->
                         <HorizontalStackLayout Spacing="16" VerticalOptions="Center">
-                            <Frame WidthRequest="50" 
-                                   HeightRequest="50" 
-                                   CornerRadius="25" 
-                                   Padding="0" 
-                                   IsClippedToBounds="True" 
-                                   BorderColor="{StaticResource BorderColor}" 
-                                   HasShadow="False">
-                                <Image x:Name="ProfileImage" 
-                                       Source="default_profile_icon.png" 
-                                       Aspect="AspectFill"/>
+                            <Frame WidthRequest="50" HeightRequest="50" CornerRadius="25" Padding="0" IsClippedToBounds="True" BorderColor="{StaticResource BorderColor}" HasShadow="False">
+                                <Image x:Name="ProfileImage" Source="default_profile_icon.png" Aspect="AspectFill"/>
                             </Frame>
                             <VerticalStackLayout Spacing="4" VerticalOptions="Center">
-                                <Label x:Name="AutoreLabel" 
-                                       Text="Organizzatore" 
-                                       FontFamily="OpenSansBold"
-                                       FontSize="16" 
-                                       TextColor="{StaticResource TextPrimary}"/>
-                                <Label x:Name="AutoreUsernameLabel" 
-                                       Text="@username" 
-                                       Style="{StaticResource SecondaryTextStyle}"/>
+                                <Label x:Name="AutoreLabel" Text="Organizzatore" FontFamily="OpenSansBold" FontSize="16" TextColor="{StaticResource TextPrimary}"/>
+                                <Label x:Name="AutoreUsernameLabel" Text="@username" Style="{StaticResource SecondaryTextStyle}"/>
                             </VerticalStackLayout>
                         </HorizontalStackLayout>
 
-                        <!-- Info Evento in Grid -->
+                        <!-- Info Evento in Grid (la tua sezione esistente con tutti i dettagli) -->
                         <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto" ColumnDefinitions="*,*" RowSpacing="16" ColumnSpacing="16">
-
                             <!-- Data e Ora -->
                             <HorizontalStackLayout Grid.Row="0" Grid.Column="0" Spacing="12">
                                 <Label Text="📅" FontSize="20"/>
                                 <VerticalStackLayout Spacing="2">
                                     <Label Text="Data e Ora" Style="{StaticResource SecondaryTextStyle}" FontSize="12"/>
-                                    <Label x:Name="DataOraLabel" 
-                                           Text="Sabato 15 Marzo, ore 18:30" 
-                                           Style="{StaticResource InfoLabelStyle}" 
-                                           FontAttributes="Bold"
-                                           FontSize="14"/>
+                                    <Label x:Name="DataOraLabel" Text="Sabato 15 Marzo, ore 18:30" Style="{StaticResource InfoLabelStyle}" FontAttributes="Bold" FontSize="14"/>
                                 </VerticalStackLayout>
                             </HorizontalStackLayout>
+
+                            <!-- Resto della tua griglia esistente... -->
+                            <!-- (aggiungi qui tutte le altre sezioni: Località, Sport, Livello, Numero Giocatori, Campo Sportivo) -->
 
                             <!-- Località -->
                             <HorizontalStackLayout Grid.Row="0" Grid.Column="1" Spacing="12">
                                 <Label Text="📍" FontSize="20"/>
                                 <VerticalStackLayout Spacing="2">
                                     <Label Text="Luogo" Style="{StaticResource SecondaryTextStyle}" FontSize="12"/>
-                                    <Label x:Name="LocalitaLabel" 
-                                           Text="Milano, Lombardia" 
-                                           Style="{StaticResource InfoLabelStyle}" 
-                                           FontAttributes="Bold"
-                                           FontSize="14"/>
+                                    <Label x:Name="LocalitaLabel" Text="Milano, Lombardia" Style="{StaticResource InfoLabelStyle}" FontAttributes="Bold" FontSize="14"/>
                                 </VerticalStackLayout>
                             </HorizontalStackLayout>
 
@@ -171,11 +130,7 @@
                                 <Label Text="⚽" FontSize="20"/>
                                 <VerticalStackLayout Spacing="2">
                                     <Label Text="Sport" Style="{StaticResource SecondaryTextStyle}" FontSize="12"/>
-                                    <Label x:Name="SportLabel" 
-                                           Text="Calcio" 
-                                           Style="{StaticResource InfoLabelStyle}" 
-                                           FontAttributes="Bold"
-                                           FontSize="14"/>
+                                    <Label x:Name="SportLabel" Text="Calcio" Style="{StaticResource InfoLabelStyle}" FontAttributes="Bold" FontSize="14"/>
                                 </VerticalStackLayout>
                             </HorizontalStackLayout>
 
@@ -184,204 +139,167 @@
                                 <Label Text="🏆" FontSize="20"/>
                                 <VerticalStackLayout Spacing="2">
                                     <Label Text="Livello" Style="{StaticResource SecondaryTextStyle}" FontSize="12"/>
-                                    <Label x:Name="LivelloLabel" 
-                                           Text="🟡 Intermedio" 
-                                           Style="{StaticResource InfoLabelStyle}" 
-                                           FontAttributes="Bold"
-                                           FontSize="14"/>
+                                    <Label x:Name="LivelloLabel" Text="🟡 Intermedio" Style="{StaticResource InfoLabelStyle}" FontAttributes="Bold" FontSize="14"/>
                                 </VerticalStackLayout>
                             </HorizontalStackLayout>
 
-                            <!-- NUOVO: Numero Giocatori -->
+                            <!-- Numero Giocatori -->
                             <HorizontalStackLayout Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" Spacing="12">
                                 <Label Text="👥" FontSize="20"/>
                                 <VerticalStackLayout Spacing="2">
                                     <Label Text="Giocatori richiesti" Style="{StaticResource SecondaryTextStyle}" FontSize="12"/>
-                                    <Label x:Name="NumeroGiocatoriLabel" 
-                                           Text="Cerco 5 giocatori" 
-                                           Style="{StaticResource InfoLabelStyle}" 
-                                           FontAttributes="Bold"
-                                           FontSize="14"
-                                           TextColor="#2196F3"/>
+                                    <Label x:Name="NumeroGiocatoriLabel" Text="Cerco 5 giocatori" Style="{StaticResource InfoLabelStyle}" FontAttributes="Bold" FontSize="14" TextColor="#2196F3"/>
                                 </VerticalStackLayout>
                             </HorizontalStackLayout>
 
                             <!-- Campo Sportivo -->
-                            <HorizontalStackLayout Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2" Spacing="12"
-                                                   IsVisible="{Binding Campo, Converter={StaticResource IsNotNullConverter}}">
+                            <HorizontalStackLayout Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2" Spacing="12" IsVisible="{Binding Campo, Converter={StaticResource IsNotNullConverter}}">
                                 <Label Text="🏟️" FontSize="20"/>
                                 <VerticalStackLayout Spacing="2">
                                     <Label Text="Campo" Style="{StaticResource SecondaryTextStyle}" FontSize="12"/>
-                                    <Label x:Name="CampoNomeLabel" 
-                                           Text="Centro Sportivo San Siro"
-                                           Style="{StaticResource InfoLabelStyle}" 
-                                           FontAttributes="Bold"
-                                           FontSize="14"
-                                           LineBreakMode="TailTruncation"/>
+                                    <Label x:Name="CampoNomeLabel" Text="Centro Sportivo San Siro" Style="{StaticResource InfoLabelStyle}" FontAttributes="Bold" FontSize="14" LineBreakMode="TailTruncation"/>
                                 </VerticalStackLayout>
                             </HorizontalStackLayout>
 
-                            <!-- Dettagli Campo (span su 2 colonne) -->
-                            <VerticalStackLayout Grid.Row="4" Grid.ColumnSpan="2" Spacing="12" 
-                                                 IsVisible="{Binding Campo, Converter={StaticResource IsNotNullConverter}}">
-                                <Frame BackgroundColor="{StaticResource InputColor}" 
-                                       CornerRadius="12" 
-                                       Padding="16" 
-                                       HasShadow="False">
+                            <!-- Dettagli Campo -->
+                            <VerticalStackLayout Grid.Row="4" Grid.ColumnSpan="2" Spacing="12" IsVisible="{Binding Campo, Converter={StaticResource IsNotNullConverter}}">
+                                <Frame BackgroundColor="{StaticResource InputColor}" CornerRadius="12" Padding="16" HasShadow="False">
                                     <VerticalStackLayout Spacing="8">
                                         <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto" RowSpacing="8" ColumnSpacing="16">
                                             <HorizontalStackLayout Grid.Row="0" Grid.Column="0" Spacing="8">
                                                 <Label Text="📍" FontSize="14"/>
-                                                <Label x:Name="CampoIndirizzoLabel" 
-                                                       Text="Via dei Campi 15, Milano"
-                                                       Style="{StaticResource InfoLabelStyle}" 
-                                                       FontSize="13"
-                                                       LineBreakMode="TailTruncation"/>
+                                                <Label x:Name="CampoIndirizzoLabel" Text="Via dei Campi 15, Milano" Style="{StaticResource InfoLabelStyle}" FontSize="13" LineBreakMode="TailTruncation"/>
                                             </HorizontalStackLayout>
-
                                             <HorizontalStackLayout Grid.Row="0" Grid.Column="1" Spacing="8">
                                                 <Label Text="🏗️" FontSize="14"/>
-                                                <Label x:Name="CampoTipoLabel" 
-                                                       Text="Erba Sintetica"
-                                                       Style="{StaticResource InfoLabelStyle}"
-                                                       FontSize="13"/>
+                                                <Label x:Name="CampoTipoLabel" Text="Erba Sintetica" Style="{StaticResource InfoLabelStyle}" FontSize="13"/>
                                             </HorizontalStackLayout>
-
                                             <HorizontalStackLayout Grid.Row="1" Grid.ColumnSpan="2" Spacing="8">
                                                 <Label Text="ℹ️" FontSize="14"/>
-                                                <Label x:Name="CampoDescrizioneLabel" 
-                                                       Text="Campo regolamentare con spogliatoi"
-                                                       Style="{StaticResource SecondaryTextStyle}"
-                                                       FontSize="13"
-                                                       LineBreakMode="WordWrap"/>
+                                                <Label x:Name="CampoDescrizioneLabel" Text="Campo regolamentare con spogliatoi" Style="{StaticResource SecondaryTextStyle}" FontSize="13" LineBreakMode="WordWrap"/>
                                             </HorizontalStackLayout>
                                         </Grid>
-
-                                        <Button Text="Visualizza su Mappa" 
-                                                x:Name="ViewOnMapButton"
-                                                Style="{StaticResource CleanButtonStyle}"
-                                                BackgroundColor="{StaticResource SuccessColor}"
-                                                HeightRequest="36"
-                                                FontSize="14"
-                                                Clicked="OnViewOnMapClicked"
-                                                Margin="0,8,0,0"/>
+                                        <Button Text="Visualizza su Mappa" x:Name="ViewOnMapButton" Style="{StaticResource CleanButtonStyle}" BackgroundColor="{StaticResource SuccessColor}" HeightRequest="36" FontSize="14" Clicked="OnViewOnMapClicked" Margin="0,8,0,0"/>
                                     </VerticalStackLayout>
                                 </Frame>
                             </VerticalStackLayout>
                         </Grid>
 
-                        <!-- Descrizione integrata nello stesso rettangolo -->
-                        <BoxView HeightRequest="1" 
-                                 BackgroundColor="{StaticResource BorderColor}" 
-                                 Margin="0,16,0,0"/>
-
+                        <!-- Descrizione -->
+                        <BoxView HeightRequest="1" BackgroundColor="{StaticResource BorderColor}" Margin="0,16,0,0"/>
                         <VerticalStackLayout Spacing="8" Margin="0,16,0,0">
-                            <Label Text="Descrizione" 
-                                   FontFamily="OpenSansBold"
-                                   FontSize="16"
-                                   TextColor="{StaticResource TextPrimary}"/>
-                            <Label x:Name="CommentoLabel"
-                                   Style="{StaticResource InfoLabelStyle}"
-                                   LineBreakMode="WordWrap"
-                                   LineHeight="1.6"
-                                   FontSize="15"
-                                   Text="Cerchiamo giocatori per una partita amichevole ma competitiva. Livello intermedio-avanzato."/>
+                            <Label Text="Descrizione" FontFamily="OpenSansBold" FontSize="16" TextColor="{StaticResource TextPrimary}"/>
+                            <Label x:Name="CommentoLabel" Style="{StaticResource InfoLabelStyle}" LineBreakMode="WordWrap" LineHeight="1.6" FontSize="15" Text="Cerchiamo giocatori per una partita amichevole ma competitiva. Livello intermedio-avanzato."/>
                         </VerticalStackLayout>
                     </VerticalStackLayout>
                 </Frame>
 
-                <!-- Partecipazione -->
+                <!-- 2. Partecipazione Evento -->
                 <Frame Style="{StaticResource CleanCardStyle}">
                     <VerticalStackLayout Spacing="20">
-                        <Label Text="Partecipa all'evento" Style="{StaticResource SectionTitleStyle}"/>
+                        <Label Text="🎯 Partecipa all'evento" Style="{StaticResource SectionTitleStyle}"/>
 
-                        <Frame BackgroundColor="{StaticResource InputColor}" 
-                               CornerRadius="12" 
-                               Padding="0" 
-                               HasShadow="False">
-                            <Editor x:Name="RispostaEditor"
-                                    Placeholder="Scrivi un messaggio per l'organizzatore..."
-                                    AutoSize="TextChanges"
-                                    MinimumHeightRequest="80"
-                                    TextColor="{StaticResource TextPrimary}"
-                                    PlaceholderColor="{StaticResource TextSecondary}"
-                                    BackgroundColor="Transparent"
-                                    FontSize="16"
-                                    Margin="16,12"/>
+                        <!-- Status partecipazione e posti disponibili -->
+                        <Frame BackgroundColor="{StaticResource InputColor}" CornerRadius="12" Padding="16" HasShadow="False">
+                            <Grid RowDefinitions="Auto,Auto,Auto" RowSpacing="8">
+                                <HorizontalStackLayout Grid.Row="0" Spacing="12">
+                                    <Label Text="👥" FontSize="16"/>
+                                    <Label x:Name="PostiDisponibiliLabel" Text="3 posti disponibili su 5" Style="{StaticResource InfoLabelStyle}" FontAttributes="Bold" FontSize="15"/>
+                                </HorizontalStackLayout>
+                                <HorizontalStackLayout Grid.Row="1" Spacing="12">
+                                    <Label Text="📍" FontSize="16"/>
+                                    <Label x:Name="StatusPartecipazioneLabel" Text="Non sei ancora iscritto a questo evento" Style="{StaticResource InfoLabelStyle}" FontSize="14"/>
+                                </HorizontalStackLayout>
+                                <Button x:Name="JoinLeaveButton" Grid.Row="2" Text="PARTECIPA ALL'EVENTO" Style="{StaticResource CleanButtonStyle}" BackgroundColor="{StaticResource SuccessColor}" Clicked="OnJoinLeaveEventClicked" Margin="0,8,0,0"/>
+                            </Grid>
                         </Frame>
-
-                        <Button x:Name="InviaRispostaButton" 
-                                Text="Invia Messaggio" 
-                                Style="{StaticResource CleanButtonStyle}" 
-                                Clicked="OnInviaRispostaClicked"/>
                     </VerticalStackLayout>
                 </Frame>
 
-                <!-- Commenti -->
+                <!-- 3. Lista Partecipanti -->
+                <Frame Style="{StaticResource CleanCardStyle}">
+                    <VerticalStackLayout Spacing="20">
+                        <HorizontalStackLayout Spacing="12" VerticalOptions="Center">
+                            <Label Text="👫 Partecipanti" Style="{StaticResource SectionTitleStyle}" Margin="0"/>
+                            <Frame BackgroundColor="{StaticResource AccentColor}" CornerRadius="10" Padding="6,3" HasShadow="False" VerticalOptions="Center">
+                                <Label x:Name="ParticipantsCountBadge" Text="0" TextColor="White" FontSize="12" FontAttributes="Bold"/>
+                            </Frame>
+                        </HorizontalStackLayout>
+
+                        <CollectionView x:Name="ParticipantsCollectionView" ItemsSource="{Binding Participants}" EmptyView="Nessun partecipante ancora iscritto">
+                            <CollectionView.ItemsLayout>
+                                <LinearItemsLayout Orientation="Vertical" ItemSpacing="12"/>
+                            </CollectionView.ItemsLayout>
+                            <CollectionView.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Stroke="{StaticResource BorderColor}" StrokeThickness="1" StrokeShape="RoundRectangle 10" BackgroundColor="{StaticResource CardColor}" Padding="12">
+                                        <HorizontalStackLayout Spacing="12" VerticalOptions="Center">
+                                            <Frame WidthRequest="40" HeightRequest="40" CornerRadius="20" Padding="0" IsClippedToBounds="True" BorderColor="{StaticResource BorderColor}" HasShadow="False">
+                                                <Image Source="{Binding profile_picture, StringFormat='{0}'}" Aspect="AspectFill"/>
+                                            </Frame>
+                                            <VerticalStackLayout Spacing="2" VerticalOptions="Center" HorizontalOptions="StartAndExpand">
+                                                <Label Text="{Binding DisplayName}" FontAttributes="Bold" FontSize="14" TextColor="{StaticResource TextPrimary}"/>
+                                                <Label Text="{Binding registered_at, StringFormat='Iscritto il {0:dd/MM/yyyy}'}" FontSize="12" TextColor="{StaticResource TextSecondary}"/>
+                                            </VerticalStackLayout>
+                                            <Frame BackgroundColor="#FF6B35" CornerRadius="8" Padding="6,3" HasShadow="False" IsVisible="{Binding IsOrganizer}" VerticalOptions="Center">
+                                                <Label Text="ORGANIZZATORE" TextColor="White" FontSize="10" FontAttributes="Bold"/>
+                                            </Frame>
+                                        </HorizontalStackLayout>
+                                    </Border>
+                                </DataTemplate>
+                            </CollectionView.ItemTemplate>
+                            <CollectionView.EmptyView>
+                                <VerticalStackLayout Spacing="12" HorizontalOptions="Center" Padding="24">
+                                    <Label Text="👥" FontSize="32" HorizontalOptions="Center" Opacity="0.5"/>
+                                    <Label Text="Nessun partecipante ancora iscritto" HorizontalOptions="Center" FontSize="16" TextColor="{StaticResource TextSecondary}"/>
+                                    <Label Text="Sii il primo a partecipare!" HorizontalOptions="Center" FontSize="14" TextColor="{StaticResource TextSecondary}"/>
+                                </VerticalStackLayout>
+                            </CollectionView.EmptyView>
+                        </CollectionView>
+                    </VerticalStackLayout>
+                </Frame>
+
+                <!-- 4. Invia Messaggio -->
+                <Frame Style="{StaticResource CleanCardStyle}">
+                    <VerticalStackLayout Spacing="20">
+                        <Label Text="Invia un messaggio" Style="{StaticResource SectionTitleStyle}"/>
+                        <Frame BackgroundColor="{StaticResource InputColor}" CornerRadius="12" Padding="0" HasShadow="False">
+                            <Editor x:Name="RispostaEditor" Placeholder="Scrivi un messaggio per l'organizzatore..." AutoSize="TextChanges" MinimumHeightRequest="80" TextColor="{StaticResource TextPrimary}" PlaceholderColor="{StaticResource TextSecondary}" BackgroundColor="Transparent" FontSize="16" Margin="16,12"/>
+                        </Frame>
+                        <Button x:Name="InviaRispostaButton" Text="Invia Messaggio" Style="{StaticResource CleanButtonStyle}" Clicked="OnInviaRispostaClicked"/>
+                    </VerticalStackLayout>
+                </Frame>
+
+                <!-- 5. Commenti -->
                 <Frame Style="{StaticResource CleanCardStyle}">
                     <VerticalStackLayout Spacing="20">
                         <Label Text="Commenti" Style="{StaticResource SectionTitleStyle}"/>
-
-                        <CollectionView x:Name="CommentsCollectionView" 
-                                        ItemsSource="{Binding Comments}"
-                                        EmptyView="Nessun commento ancora...">
+                        <CollectionView x:Name="CommentsCollectionView" ItemsSource="{Binding Comments}" EmptyView="Nessun commento ancora...">
                             <CollectionView.ItemsLayout>
                                 <LinearItemsLayout Orientation="Vertical" ItemSpacing="16"/>
                             </CollectionView.ItemsLayout>
-
                             <CollectionView.ItemTemplate>
                                 <DataTemplate>
-                                    <Frame BackgroundColor="{StaticResource InputColor}" 
-                                           CornerRadius="12" 
-                                           Padding="16" 
-                                           HasShadow="False"
-                                           Margin="0">
+                                    <Frame BackgroundColor="{StaticResource InputColor}" CornerRadius="12" Padding="16" HasShadow="False" Margin="0">
                                         <VerticalStackLayout Spacing="8">
-                                            <!-- MODIFICATO: Header del commento con badge autore -->
                                             <HorizontalStackLayout Spacing="8" VerticalOptions="Center">
                                                 <Label Text="👤" FontSize="16" TextColor="{StaticResource AccentColor}"/>
-                                                <Label Text="{Binding autore_username}" 
-                                                       FontFamily="OpenSansBold" 
-                                                       FontSize="14" 
-                                                       TextColor="{StaticResource TextPrimary}"/>
-
-                                                <!-- NUOVO: Badge "AUTORE" visibile solo se è l'autore del post -->
-                                                <Frame Style="{StaticResource AuthorBadgeStyle}"
-                                                       IsVisible="{Binding IsAuthorComment}">
-                                                    <Label Text="AUTORE" 
-                                                           TextColor="White" 
-                                                           FontSize="10" 
-                                                           FontAttributes="Bold"/>
+                                                <Label Text="{Binding autore_username}" FontFamily="OpenSansBold" FontSize="14" TextColor="{StaticResource TextPrimary}"/>
+                                                <Frame Style="{StaticResource AuthorBadgeStyle}" IsVisible="{Binding IsAuthorComment}">
+                                                    <Label Text="AUTORE" TextColor="White" FontSize="10" FontAttributes="Bold"/>
                                                 </Frame>
-
-                                                <Label Text="{Binding created_at, StringFormat='{0:dd/MM/yyyy HH:mm}'}" 
-                                                       FontSize="12" 
-                                                       TextColor="{StaticResource TextSecondary}"
-                                                       HorizontalOptions="EndAndExpand"/>
+                                                <Label Text="{Binding created_at, StringFormat='{0:dd/MM/yyyy HH:mm}'}" FontSize="12" TextColor="{StaticResource TextSecondary}" HorizontalOptions="EndAndExpand"/>
                                             </HorizontalStackLayout>
-
-                                            <Label Text="{Binding contenuto}" 
-                                                   FontSize="14" 
-                                                   TextColor="{StaticResource TextPrimary}"
-                                                   LineBreakMode="WordWrap" 
-                                                   LineHeight="1.4"
-                                                   Margin="24,0,0,0"/>
+                                            <Label Text="{Binding contenuto}" FontSize="14" TextColor="{StaticResource TextPrimary}" LineBreakMode="WordWrap" LineHeight="1.4" Margin="24,0,0,0"/>
                                         </VerticalStackLayout>
                                     </Frame>
                                 </DataTemplate>
                             </CollectionView.ItemTemplate>
-
                             <CollectionView.EmptyView>
                                 <VerticalStackLayout Spacing="12" HorizontalOptions="Center" Padding="32">
                                     <Label Text="💬" FontSize="32" HorizontalOptions="Center" Opacity="0.5"/>
-                                    <Label Text="Nessun commento ancora..." 
-                                           HorizontalOptions="Center" 
-                                           FontSize="16" 
-                                           TextColor="{StaticResource TextSecondary}"/>
-                                    <Label Text="Sii il primo a commentare!" 
-                                           HorizontalOptions="Center" 
-                                           FontSize="14" 
-                                           TextColor="{StaticResource TextSecondary}"/>
+                                    <Label Text="Nessun commento ancora..." HorizontalOptions="Center" FontSize="16" TextColor="{StaticResource TextSecondary}"/>
+                                    <Label Text="Sii il primo a commentare!" HorizontalOptions="Center" FontSize="14" TextColor="{StaticResource TextSecondary}"/>
                                 </VerticalStackLayout>
                             </CollectionView.EmptyView>
                         </CollectionView>
