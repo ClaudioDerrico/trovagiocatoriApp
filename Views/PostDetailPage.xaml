@@ -70,33 +70,7 @@
 
     <Grid RowDefinitions="Auto,*" BackgroundColor="{StaticResource BackgroundColor}">
 
-        <!-- Header Semplificato -->
-        <Grid Grid.Row="0" BackgroundColor="{StaticResource PrimaryColor}" Padding="0,0,0,0">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto"/>
-                <ColumnDefinition Width="*"/>
-            </Grid.ColumnDefinitions>
 
-            <!-- Pulsante Indietro -->
-            <Button Grid.Column="0" 
-                    Text="←" 
-                    BackgroundColor="Transparent" 
-                    TextColor="White" 
-                    FontSize="24"
-                    WidthRequest="40"
-                    HeightRequest="40"
-                    CornerRadius="20"
-                    Clicked="OnBackButtonClicked"/>
-
-            <!-- Titolo -->
-            <Label Grid.Column="1" 
-                   Text="Dettagli Evento" 
-                   FontFamily="OpenSansBold" 
-                   FontSize="20" 
-                   TextColor="White" 
-                   VerticalOptions="Center" 
-                   HorizontalOptions="Center"/>
-        </Grid>
 
         <!-- Contenuto Principale -->
         <ScrollView Grid.Row="1" BackgroundColor="{StaticResource BackgroundColor}">

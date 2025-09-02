@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="trovagiocatoriApp.Views.SplashPage"
+             BackgroundColor="#121212">
+
+    <Grid RowDefinitions="*,Auto,*" ColumnDefinitions="*">
+
+        <!-- Logo al centro -->
+        <Image Source="logo.jpg"
+               Grid.Row="1"
+               HorizontalOptions="Center"
+               VerticalOptions="Center"
+               WidthRequest="200"
+               HeightRequest="200" />
+
+        <!-- Indicatore di caricamento sotto -->
+        <ActivityIndicator Grid.Row="2"
+                           IsRunning="True"
+                           VerticalOptions="Start"
+                           HorizontalOptions="Center"
+                           Color="White" />
+
+    </Grid>
+</ContentPage>

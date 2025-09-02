@@ -8,16 +8,48 @@ namespace trovagiocatoriApp
         {
             InitializeComponent();
 
-            bool hasSession = Preferences.ContainsKey("session_id") &&
-                              !string.IsNullOrEmpty(Preferences.Get("session_id", ""));
+            // Mostro splash iniziale
+            MainPage = new SplashPage();
 
-            if (hasSession)
+            // Avvio la logica asincrona
+            _ = InitializeAsync();
+        }
+
+        private async Task InitializeAsync()
+        {
+            bool valid = await IsSessionValid();
+
+            MainThread.BeginInvokeOnMainThread(() =>
             {
-                MainPage = new AppShell();
+                if (valid)
+                {
+                    MainPage = new AppShell();
+                }
+                else
+                {
+                    MainPage = new NavigationPage(new LoginPage());
+                }
+            });
+        }
+
+        private async Task<bool> IsSessionValid()
+        {
+            string sessionId = Preferences.Get("session_id", "");
+            if (string.IsNullOrEmpty(sessionId))
+                return false;
+
+            try
+            {
+                using var client = new HttpClient();
+                var request = new HttpRequestMessage(HttpMethod.Get, $"{ApiConfig.BaseUrl}/profile");
+                request.Headers.Add("Cookie", $"session_id={sessionId}");
+
+                var response = await client.SendAsync(request);
+                return response.IsSuccessStatusCode;
             }
-            else
+            catch
             {
-                MainPage = new NavigationPage(new LoginPage());
+                return false;
             }
         }
 
@@ -25,6 +57,7 @@ namespace trovagiocatoriApp
         {
             Shell.Current.GoToAsync("..");
         }
-
     }
 }
+
+

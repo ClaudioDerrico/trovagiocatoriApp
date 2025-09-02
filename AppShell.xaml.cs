@@ -30,15 +30,6 @@ namespace trovagiocatoriApp
         {
             base.OnAppearing();
 
-            bool hasSession = Preferences.ContainsKey("session_id") &&
-                              !string.IsNullOrEmpty(Preferences.Get("session_id", ""));
-
-            // Se non c'è sessione, naviga alla LoginPage
-            if (!hasSession)
-            {
-                // Usa MainPage invece della navigazione relativa per evitare problemi
-                Application.Current.MainPage = new NavigationPage(new LoginPage());
-            }
         }
 
         private async void OnLogoutClicked(object sender, EventArgs e)
@@ -46,14 +37,13 @@ namespace trovagiocatoriApp
             bool confirm = await DisplayAlert("Logout", "Sei sicuro di voler effettuare il logout?", "Sì", "No");
             if (confirm)
             {
-                if (Preferences.ContainsKey("session_id"))
-                {
-                    Preferences.Remove("session_id");
-                }
-                Debug.WriteLine($"Session_id AFTER REMOVE: {Preferences.Get("session_id", "")}");
+                // Pulisci TUTTE le preferences relative alla sessione
+                Preferences.Clear(); // O più specificamente:
+                                     // Preferences.Remove("session_id");
+
+                Debug.WriteLine($"[LOGOUT] Session cleared");
 
                 Application.Current.MainPage = new NavigationPage(new LoginPage());
-
                 await DisplayAlert("Logout", "Sei stato disconnesso con successo.", "OK");
             }
         }
