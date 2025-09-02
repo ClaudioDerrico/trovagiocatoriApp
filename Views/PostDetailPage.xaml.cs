@@ -26,6 +26,9 @@ namespace trovagiocatoriApp.Views
         // Stato del preferito
         private bool _isFavorite = false;
 
+        // NUOVO: Salva l'email dell'autore del post per confronto
+        private string _postAuthorEmail = "";
+
         // ObservableCollection per i commenti
         public ObservableCollection<Comment> Comments { get; set; } = new ObservableCollection<Comment>();
 
@@ -71,6 +74,9 @@ namespace trovagiocatoriApp.Views
             {
                 // 1. Carica i dati del post
                 var post = await LoadPostDataAsync();
+
+                // NUOVO: Salva l'email dell'autore del post
+                _postAuthorEmail = post.autore_email;
 
                 // 2. Carica i dati dell'utente
                 var user = await LoadUserDataAsync(post.autore_email);
@@ -200,7 +206,7 @@ namespace trovagiocatoriApp.Views
             }
         }
 
-        // NUOVE FUNZIONI PER I PREFERITI
+        // FUNZIONI PER I PREFERITI
 
         private async Task CheckFavoriteStatusAsync()
         {
@@ -288,34 +294,17 @@ namespace trovagiocatoriApp.Views
                 return;
             }
 
-            // Preferisci usare le coordinate se presenti
-            bool hasCoords = Campo.Lat != 0 && Campo.Lng != 0; // o altra condizione valida per te
-            string nameEscaped = Uri.EscapeDataString(Campo.Nome ?? "Posizione");
-
-
             try
             {
                 string uriString;
 
-                if (hasCoords)
-                {
-                    // Apri Google Maps con coordinate (funziona sempre)
-                    string latStr = Campo.Lat.ToString(CultureInfo.InvariantCulture);
-                    string lngStr = Campo.Lng.ToString(CultureInfo.InvariantCulture);
-                    uriString = $"https://www.google.com/maps/search/?api=1&query={latStr},{lngStr}";
-                }
-                else
-                {
-                    // Se non hai coordinate, usa l'indirizzo
-                    string address = Campo.Indirizzo ?? Campo.Nome ?? "";
-                    if (string.IsNullOrWhiteSpace(address))
-                    {
-                        await DisplayAlert("Info", "Impossibile ottenere posizione o indirizzo del campo.", "OK");
-                        return;
-                    }
-
-                    uriString = $"https://www.google.com/maps/search/?api=1&query={Uri.EscapeDataString(address)}";
-                }
+     
+ 
+        
+                string latStr = Campo.Lat.ToString(CultureInfo.InvariantCulture);
+                string lngStr = Campo.Lng.ToString(CultureInfo.InvariantCulture);
+                uriString = $"https://www.google.com/maps/search/?api=1&query={latStr},{lngStr}";
+       
 
                 await Launcher.OpenAsync(new Uri(uriString));
             }
@@ -326,6 +315,7 @@ namespace trovagiocatoriApp.Views
             }
         }
 
+        // MODIFICATO: Carica i commenti con badge autore
         private async Task LoadCommentsAsync()
         {
             try
@@ -353,6 +343,10 @@ namespace trovagiocatoriApp.Views
                     {
                         // Recupera il username per ogni commento
                         comment.autore_username = await GetUsernameByEmail(comment.autore_email);
+
+                        // NUOVO: Determina se il commento è dell'autore del post
+                        comment.IsAuthorComment = comment.autore_email.Equals(_postAuthorEmail, StringComparison.OrdinalIgnoreCase);
+
                         Comments.Add(comment);
                     }
                 }

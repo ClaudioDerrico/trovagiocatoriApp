@@ -15,12 +15,6 @@ namespace trovagiocatoriApp.Views
             InitializeComponent();
         }
 
-        protected override void OnAppearing()
-        {
-            base.OnAppearing();
-            Application.Current.MainPage.Window.Height = 800;
-            Application.Current.MainPage.Window.Width = 500;
-        }
 
         private void OnTogglePasswordVisibility(object sender, EventArgs e)
         {

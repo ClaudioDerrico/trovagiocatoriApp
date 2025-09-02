@@ -229,80 +229,9 @@
                             </Frame>
                         </DataTemplate>
                     </CollectionView.ItemTemplate>
-                    <CollectionView.ItemTemplate>
-                        <DataTemplate>
-                            <Frame Style="{StaticResource PostCard}">
-                                <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto" RowSpacing="10">
-                                    <!-- Titolo e Livello -->
-                                    <Grid Grid.Row="0" ColumnDefinitions="*,Auto">
-                                        <Label Text="{Binding titolo}"
-                                               Style="{StaticResource CardTitle}"
-                                               Grid.Column="0"/>
-                                        <!-- Badge Livello -->
-                                        <Frame Grid.Column="1"
-                                               BackgroundColor="{Binding LivelloColor}"
-                                               CornerRadius="12"
-                                               Padding="8,4"
-                                               HasShadow="False"
-                                               VerticalOptions="Start">
-                                            <Label Text="{Binding LivelloDisplayText}"
-                                                   TextColor="White"
-                                                   FontSize="11"
-                                                   FontAttributes="Bold"/>
-                                        </Frame>
-                                    </Grid>
 
-                                    <!-- Località con icona -->
-                                    <Grid Grid.Row="1" ColumnDefinitions="Auto,*">
-                                        <Image Source="location_pin.png"
-                                               Style="{StaticResource IconStyle}"/>
-                                        <Label Text="{Binding citta}"
-                                               Grid.Column="1"
-                                               Style="{StaticResource CardLocation}"/>
-                                    </Grid>
+                    <!-- RIMOSSO IL TEMPLATE DUPLICATO -->
 
-                                    <!-- Data e ora con icone -->
-                                    <Grid Grid.Row="2" ColumnDefinitions="Auto,*,Auto,*">
-                                        <Image Source="calendar.png"
-                                               Grid.Column="0"
-                                               Style="{StaticResource IconStyle}"/>
-                                        <Label Text="{Binding data_partita}"
-                                               Grid.Column="1"
-                                               Style="{StaticResource CardDateTime}"/>
-                                        <Image Source="clock.png"
-                                               Grid.Column="2"
-                                               Style="{StaticResource IconStyle}"
-                                               Margin="12,0,8,0"/>
-                                        <Label Text="{Binding ora_partita}"
-                                               Grid.Column="3"
-                                               Style="{StaticResource CardDateTime}"/>
-                                    </Grid>
-
-                                    <!-- Sport e Campo (se presente) -->
-                                    <Grid Grid.Row="3" ColumnDefinitions="Auto,*">
-                                        <Image Source="sports_icon.png"
-                                               Grid.Column="0"
-                                               Style="{StaticResource IconStyle}"/>
-                                        <Label Grid.Column="1"
-                                               Style="{StaticResource CardDateTime}">
-                                            <Label.Text>
-                                                <MultiBinding StringFormat="{}{0}{1}">
-                                                    <Binding Path="sport"/>
-                                                    <Binding Path="campo.nome" StringFormat=" - {0}"/>
-                                                </MultiBinding>
-                                            </Label.Text>
-                                        </Label>
-                                    </Grid>
-
-                                    <!-- Separatore -->
-                                    <BoxView Grid.Row="4" 
-                                             HeightRequest="1" 
-                                             Color="#F0F2F5" 
-                                             Margin="0,4,0,8"/>
-                                </Grid>
-                            </Frame>
-                        </DataTemplate>
-                    </CollectionView.ItemTemplate>
                 </CollectionView>
             </RefreshView>
         </Grid>

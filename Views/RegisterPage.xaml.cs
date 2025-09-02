@@ -21,14 +21,6 @@ namespace trovagiocatoriApp.Views
             InitializeComponent();
         }
 
-        protected override void OnAppearing()
-        {
-            base.OnAppearing();
-
-            // Se desideri forzare una dimensione fissa per la finestra (usato in fase di sviluppo o su desktop)
-            Application.Current.MainPage.Window.Height = 800;
-            Application.Current.MainPage.Window.Width = 500;
-        }
 
         private void OnTogglePasswordVisibility(object sender, EventArgs e)
         {

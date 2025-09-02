@@ -13,6 +13,8 @@ namespace trovagiocatoriApp.Models
         public string autore_nome { get; set; }
         public string autore_cognome { get; set; }
 
+        public bool IsAuthorComment { get; set; }
+
         // Proprietà computed per il display name
         public string DisplayName =>
             !string.IsNullOrEmpty(autore_username) ? autore_username :

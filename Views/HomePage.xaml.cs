@@ -23,18 +23,6 @@ public partial class HomePage : ContentPage
         }
     }
 
-    protected override void OnAppearing()
-    {
-        base.OnAppearing();
-        // Impostare la dimensione per la pagina di login (1000x800)
-        // Nota: Questa logica è più adatta per applicazioni Desktop.
-        // Su mobile, l'app occupa solitamente l'intero schermo.
-        if (Application.Current.MainPage?.Window != null) // Aggiunto controllo per nullità
-        {
-            Application.Current.MainPage.Window.Height = 800;
-            Application.Current.MainPage.Window.Width = 1000;
-        }
-    }
 
     private async void PostPageClicked(object sender, EventArgs e)
     {

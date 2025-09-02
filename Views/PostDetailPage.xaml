@@ -65,12 +65,20 @@
                     <Shadow Brush="{StaticResource PrimaryColor}" Offset="0,4" Radius="12" Opacity="0.2"/>
                 </Setter>
             </Style>
+
+            <!-- NUOVO: Stile per il badge autore -->
+            <Style x:Key="AuthorBadgeStyle" TargetType="Frame">
+                <Setter Property="BackgroundColor" Value="#FF6B35"/>
+                <Setter Property="CornerRadius" Value="10"/>
+                <Setter Property="Padding" Value="8,4"/>
+                <Setter Property="HasShadow" Value="False"/>
+                <Setter Property="BorderColor" Value="Transparent"/>
+                <Setter Property="VerticalOptions" Value="Center"/>
+            </Style>
         </ResourceDictionary>
     </ContentPage.Resources>
 
     <Grid RowDefinitions="Auto,*" BackgroundColor="{StaticResource BackgroundColor}">
-
-
 
         <!-- Contenuto Principale -->
         <ScrollView Grid.Row="1" BackgroundColor="{StaticResource BackgroundColor}">
@@ -329,16 +337,29 @@
                                            HasShadow="False"
                                            Margin="0">
                                         <VerticalStackLayout Spacing="8">
+                                            <!-- MODIFICATO: Header del commento con badge autore -->
                                             <HorizontalStackLayout Spacing="8" VerticalOptions="Center">
                                                 <Label Text="👤" FontSize="16" TextColor="{StaticResource AccentColor}"/>
                                                 <Label Text="{Binding autore_username}" 
                                                        FontFamily="OpenSansBold" 
                                                        FontSize="14" 
                                                        TextColor="{StaticResource TextPrimary}"/>
+
+                                                <!-- NUOVO: Badge "AUTORE" visibile solo se è l'autore del post -->
+                                                <Frame Style="{StaticResource AuthorBadgeStyle}"
+                                                       IsVisible="{Binding IsAuthorComment}">
+                                                    <Label Text="AUTORE" 
+                                                           TextColor="White" 
+                                                           FontSize="10" 
+                                                           FontAttributes="Bold"/>
+                                                </Frame>
+
                                                 <Label Text="{Binding created_at, StringFormat='{0:dd/MM/yyyy HH:mm}'}" 
                                                        FontSize="12" 
-                                                       TextColor="{StaticResource TextSecondary}"/>
+                                                       TextColor="{StaticResource TextSecondary}"
+                                                       HorizontalOptions="EndAndExpand"/>
                                             </HorizontalStackLayout>
+
                                             <Label Text="{Binding contenuto}" 
                                                    FontSize="14" 
                                                    TextColor="{StaticResource TextPrimary}"
