@@ -3,9 +3,15 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
              xmlns:vm="clr-namespace:trovagiocatoriApp.ViewModels"
+             xmlns:converters="clr-namespace:trovagiocatoriApp.Converters"
              x:Class="trovagiocatoriApp.Views.ProfilePage"
              Title="Profilo Utente">
 
+    <ContentPage.Resources>
+        <ResourceDictionary>
+            <converters:IsNotNullConverter x:Key="IsNotNullConverter"/>
+        </ResourceDictionary>
+    </ContentPage.Resources>
 
     <ScrollView>
         <VerticalStackLayout Padding="20" Spacing="20">
@@ -73,6 +79,128 @@
                 </VerticalStackLayout>
             </Frame>
 
+            <!-- NUOVO: SEZIONE CALENDARIO EVENTI -->
+            <Frame CornerRadius="15" Padding="20"
+                   BackgroundColor="White" HasShadow="True"
+                   BorderColor="#DDDDDD"
+                   HorizontalOptions="FillAndExpand">
+                <VerticalStackLayout Spacing="15">
+                    <Label Text="📅 I Miei Eventi" 
+                           FontSize="18" 
+                           FontAttributes="Bold" 
+                           TextColor="#2196F3" 
+                           HorizontalOptions="Start"/>
+
+                    <!-- Calendario con eventi -->
+                    <CollectionView x:Name="CalendarEventsCollectionView"
+                                    SelectionMode="Single"
+                                    SelectionChanged="OnCalendarEventSelected"
+                                    EmptyView="Nessun evento in programma">
+                        <CollectionView.ItemsLayout>
+                            <LinearItemsLayout Orientation="Vertical" ItemSpacing="12"/>
+                        </CollectionView.ItemsLayout>
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate>
+                                <Border Stroke="#E0E0E0" 
+                                        StrokeThickness="1" 
+                                        StrokeShape="RoundRectangle 10" 
+                                        BackgroundColor="#F8F9FF"
+                                        Padding="16">
+                                    <Grid RowDefinitions="Auto,Auto,Auto,Auto" RowSpacing="6">
+                                        <!-- Header con data e sport -->
+                                        <Grid Grid.Row="0" ColumnDefinitions="Auto,*,Auto">
+                                            <Frame Grid.Column="0" 
+                                                   BackgroundColor="#2196F3" 
+                                                   CornerRadius="8" 
+                                                   Padding="8,4" 
+                                                   HasShadow="False"
+                                                   VerticalOptions="Center">
+                                                <Label Text="{Binding data_partita}" 
+                                                       TextColor="White" 
+                                                       FontSize="12" 
+                                                       FontAttributes="Bold"/>
+                                            </Frame>
+
+                                            <Label Grid.Column="1" 
+                                                   Text="{Binding sport, StringFormat='Partita di {0}'}"
+                                                   FontAttributes="Bold"
+                                                   FontSize="16"
+                                                   TextColor="#2196F3"
+                                                   VerticalOptions="Center"
+                                                   Margin="12,0,0,0"/>
+
+                                            <Label Grid.Column="2" 
+                                                   Text="{Binding ora_partita}"
+                                                   FontSize="14"
+                                                   FontAttributes="Bold"
+                                                   TextColor="#666"
+                                                   VerticalOptions="Center"/>
+                                        </Grid>
+
+                                        <!-- Titolo evento -->
+                                        <Label Grid.Row="1" 
+                                               Text="{Binding titolo}"
+                                               FontSize="15"
+                                               FontAttributes="Bold"
+                                               TextColor="#333"
+                                               LineBreakMode="TailTruncation"
+                                               Margin="0,4,0,0"/>
+
+                                        <!-- Località -->
+                                        <HorizontalStackLayout Grid.Row="2" Spacing="8" Margin="0,2,0,0">
+                                            <Label Text="📍" FontSize="14"/>
+                                            <Label Text="{Binding citta}" 
+                                                   FontSize="13" 
+                                                   TextColor="#666"/>
+                                            <Label Text="|" 
+                                                   FontSize="13" 
+                                                   TextColor="#DDD"/>
+                                            <Label Text="{Binding provincia}" 
+                                                   FontSize="13" 
+                                                   TextColor="#666"/>
+                                        </HorizontalStackLayout>
+
+                                        <!-- Dettagli aggiuntivi -->
+                                        <HorizontalStackLayout Grid.Row="3" Spacing="15" Margin="0,4,0,0">
+                                            <!-- Livello -->
+                                            <HorizontalStackLayout Spacing="4">
+                                                <Label Text="🏆" FontSize="12"/>
+                                                <Label Text="{Binding livello}" 
+                                                       FontSize="12" 
+                                                       TextColor="#888"/>
+                                            </HorizontalStackLayout>
+
+                                            <!-- Campo (se presente) -->
+                                            <HorizontalStackLayout Spacing="4" IsVisible="{Binding campo, Converter={StaticResource IsNotNullConverter}}">
+                                                <Label Text="🏟️" FontSize="12"/>
+                                                <Label Text="{Binding campo.nome}" 
+                                                       FontSize="12" 
+                                                       TextColor="#888"
+                                                       LineBreakMode="TailTruncation"/>
+                                            </HorizontalStackLayout>
+                                        </HorizontalStackLayout>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                        <CollectionView.EmptyView>
+                            <VerticalStackLayout Spacing="10" HorizontalOptions="Center" Padding="20">
+                                <Label Text="📅" FontSize="40" HorizontalOptions="Center" Opacity="0.5"/>
+                                <Label Text="Nessun evento in programma" 
+                                       HorizontalOptions="Center" 
+                                       FontSize="16" 
+                                       TextColor="#888"/>
+                                <Label Text="Iscriviti agli eventi per vederli qui!" 
+                                       HorizontalOptions="Center" 
+                                       FontSize="14" 
+                                       TextColor="#AAA"
+                                       HorizontalTextAlignment="Center"/>
+                            </VerticalStackLayout>
+                        </CollectionView.EmptyView>
+                    </CollectionView>
+                </VerticalStackLayout>
+            </Frame>
+
             <!-- SEZIONE PREFERITI -->
             <Frame CornerRadius="15" Padding="20"
                    BackgroundColor="White" HasShadow="True"
@@ -121,10 +249,10 @@
 
                                         <!-- Data e Ora -->
                                         <HorizontalStackLayout Grid.Row="2" Spacing="15">
-                                            <Label Text="{Binding data_partita, StringFormat='📅 {0}'}" 
+                                            <Label Text="{Binding DataPartitaLong, StringFormat='📅 {0}'}" 
                                                    FontSize="13" 
                                                    TextColor="#888"/>
-                                            <Label Text="{Binding ora_partita, StringFormat='🕐 {0}'}" 
+                                            <Label Text="{Binding OraPartitaFormatted, StringFormat='🕐 {0}'}" 
                                                    FontSize="13" 
                                                    TextColor="#888"/>
                                         </HorizontalStackLayout>
