@@ -69,8 +69,6 @@ namespace trovagiocatoriApp.Views
 
                 // Carica i messaggi esistenti
                 LoadExistingMessages();
-
-
             }
             else
             {
@@ -104,8 +102,6 @@ namespace trovagiocatoriApp.Views
             {
                 AddMessageToUI(message);
                 ScrollToBottom();
-
-
             });
         }
 
@@ -203,16 +199,37 @@ namespace trovagiocatoriApp.Views
             if (string.IsNullOrEmpty(message))
                 return;
 
+            Debug.WriteLine($"[CHAT UI] Invio messaggio: {message}");
+
+            // CORREZIONE: Aggiungi subito il messaggio alla UI come "inviato da me"
+            var localMessage = new LiveChatMessage
+            {
+                Id = Guid.NewGuid().ToString(),
+                PostId = _post.id,
+                SenderEmail = _currentUserEmail,
+                RecipientEmail = _recipientEmail,
+                Content = message,
+                Timestamp = DateTime.Now,
+                IsSentByMe = true,
+                Read = false
+            };
+
+            // Aggiungi immediatamente alla UI
+            AddMessageToUI(localMessage);
+            ScrollToBottom();
+
+            // Pulisci il campo di input subito
+            MessageEntry.Text = "";
+
             // Disabilita il pulsante temporaneamente
             SendButton.IsEnabled = false;
 
             try
             {
-                // Invia il messaggio
+                // Invia il messaggio al server
                 await _chatService.SendMessageAsync(_post.id, _recipientEmail, message);
 
-                // Pulisci il campo di input
-                MessageEntry.Text = "";
+                Debug.WriteLine($"[CHAT UI] Messaggio inviato al server");
 
                 // Ferma il typing indicator
                 if (_isTyping)
@@ -223,8 +240,14 @@ namespace trovagiocatoriApp.Views
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"[CHAT] Errore invio messaggio: {ex.Message}");
+                Debug.WriteLine($"[CHAT UI] Errore invio messaggio: {ex.Message}");
+
+                // In caso di errore, mostra un messaggio di errore
                 await DisplayAlert("Errore", "Impossibile inviare il messaggio", "OK");
+
+                // OPZIONALE: Rimuovi il messaggio dalla UI se l'invio è fallito
+                // var lastChild = MessagesContainer.Children.LastOrDefault();
+                // if (lastChild != null) MessagesContainer.Children.Remove(lastChild);
             }
             finally
             {
@@ -296,7 +319,7 @@ namespace trovagiocatoriApp.Views
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"[CHAT] Errore durante uscita: {ex.Message}");
+                Debug.WriteLine($"[CHAT UI] Errore durante uscita: {ex.Message}");
             }
 
             await Navigation.PopAsync();
@@ -322,7 +345,7 @@ namespace trovagiocatoriApp.Views
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"[CHAT] Errore durante cleanup: {ex.Message}");
+                Debug.WriteLine($"[CHAT UI] Errore durante cleanup: {ex.Message}");
             }
         }
     }
