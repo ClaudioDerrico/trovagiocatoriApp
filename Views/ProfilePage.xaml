@@ -79,7 +79,211 @@
                 </VerticalStackLayout>
             </Frame>
 
-            <!-- NUOVO: SEZIONE CALENDARIO EVENTI -->
+            <!-- NUOVO: SEZIONE I MIEI POST -->
+            <Frame CornerRadius="15" Padding="20"
+                   BackgroundColor="White" HasShadow="True"
+                   BorderColor="#DDDDDD"
+                   HorizontalOptions="FillAndExpand">
+                <VerticalStackLayout Spacing="15">
+                    <Label Text="📝 I Miei Post" 
+                           FontSize="18" 
+                           FontAttributes="Bold" 
+                           TextColor="#4CAF50" 
+                           HorizontalOptions="Start"/>
+
+                    <!-- Lista dei miei post -->
+                    <CollectionView x:Name="MyPostsCollectionView"
+                                    SelectionMode="Single"
+                                    SelectionChanged="OnMyPostSelected"
+                                    EmptyView="Non hai ancora creato eventi">
+                        <CollectionView.ItemsLayout>
+                            <LinearItemsLayout Orientation="Vertical" ItemSpacing="12"/>
+                        </CollectionView.ItemsLayout>
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate>
+                                <Border Stroke="#E0E0E0" 
+                                        StrokeThickness="1" 
+                                        StrokeShape="RoundRectangle 10" 
+                                        BackgroundColor="#F0F8F0"
+                                        Padding="16">
+                                    <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto" RowSpacing="8">
+                                        <!-- Header con titolo e status -->
+                                        <Grid Grid.Row="0" ColumnDefinitions="*,Auto">
+                                            <Label Grid.Column="0" 
+                                                   Text="{Binding titolo}"
+                                                   FontAttributes="Bold"
+                                                   FontSize="16"
+                                                   TextColor="#2E7D32"
+                                                   LineBreakMode="TailTruncation"/>
+
+                                            <Frame Grid.Column="1" 
+                                                   CornerRadius="8" 
+                                                   Padding="6,3" 
+                                                   HasShadow="False"
+                                                   VerticalOptions="Center">
+                                                <!-- Colore dinamico basato sulla disponibilità -->
+                                                <Frame.Triggers>
+                                                    <DataTrigger TargetType="Frame" Binding="{Binding is_full}" Value="True">
+                                                        <Setter Property="BackgroundColor" Value="#FF5722"/>
+                                                    </DataTrigger>
+                                                    <DataTrigger TargetType="Frame" Binding="{Binding is_full}" Value="False">
+                                                        <Setter Property="BackgroundColor" Value="#4CAF50"/>
+                                                    </DataTrigger>
+                                                </Frame.Triggers>
+
+                                                <Label FontSize="10" 
+                                                       FontAttributes="Bold" 
+                                                       TextColor="White">
+                                                    <Label.Triggers>
+                                                        <DataTrigger TargetType="Label" Binding="{Binding is_full}" Value="True">
+                                                            <Setter Property="Text" Value="COMPLETO"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger TargetType="Label" Binding="{Binding is_full}" Value="False">
+                                                            <Setter Property="Text" Value="APERTO"/>
+                                                        </DataTrigger>
+                                                    </Label.Triggers>
+                                                </Label>
+                                            </Frame>
+                                        </Grid>
+
+                                        <!-- Sport e Data/Ora -->
+                                        <Grid Grid.Row="1" ColumnDefinitions="Auto,*,Auto">
+                                            <HorizontalStackLayout Grid.Column="0" Spacing="6">
+                                                <Label Text="⚽" FontSize="14"/>
+                                                <Label Text="{Binding sport}" 
+                                                       FontSize="14" 
+                                                       FontAttributes="Bold"
+                                                       TextColor="#FF6B35"/>
+                                            </HorizontalStackLayout>
+
+                                            <HorizontalStackLayout Grid.Column="2" Spacing="10">
+                                                <Label Text="{Binding data_partita}" 
+                                                       FontSize="13" 
+                                                       TextColor="#666"/>
+                                                <Label Text="{Binding ora_partita}" 
+                                                       FontSize="13" 
+                                                       FontAttributes="Bold"
+                                                       TextColor="#666"/>
+                                            </HorizontalStackLayout>
+                                        </Grid>
+
+                                        <!-- Località -->
+                                        <HorizontalStackLayout Grid.Row="2" Spacing="8">
+                                            <Label Text="📍" FontSize="14"/>
+                                            <Label Text="{Binding citta}" 
+                                                   FontSize="13" 
+                                                   TextColor="#666"/>
+                                            <Label Text="|" 
+                                                   FontSize="13" 
+                                                   TextColor="#DDD"/>
+                                            <Label Text="{Binding provincia}" 
+                                                   FontSize="13" 
+                                                   TextColor="#666"/>
+                                        </HorizontalStackLayout>
+
+                                        <!-- Statistiche partecipanti -->
+                                        <Frame Grid.Row="3" 
+                                               BackgroundColor="#E8F5E8" 
+                                               CornerRadius="8" 
+                                               Padding="12,8" 
+                                               HasShadow="False"
+                                               Margin="0,4,0,0">
+                                            <Grid ColumnDefinitions="*,*,*" ColumnSpacing="8">
+                                                <!-- Richiesti -->
+                                                <VerticalStackLayout Grid.Column="0" Spacing="2" HorizontalOptions="Center">
+                                                    <Label Text="{Binding numero_giocatori}" 
+                                                           FontSize="16" 
+                                                           FontAttributes="Bold" 
+                                                           TextColor="#2E7D32"
+                                                           HorizontalOptions="Center"/>
+                                                    <Label Text="Richiesti" 
+                                                           FontSize="10" 
+                                                           TextColor="#666"
+                                                           HorizontalOptions="Center"/>
+                                                </VerticalStackLayout>
+
+                                                <!-- Iscritti -->
+                                                <VerticalStackLayout Grid.Column="1" Spacing="2" HorizontalOptions="Center">
+                                                    <Label Text="{Binding partecipanti_iscritti}" 
+                                                           FontSize="16" 
+                                                           FontAttributes="Bold" 
+                                                           TextColor="#FF9800"
+                                                           HorizontalOptions="Center"/>
+                                                    <Label Text="Iscritti" 
+                                                           FontSize="10" 
+                                                           TextColor="#666"
+                                                           HorizontalOptions="Center"/>
+                                                </VerticalStackLayout>
+
+                                                <!-- Liberi -->
+                                                <VerticalStackLayout Grid.Column="2" Spacing="2" HorizontalOptions="Center">
+                                                    <Label Text="{Binding posti_disponibili}" 
+                                                           FontSize="16" 
+                                                           FontAttributes="Bold" 
+                                                           HorizontalOptions="Center">
+                                                        <Label.Triggers>
+                                                            <DataTrigger TargetType="Label" Binding="{Binding posti_disponibili}" Value="0">
+                                                                <Setter Property="TextColor" Value="#F44336"/>
+                                                            </DataTrigger>
+                                                        </Label.Triggers>
+                                                        <Label.TextColor>
+                                                            <Binding Path="posti_disponibili">
+                                                                <Binding.Converter>
+                                                                    <converters:AvailabilityColorConverter/>
+                                                                </Binding.Converter>
+                                                            </Binding>
+                                                        </Label.TextColor>
+                                                    </Label>
+                                                    <Label Text="Liberi" 
+                                                           FontSize="10" 
+                                                           TextColor="#666"
+                                                           HorizontalOptions="Center"/>
+                                                </VerticalStackLayout>
+                                            </Grid>
+                                        </Frame>
+
+                                        <!-- Livello e Campo -->
+                                        <HorizontalStackLayout Grid.Row="4" Spacing="15" Margin="0,4,0,0">
+                                            <!-- Livello -->
+                                            <HorizontalStackLayout Spacing="4">
+                                                <Label Text="🏆" FontSize="12"/>
+                                                <Label Text="{Binding livello}" 
+                                                       FontSize="12" 
+                                                       TextColor="#888"/>
+                                            </HorizontalStackLayout>
+
+                                            <!-- Campo (se presente) -->
+                                            <HorizontalStackLayout Spacing="4" IsVisible="{Binding campo, Converter={StaticResource IsNotNullConverter}}">
+                                                <Label Text="🏟️" FontSize="12"/>
+                                                <Label Text="{Binding campo.nome}" 
+                                                       FontSize="12" 
+                                                       TextColor="#888"
+                                                       LineBreakMode="TailTruncation"/>
+                                            </HorizontalStackLayout>
+                                        </HorizontalStackLayout>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                        <CollectionView.EmptyView>
+                            <VerticalStackLayout Spacing="10" HorizontalOptions="Center" Padding="20">
+                                <Label Text="📝" FontSize="40" HorizontalOptions="Center" Opacity="0.5"/>
+                                <Label Text="Non hai ancora creato eventi" 
+                                       HorizontalOptions="Center" 
+                                       FontSize="16" 
+                                       TextColor="#888"/>
+                                <Label Text="Crea il tuo primo evento per iniziare!" 
+                                       HorizontalOptions="Center" 
+                                       FontSize="14" 
+                                       TextColor="#AAA"
+                                       HorizontalTextAlignment="Center"/>
+                            </VerticalStackLayout>
+                        </CollectionView.EmptyView>
+                    </CollectionView>
+                </VerticalStackLayout>
+            </Frame>
+
+            <!-- SEZIONE CALENDARIO EVENTI -->
             <Frame CornerRadius="15" Padding="20"
                    BackgroundColor="White" HasShadow="True"
                    BorderColor="#DDDDDD"

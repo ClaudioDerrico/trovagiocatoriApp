@@ -324,6 +324,16 @@ namespace trovagiocatoriApp.Views
             }
         }
 
+        // NUOVO: Gestione selezione mio post
+        private async void OnMyPostSelected(object sender, SelectionChangedEventArgs e)
+        {
+            if (e.CurrentSelection.FirstOrDefault() is PostResponse selectedPost)
+            {
+                ((CollectionView)sender).SelectedItem = null;
+                await Navigation.PushAsync(new PostDetailPage(selectedPost.id));
+            }
+        }
+
         // NUOVO: Gestione selezione evento calendario
         private async void OnCalendarEventSelected(object sender, SelectionChangedEventArgs e)
         {
