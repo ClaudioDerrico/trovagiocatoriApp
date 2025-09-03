@@ -229,19 +229,6 @@
 									</Border>
 								</DataTemplate>
 							</CollectionView.ItemTemplate>
-							<CollectionView.EmptyView>
-								<VerticalStackLayout Spacing="12" HorizontalOptions="Center" Padding="24">
-									<Label Text="👥" FontSize="32" HorizontalOptions="Center" Opacity="0.5"/>
-									<Label Text="Nessun partecipante ancora iscritto"
-                                           HorizontalOptions="Center"
-                                           FontSize="16"
-                                           TextColor="{StaticResource TextSecondary}"/>
-									<Label Text="Sii il primo a partecipare!"
-                                           HorizontalOptions="Center"
-                                           FontSize="14"
-                                           TextColor="{StaticResource TextSecondary}"/>
-								</VerticalStackLayout>
-							</CollectionView.EmptyView>
 						</CollectionView>
 					</VerticalStackLayout>
 				</Frame>
@@ -253,8 +240,7 @@
 				<!-- Messages List -->
 				<ScrollView Grid.Row="0" x:Name="MessagesScrollView">
 					<VerticalStackLayout Spacing="12" Padding="0,16">
-						<CollectionView x:Name="CommentsCollectionView"
-                                        EmptyView="Nessun messaggio ancora...">
+						<CollectionView x:Name="CommentsCollectionView">
 							<CollectionView.ItemsLayout>
 								<LinearItemsLayout Orientation="Vertical" ItemSpacing="12"/>
 							</CollectionView.ItemsLayout>

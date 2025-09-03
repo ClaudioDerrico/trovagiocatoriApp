@@ -578,11 +578,91 @@ namespace trovagiocatoriApp.Views
             await Navigation.PushAsync(new PostDetailParticipantsPage(_postId, _currentPost, _isPostAuthor));
         }
 
+
         private async void OnNavigateToChatClicked(object sender, EventArgs e)
         {
-            await Navigation.PushAsync(new PostDetailParticipantsPage(_postId, _currentPost, _isPostAuthor, true)); // true = vai direttamente alla tab chat
-        }
+            if (_currentPost == null)
+            {
+                await DisplayAlert("Errore", "Informazioni del post non disponibili", "OK");
+                return;
+            }
 
+            try
+            {
+                // Determina chi è il destinatario della chat
+                string recipientEmail;
+                bool isPostAuthor = _isPostAuthor;
+
+                if (isPostAuthor)
+                {
+                    // Se sono l'autore del post, devo scegliere con chi chattare
+                    // Per ora, usiamo il primo partecipante disponibile
+                    // In futuro potresti implementare una lista di partecipanti
+
+                    // Ottieni la lista dei partecipanti
+                    var participantsResponse = await _sharedClient.GetAsync($"{_pythonApiBaseUrl}/posts/{_postId}/participants-count");
+
+                    if (participantsResponse.IsSuccessStatusCode)
+                    {
+                        var participantsJson = await participantsResponse.Content.ReadAsStringAsync();
+                        var participantsData = JsonSerializer.Deserialize<Dictionary<string, object>>(participantsJson);
+
+                        if (participantsData.ContainsKey("participants"))
+                        {
+                            var participantsArray = JsonSerializer.Deserialize<List<Dictionary<string, object>>>(
+                                participantsData["participants"].ToString());
+
+                            if (participantsArray != null && participantsArray.Count > 0)
+                            {
+                                // Trova il primo partecipante che non è l'organizzatore
+                                var firstParticipant = participantsArray.FirstOrDefault(p =>
+                                    p.ContainsKey("email") &&
+                                    !p["email"].ToString().Equals(_currentUserEmail, StringComparison.OrdinalIgnoreCase));
+
+                                if (firstParticipant != null)
+                                {
+                                    recipientEmail = firstParticipant["email"].ToString();
+                                }
+                                else
+                                {
+                                    await DisplayAlert("Info", "Nessun partecipante con cui chattare al momento.", "OK");
+                                    return;
+                                }
+                            }
+                            else
+                            {
+                                await DisplayAlert("Info", "Nessun partecipante iscritto al momento.", "OK");
+                                return;
+                            }
+                        }
+                        else
+                        {
+                            await DisplayAlert("Errore", "Impossibile ottenere la lista dei partecipanti.", "OK");
+                            return;
+                        }
+                    }
+                    else
+                    {
+                        await DisplayAlert("Errore", "Impossibile caricare i partecipanti.", "OK");
+                        return;
+                    }
+                }
+                else
+                {
+                    // Se non sono l'autore, chatto con l'organizzatore
+                    recipientEmail = _currentPost.autore_email;
+                }
+
+                // Naviga alla pagina chat
+                var chatPage = new ChatPage(_currentPost, _currentUserEmail, recipientEmail, isPostAuthor);
+                await Navigation.PushAsync(chatPage);
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[CHAT] Errore apertura chat: {ex.Message}");
+                await DisplayAlert("Errore", "Impossibile aprire la chat. Riprova più tardi.", "OK");
+            }
+        }
         // ========== ALTRE FUNZIONI ==========
 
         private async void OnViewOnMapClicked(object sender, EventArgs e)

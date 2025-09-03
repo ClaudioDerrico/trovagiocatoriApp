@@ -230,6 +230,8 @@
 			</VerticalStackLayout>
 		</ScrollView>
 
+
+
 		<!-- Barra di navigazione inferiore -->
 		<Grid Grid.Row="1" BackgroundColor="White" HeightRequest="80" Padding="16,8">
 			<Grid.Shadow>
@@ -238,27 +240,47 @@
 			<Grid.ColumnDefinitions>
 				<ColumnDefinition Width="*" />
 				<ColumnDefinition Width="*" />
+				<ColumnDefinition Width="*" />
 			</Grid.ColumnDefinitions>
 
-			<!-- Bottone Partecipanti e Chat -->
+			<!-- Bottone Partecipanti -->
 			<Button Grid.Column="0"
-                    Text="👥 Partecipanti"
-                    Style="{StaticResource CleanButtonStyle}"
-                    BackgroundColor="#2196F3"
-                    FontSize="14"
-                    HeightRequest="44"
-                    Margin="0,0,8,0"
-                    Clicked="OnNavigateToParticipantsClicked"/>
+					Text="👥 Partecipanti"
+					Style="{StaticResource CleanButtonStyle}"
+					BackgroundColor="#2196F3"
+					FontSize="12"
+					HeightRequest="44"
+					Margin="0,0,4,0"
+					Clicked="OnNavigateToParticipantsClicked"/>
 
-			<!-- Bottone Chat -->
+			<!-- NUOVO: Bottone Chat Live -->
 			<Button Grid.Column="1"
-                    Text="💬 Chat"
-                    Style="{StaticResource CleanButtonStyle}"
-                    BackgroundColor="#FF9800"
-                    FontSize="14"
-                    HeightRequest="44"
-                    Margin="8,0,0,0"
-                    Clicked="OnNavigateToChatClicked"/>
+					x:Name="ChatButton"
+					Text="💬 Chat Live"
+					Style="{StaticResource CleanButtonStyle}"
+					BackgroundColor="#10B981"
+					FontSize="12"
+					HeightRequest="44"
+					Margin="2,0,2,0"
+					Clicked="OnNavigateToChatClicked">
+				<!-- Badge notifica messaggi non letti (opzionale) -->
+				<Button.Triggers>
+					<DataTrigger TargetType="Button" Binding="{Binding HasUnreadMessages}" Value="True">
+						<Setter Property="Text" Value="💬 Chat Live (!)"/>
+						<Setter Property="BackgroundColor" Value="#FF6B35"/>
+					</DataTrigger>
+				</Button.Triggers>
+			</Button>
+
+			<!-- Bottone Commenti -->
+			<Button Grid.Column="2"
+					Text="💭 Commenti"
+					Style="{StaticResource CleanButtonStyle}"
+					BackgroundColor="#FF9800"
+					FontSize="12"
+					HeightRequest="44"
+					Margin="4,0,0,0"
+					Clicked="OnNavigateToParticipantsClicked"/>
 		</Grid>
 	</Grid>
 </ContentPage>

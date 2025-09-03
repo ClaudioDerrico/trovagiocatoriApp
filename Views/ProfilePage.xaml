@@ -94,8 +94,7 @@
                     <!-- Lista dei miei post -->
                     <CollectionView x:Name="MyPostsCollectionView"
                                     SelectionMode="Single"
-                                    SelectionChanged="OnMyPostSelected"
-                                    EmptyView="Non hai ancora creato eventi">
+                                    SelectionChanged="OnMyPostSelected">
                         <CollectionView.ItemsLayout>
                             <LinearItemsLayout Orientation="Vertical" ItemSpacing="12"/>
                         </CollectionView.ItemsLayout>
@@ -298,8 +297,7 @@
                     <!-- Calendario con eventi -->
                     <CollectionView x:Name="CalendarEventsCollectionView"
                                     SelectionMode="Single"
-                                    SelectionChanged="OnCalendarEventSelected"
-                                    EmptyView="Nessun evento in programma">
+                                    SelectionChanged="OnCalendarEventSelected">
                         <CollectionView.ItemsLayout>
                             <LinearItemsLayout Orientation="Vertical" ItemSpacing="12"/>
                         </CollectionView.ItemsLayout>

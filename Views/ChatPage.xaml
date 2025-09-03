@@ -1,0 +1,142 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="trovagiocatoriApp.Views.ChatPage"
+             Title="Chat Live"
+             BackgroundColor="#F8F9FA">
+
+    <ContentPage.Resources>
+        <ResourceDictionary>
+            <!-- Stili per i messaggi -->
+            <Style x:Key="SentMessageStyle" TargetType="Frame">
+                <Setter Property="BackgroundColor" Value="#007AFF"/>
+                <Setter Property="CornerRadius" Value="18"/>
+                <Setter Property="Padding" Value="12,8"/>
+                <Setter Property="Margin" Value="50,4,16,4"/>
+                <Setter Property="HorizontalOptions" Value="End"/>
+                <Setter Property="HasShadow" Value="True"/>
+            </Style>
+
+            <Style x:Key="ReceivedMessageStyle" TargetType="Frame">
+                <Setter Property="BackgroundColor" Value="#E9ECEF"/>
+                <Setter Property="CornerRadius" Value="18"/>
+                <Setter Property="Padding" Value="12,8"/>
+                <Setter Property="Margin" Value="16,4,50,4"/>
+                <Setter Property="HorizontalOptions" Value="Start"/>
+                <Setter Property="HasShadow" Value="True"/>
+            </Style>
+
+            <Style x:Key="SentMessageTextStyle" TargetType="Label">
+                <Setter Property="TextColor" Value="White"/>
+                <Setter Property="FontSize" Value="16"/>
+                <Setter Property="LineBreakMode" Value="WordWrap"/>
+            </Style>
+
+            <Style x:Key="ReceivedMessageTextStyle" TargetType="Label">
+                <Setter Property="TextColor" Value="#333333"/>
+                <Setter Property="FontSize" Value="16"/>
+                <Setter Property="LineBreakMode" Value="WordWrap"/>
+            </Style>
+        </ResourceDictionary>
+    </ContentPage.Resources>
+
+    <Grid RowDefinitions="Auto,*,Auto,Auto">
+
+        <!-- Header con info post -->
+        <Frame Grid.Row="0" BackgroundColor="#007AFF" CornerRadius="0" Padding="20,16" HasShadow="True">
+            <Grid ColumnDefinitions="Auto,*,Auto">
+                <ImageButton Grid.Column="0" 
+                           Source="back_arrow_white.png" 
+                           BackgroundColor="Transparent"
+                           WidthRequest="24" 
+                           HeightRequest="24"
+                           VerticalOptions="Center"
+                           Clicked="OnBackButtonClicked"/>
+
+                <VerticalStackLayout Grid.Column="1" Spacing="4" Margin="16,0,0,0">
+                    <Label x:Name="PostTitleLabel" 
+                           Text="Titolo del Post"
+                           TextColor="White"
+                           FontAttributes="Bold"
+                           FontSize="16"/>
+                    <Label x:Name="ChatWithLabel"
+                           Text="Chat con: Utente"
+                           TextColor="White"
+                           Opacity="0.9"
+                           FontSize="14"/>
+                </VerticalStackLayout>
+
+                <Frame Grid.Column="2"
+                       x:Name="ConnectionStatusFrame"
+                       BackgroundColor="#10B981"
+                       CornerRadius="8"
+                       Padding="8,4"
+                       VerticalOptions="Center">
+                    <Label x:Name="ConnectionStatusLabel"
+                           Text="Online"
+                           TextColor="White"
+                           FontSize="12"
+                           FontAttributes="Bold"/>
+                </Frame>
+            </Grid>
+        </Frame>
+
+        <!-- Area messaggi -->
+        <ScrollView Grid.Row="1" x:Name="MessagesScrollView" Padding="0,8">
+            <StackLayout x:Name="MessagesContainer" Spacing="0">
+                <!-- I messaggi verranno aggiunti dinamicamente qui -->
+            </StackLayout>
+        </ScrollView>
+
+        <!-- Indicatore typing -->
+        <Frame Grid.Row="2" 
+               x:Name="TypingIndicator"
+               BackgroundColor="#E9ECEF"
+               CornerRadius="18"
+               Padding="16,8"
+               Margin="16,4,50,8"
+               HorizontalOptions="Start"
+               IsVisible="False">
+            <Label x:Name="TypingLabel"
+                   Text="Sta scrivendo..."
+                   TextColor="#666666"
+                   FontSize="14"
+                   FontAttributes="Italic"/>
+        </Frame>
+
+        <!-- Input area -->
+        <Frame Grid.Row="3"
+               BackgroundColor="White"
+               CornerRadius="0"
+               Padding="16"
+               HasShadow="True">
+            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                <Frame Grid.Column="0"
+                       BackgroundColor="#F1F3F4"
+                       CornerRadius="20"
+                       Padding="0"
+                       HasShadow="False">
+                    <Entry x:Name="MessageEntry"
+                           Placeholder="Scrivi un messaggio..."
+                           BackgroundColor="Transparent"
+                           FontSize="16"
+                           Margin="16,0"
+                           TextChanged="OnMessageTextChanged"
+                           Completed="OnSendMessageClicked"/>
+                </Frame>
+
+                <Button Grid.Column="1"
+                        x:Name="SendButton"
+                        Text="📤"
+                        FontSize="20"
+                        BackgroundColor="#007AFF"
+                        TextColor="White"
+                        CornerRadius="25"
+                        WidthRequest="50"
+                        HeightRequest="50"
+                        Clicked="OnSendMessageClicked"
+                        IsEnabled="False"/>
+            </Grid>
+        </Frame>
+    </Grid>
+</ContentPage>
