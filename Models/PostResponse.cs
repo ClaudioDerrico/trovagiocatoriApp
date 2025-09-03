@@ -22,11 +22,14 @@ namespace trovagiocatoriApp.Models
         public string livello { get; set; } = "Intermedio";
         public int numero_giocatori { get; set; } = 1;
 
-        // NUOVO: Proprietà per i partecipanti
+        // Proprietà per i partecipanti
         public int partecipanti_iscritti { get; set; } = 0;
         public int posti_disponibili { get; set; } = 1;
 
-        // NUOVO: Proprietà computed per gestire le date nel calendario
+        // NUOVO: Proprietà per lo stato "completo/aperto"
+        public bool is_full { get; set; } = false;
+
+        // Proprietà computed per gestire le date nel calendario
         public DateTime DataPartitaDateTime
         {
             get

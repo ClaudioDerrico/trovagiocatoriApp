@@ -20,14 +20,18 @@ namespace trovagiocatoriApp.Views
         // Lista per i preferiti
         public ObservableCollection<PostResponse> FavoritePosts { get; set; } = new ObservableCollection<PostResponse>();
 
-        // NUOVO: Lista per gli eventi del calendario
+        // Lista per gli eventi del calendario
         public ObservableCollection<PostResponse> CalendarEvents { get; set; } = new ObservableCollection<PostResponse>();
+
+        // NUOVO: Lista per i miei post
+        public ObservableCollection<PostResponse> MyPosts { get; set; } = new ObservableCollection<PostResponse>();
 
         public ProfilePage()
         {
             InitializeComponent();
             FavoritesCollectionView.ItemsSource = FavoritePosts;
-            CalendarEventsCollectionView.ItemsSource = CalendarEvents; // NUOVO
+            CalendarEventsCollectionView.ItemsSource = CalendarEvents;
+            MyPostsCollectionView.ItemsSource = MyPosts; // NUOVO
         }
 
         // Ricarica il profilo ogni volta che la pagina diventa visibile
@@ -36,7 +40,8 @@ namespace trovagiocatoriApp.Views
             base.OnAppearing();
             LoadProfile();
             LoadFavorites();
-            LoadCalendarEvents(); // NUOVO
+            LoadCalendarEvents();
+            LoadMyPosts(); // NUOVO: Carica i miei post
         }
 
         private async void LoadProfile()
@@ -96,6 +101,139 @@ namespace trovagiocatoriApp.Views
             }
         }
 
+        // NUOVO: Metodo per caricare i miei post
+        private async void LoadMyPosts()
+        {
+            try
+            {
+                Debug.WriteLine("[MY_POSTS] Inizio caricamento i miei post");
+
+                var request = new HttpRequestMessage(HttpMethod.Get, $"{pythonApiBaseUrl}/posts/by-user");
+
+                if (Preferences.ContainsKey("session_id"))
+                {
+                    string sessionId = Preferences.Get("session_id", "");
+                    request.Headers.Add("Cookie", $"session_id={sessionId}");
+                }
+
+                var response = await _client.SendAsync(request);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var jsonResponse = await response.Content.ReadAsStringAsync();
+                    Debug.WriteLine($"[MY_POSTS] Risposta API: {jsonResponse}");
+
+                    // Deserializza come lista di JsonElement per gestire le proprietà aggiuntive
+                    var jsonElements = JsonSerializer.Deserialize<List<JsonElement>>(jsonResponse);
+
+                    MyPosts.Clear();
+
+                    foreach (var element in jsonElements ?? new List<JsonElement>())
+                    {
+                        var post = new PostResponse
+                        {
+                            id = GetIntProperty(element, "id"),
+                            titolo = GetStringProperty(element, "titolo"),
+                            provincia = GetStringProperty(element, "provincia"),
+                            citta = GetStringProperty(element, "citta"),
+                            sport = GetStringProperty(element, "sport"),
+                            data_partita = GetStringProperty(element, "data_partita"),
+                            ora_partita = GetStringProperty(element, "ora_partita"),
+                            commento = GetStringProperty(element, "commento"),
+                            autore_email = GetStringProperty(element, "autore_email"),
+                            campo_id = GetNullableIntProperty(element, "campo_id"),
+                            campo = GetCampoProperty(element),
+                            livello = GetStringProperty(element, "livello", "Intermedio"),
+                            numero_giocatori = GetIntProperty(element, "numero_giocatori", 1),
+                            partecipanti_iscritti = GetIntProperty(element, "partecipanti_iscritti", 0),
+                            posti_disponibili = GetIntProperty(element, "posti_disponibili", 1)
+                        };
+
+                        MyPosts.Add(post);
+                    }
+
+                    Debug.WriteLine($"[MY_POSTS] Caricati {MyPosts.Count} post dell'utente");
+                }
+                else
+                {
+                    Debug.WriteLine($"[MY_POSTS] Errore nel caricamento post: {response.StatusCode}");
+                    MyPosts.Clear();
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[MY_POSTS] Eccezione durante il caricamento post: {ex.Message}");
+                MyPosts.Clear();
+            }
+        }
+
+        // Metodi helper per estrarre proprietà dal JsonElement
+        private string GetStringProperty(JsonElement element, string propertyName, string defaultValue = "")
+        {
+            try
+            {
+                return element.TryGetProperty(propertyName, out var prop) && prop.ValueKind != JsonValueKind.Null
+                    ? prop.GetString() ?? defaultValue
+                    : defaultValue;
+            }
+            catch
+            {
+                return defaultValue;
+            }
+        }
+
+        private int GetIntProperty(JsonElement element, string propertyName, int defaultValue = 0)
+        {
+            try
+            {
+                return element.TryGetProperty(propertyName, out var prop) && prop.ValueKind != JsonValueKind.Null
+                    ? prop.GetInt32()
+                    : defaultValue;
+            }
+            catch
+            {
+                return defaultValue;
+            }
+        }
+
+        private int? GetNullableIntProperty(JsonElement element, string propertyName)
+        {
+            try
+            {
+                if (element.TryGetProperty(propertyName, out var prop))
+                {
+                    if (prop.ValueKind == JsonValueKind.Null)
+                        return null;
+                    return prop.GetInt32();
+                }
+                return null;
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        private CampoInfo GetCampoProperty(JsonElement element)
+        {
+            try
+            {
+                if (element.TryGetProperty("campo", out var campoProp) && campoProp.ValueKind != JsonValueKind.Null)
+                {
+                    return new CampoInfo
+                    {
+                        nome = GetStringProperty(campoProp, "nome"),
+                        indirizzo = GetStringProperty(campoProp, "indirizzo")
+                    };
+                }
+                return null;
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
         private async void LoadFavorites()
         {
             try
@@ -143,7 +281,7 @@ namespace trovagiocatoriApp.Views
             }
         }
 
-        // NUOVO: Metodo per caricare gli eventi del calendario - VERSIONE CORRETTA
+        // Metodo per caricare gli eventi del calendario
         private async void LoadCalendarEvents()
         {
             try
@@ -183,15 +321,14 @@ namespace trovagiocatoriApp.Views
                         var loadTasks = participationIds.Select(LoadCalendarEventDetails);
                         await Task.WhenAll(loadTasks);
 
-                        // CORRETTO: Ordina gli eventi per data (eventi futuri per primi, poi passati)
-                        // Usa DateTime.TryParse per convertire le stringhe in DateTime prima del confronto
+                        // Ordina gli eventi per data
                         var futureEvents = CalendarEvents.Where(e =>
                         {
                             if (DateTime.TryParse(e.data_partita, out DateTime dataPartita))
                             {
                                 return dataPartita >= DateTime.Today;
                             }
-                            return false; // Se non riesce a fare il parse, consideralo passato
+                            return false;
                         })
                         .OrderBy(e => DateTime.TryParse(e.data_partita, out DateTime d1) ? d1 : DateTime.MinValue)
                         .ThenBy(e => TimeSpan.TryParse(e.ora_partita, out TimeSpan t1) ? t1 : TimeSpan.Zero)
@@ -203,7 +340,7 @@ namespace trovagiocatoriApp.Views
                             {
                                 return dataPartita < DateTime.Today;
                             }
-                            return true; // Se non riesce a fare il parse, consideralo passato
+                            return true;
                         })
                         .OrderByDescending(e => DateTime.TryParse(e.data_partita, out DateTime d2) ? d2 : DateTime.MinValue)
                         .ThenByDescending(e => TimeSpan.TryParse(e.ora_partita, out TimeSpan t2) ? t2 : TimeSpan.Zero)
@@ -218,19 +355,6 @@ namespace trovagiocatoriApp.Views
                         }
 
                         Debug.WriteLine($"[CALENDAR] Caricati e ordinati {CalendarEvents.Count} eventi nel calendario");
-
-                        // Se ci sono eventi, mostra un messaggio di debug
-                        if (CalendarEvents.Count > 0)
-                        {
-                            var nextEvent = futureEvents.FirstOrDefault();
-                            if (nextEvent != null)
-                            {
-                                if (DateTime.TryParse(nextEvent.data_partita, out DateTime nextEventDate))
-                                {
-                                    Debug.WriteLine($"[CALENDAR] Prossimo evento: {nextEvent.titolo} il {nextEventDate:dd/MM/yyyy}");
-                                }
-                            }
-                        }
                     }
                     else
                     {
@@ -277,7 +401,6 @@ namespace trovagiocatoriApp.Views
             }
         }
 
-        // NUOVO: Metodo per caricare i dettagli di un evento del calendario - VERSIONE CORRETTA
         private async Task LoadCalendarEventDetails(int postId)
         {
             try
@@ -292,9 +415,6 @@ namespace trovagiocatoriApp.Views
 
                     if (post != null)
                     {
-                        // CORRETTO: Non modifichiamo le stringhe, le usiamo così come sono
-                        // Il binding nel XAML gestirà la visualizzazione attraverso le proprietà computed
-
                         MainThread.BeginInvokeOnMainThread(() =>
                         {
                             CalendarEvents.Add(post);
@@ -324,7 +444,7 @@ namespace trovagiocatoriApp.Views
             }
         }
 
-        // NUOVO: Gestione selezione mio post
+        // Gestione selezione mio post
         private async void OnMyPostSelected(object sender, SelectionChangedEventArgs e)
         {
             if (e.CurrentSelection.FirstOrDefault() is PostResponse selectedPost)
@@ -334,7 +454,7 @@ namespace trovagiocatoriApp.Views
             }
         }
 
-        // NUOVO: Gestione selezione evento calendario
+        // Gestione selezione evento calendario
         private async void OnCalendarEventSelected(object sender, SelectionChangedEventArgs e)
         {
             if (e.CurrentSelection.FirstOrDefault() is PostResponse selectedEvent)
