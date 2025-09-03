@@ -82,7 +82,7 @@
         <ScrollView Grid.Row="1" BackgroundColor="{StaticResource BackgroundColor}">
             <VerticalStackLayout Spacing="0" Padding="0,0,0,32">
 
-                <!-- 1. Informazioni Principali (la tua sezione esistente) -->
+                <!-- 1. Informazioni Principali -->
                 <Frame Style="{StaticResource CleanCardStyle}">
                     <VerticalStackLayout Spacing="24">
                         <!-- Titolo con Cuore Preferiti -->
@@ -102,7 +102,7 @@
                             </VerticalStackLayout>
                         </HorizontalStackLayout>
 
-                        <!-- Info Evento in Grid (la tua sezione esistente con tutti i dettagli) -->
+                        <!-- Info Evento in Grid -->
                         <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto" ColumnDefinitions="*,*" RowSpacing="16" ColumnSpacing="16">
                             <!-- Data e Ora -->
                             <HorizontalStackLayout Grid.Row="0" Grid.Column="0" Spacing="12">
@@ -112,9 +112,6 @@
                                     <Label x:Name="DataOraLabel" Text="Sabato 15 Marzo, ore 18:30" Style="{StaticResource InfoLabelStyle}" FontAttributes="Bold" FontSize="14"/>
                                 </VerticalStackLayout>
                             </HorizontalStackLayout>
-
-                            <!-- Resto della tua griglia esistente... -->
-                            <!-- (aggiungi qui tutte le altre sezioni: Località, Sport, Livello, Numero Giocatori, Campo Sportivo) -->
 
                             <!-- Località -->
                             <HorizontalStackLayout Grid.Row="0" Grid.Column="1" Spacing="12">
@@ -194,8 +191,8 @@
                     </VerticalStackLayout>
                 </Frame>
 
-                <!-- 2. Partecipazione Evento -->
-                <Frame Style="{StaticResource CleanCardStyle}">
+                <!-- 2. Partecipazione Evento - MODIFICATO: Visibile solo se NON è l'autore -->
+                <Frame Style="{StaticResource CleanCardStyle}" x:Name="ParticipationFrame" IsVisible="False">
                     <VerticalStackLayout Spacing="20">
                         <Label Text="🎯 Partecipa all'evento" Style="{StaticResource SectionTitleStyle}"/>
 
@@ -212,6 +209,31 @@
                                 </HorizontalStackLayout>
                                 <Button x:Name="JoinLeaveButton" Grid.Row="2" Text="PARTECIPA ALL'EVENTO" Style="{StaticResource CleanButtonStyle}" BackgroundColor="{StaticResource SuccessColor}" Clicked="OnJoinLeaveEventClicked" Margin="0,8,0,0"/>
                             </Grid>
+                        </Frame>
+                    </VerticalStackLayout>
+                </Frame>
+
+                <!-- NUOVO: Messaggio per l'organizzatore -->
+                <Frame Style="{StaticResource CleanCardStyle}" x:Name="OrganizerFrame" IsVisible="False">
+                    <VerticalStackLayout Spacing="15">
+                        <Label Text="👑 Sei l'organizzatore" Style="{StaticResource SectionTitleStyle}" TextColor="#FF6B35"/>
+
+                        <Frame BackgroundColor="#FFF8F0" CornerRadius="12" Padding="16" HasShadow="False" BorderColor="#FFE0B3">
+                            <VerticalStackLayout Spacing="8">
+                                <HorizontalStackLayout Spacing="12">
+                                    <Label Text="🎯" FontSize="16"/>
+                                    <Label Text="Hai creato questo evento" FontAttributes="Bold" FontSize="16" TextColor="#D2691E"/>
+                                </HorizontalStackLayout>
+                                <HorizontalStackLayout Spacing="12">
+                                    <Label Text="👥" FontSize="16"/>
+                                    <Label x:Name="OrganizerPostiLabel" Text="3 posti disponibili su 5" Style="{StaticResource InfoLabelStyle}" FontSize="15"/>
+                                </HorizontalStackLayout>
+                                <Label Text="💡 I partecipanti possono iscriversi al tuo evento e scriverti nei commenti per organizzare i dettagli." 
+                                       FontSize="13" 
+                                       TextColor="#8B4513" 
+                                       LineBreakMode="WordWrap" 
+                                       Margin="0,8,0,0"/>
+                            </VerticalStackLayout>
                         </Frame>
                     </VerticalStackLayout>
                 </Frame>

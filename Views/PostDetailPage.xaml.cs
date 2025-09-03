@@ -26,18 +26,20 @@ namespace trovagiocatoriApp.Views
         // Stato del preferito
         private bool _isFavorite = false;
 
-        //  Stato della partecipazione
+        // Stato della partecipazione
         private bool _isParticipant = false;
         private int _participantsCount = 0;
         private int _postiDisponibili = 0;
         private bool _isEventFull = false;
         private List<ParticipantInfo> _participants = new List<ParticipantInfo>();
 
-        //  Dati del post per riferimento
+        // Dati del post per riferimento
         private PostResponse _currentPost;
 
-        //  Salva l'email dell'autore del post per confronto
+        // NUOVO: Per identificare se l'utente corrente è l'autore del post
         private string _postAuthorEmail = "";
+        private string _currentUserEmail = "";
+        private bool _isPostAuthor = false;
 
         // ObservableCollection per i commenti e partecipanti
         public ObservableCollection<Comment> Comments { get; set; } = new ObservableCollection<Comment>();
@@ -66,7 +68,7 @@ namespace trovagiocatoriApp.Views
         {
             var handler = new HttpClientHandler
             {
-                UseCookies = true  // Abilita la gestione automatica dei cookie
+                UseCookies = true
             };
             return new HttpClient(handler);
         }
@@ -74,11 +76,45 @@ namespace trovagiocatoriApp.Views
         protected override async void OnAppearing()
         {
             base.OnAppearing();
+            await LoadCurrentUserEmailAsync(); // NUOVO: Carica l'email dell'utente corrente
             await LoadPostDetailAsync();
             await LoadCommentsAsync();
             await CheckFavoriteStatusAsync();
-            await CheckParticipationStatusAsync(); // O
-            await LoadParticipantsAsync(); // O
+            await CheckParticipationStatusAsync();
+            await LoadParticipantsAsync();
+        }
+
+        // NUOVO: Metodo per ottenere l'email dell'utente corrente
+        private async Task LoadCurrentUserEmailAsync()
+        {
+            try
+            {
+                var request = new HttpRequestMessage(HttpMethod.Get, $"{_apiBaseUrl}/api/user");
+
+                if (Preferences.ContainsKey("session_id"))
+                {
+                    string sessionId = Preferences.Get("session_id", "");
+                    request.Headers.Add("Cookie", $"session_id={sessionId}");
+                }
+
+                var response = await _sharedClient.SendAsync(request);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var json = await response.Content.ReadAsStringAsync();
+                    var userData = JsonSerializer.Deserialize<Dictionary<string, object>>(json);
+
+                    if (userData.ContainsKey("email"))
+                    {
+                        _currentUserEmail = userData["email"].ToString();
+                        Debug.WriteLine($"[DEBUG] Email utente corrente: {_currentUserEmail}");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Errore nel caricamento dell'email utente: {ex.Message}");
+            }
         }
 
         private async Task LoadPostDetailAsync()
@@ -87,26 +123,64 @@ namespace trovagiocatoriApp.Views
             {
                 // 1. Carica i dati del post
                 var post = await LoadPostDataAsync();
-                _currentPost = post; // SALVA IL POST PER RIFERIMENTO
+                _currentPost = post;
 
-                // O: Salva l'email dell'autore del post
+                // 2. Salva l'email dell'autore del post
                 _postAuthorEmail = post.autore_email;
 
-                // 2. Carica i dati dell'utente
+                // NUOVO: 3. Determina se l'utente corrente è l'autore del post
+                _isPostAuthor = !string.IsNullOrEmpty(_currentUserEmail) &&
+                                _currentUserEmail.Equals(_postAuthorEmail, StringComparison.OrdinalIgnoreCase);
+
+                Debug.WriteLine($"[DEBUG] Post autore: {_postAuthorEmail}");
+                Debug.WriteLine($"[DEBUG] Utente corrente: {_currentUserEmail}");
+                Debug.WriteLine($"[DEBUG] È l'autore del post: {_isPostAuthor}");
+
+                // 4. Mostra/nascondi le sezioni appropriate
+                UpdateUIBasedOnAuthorStatus();
+
+                // 5. Carica i dati dell'utente
                 var user = await LoadUserDataAsync(post.autore_email);
 
-                // 3. Carica le informazioni del campo se presente
+                // 6. Carica le informazioni del campo se presente
                 if (post.campo_id.HasValue)
                 {
                     Campo = await LoadSportFieldAsync(post.campo_id.Value);
                 }
 
-                // 4. Aggiorna la UI
+                // 7. Aggiorna la UI
                 UpdateUI(post, user);
             }
             catch (Exception ex)
             {
                 await DisplayAlert("Errore", ex.Message, "OK");
+            }
+        }
+
+        // NUOVO: Metodo per aggiornare la UI in base allo status dell'autore
+        private void UpdateUIBasedOnAuthorStatus()
+        {
+            if (_isPostAuthor)
+            {
+                // L'utente è l'autore del post
+                ParticipationFrame.IsVisible = false;  // Nascondi sezione partecipazione
+                OrganizerFrame.IsVisible = true;       // Mostra sezione organizzatore
+
+                // Cambia il placeholder dell'editor per i commenti
+                RispostaEditor.Placeholder = "Rispondi ai partecipanti e organizza i dettagli...";
+
+                Debug.WriteLine("[DEBUG] UI configurata per l'autore del post");
+            }
+            else
+            {
+                // L'utente NON è l'autore del post
+                ParticipationFrame.IsVisible = true;   // Mostra sezione partecipazione
+                OrganizerFrame.IsVisible = false;      // Nascondi sezione organizzatore
+
+                // Mantieni il placeholder standard
+                RispostaEditor.Placeholder = "Scrivi un messaggio per l'organizzatore...";
+
+                Debug.WriteLine("[DEBUG] UI configurata per partecipante");
             }
         }
 
@@ -172,7 +246,7 @@ namespace trovagiocatoriApp.Views
             SportLabel.Text = post.sport;
             CommentoLabel.Text = post.commento;
 
-            // O: Gestione numero giocatori
+            // Gestione numero giocatori
             if (post.numero_giocatori > 0)
             {
                 NumeroGiocatoriLabel.Text = post.numero_giocatori == 1
@@ -184,7 +258,7 @@ namespace trovagiocatoriApp.Views
                 NumeroGiocatoriLabel.Text = "Cerco giocatori";
             }
 
-            // O: Gestione del livello
+            // Gestione del livello
             if (!string.IsNullOrEmpty(post.livello))
             {
                 LivelloLabel.Text = post.livello switch
@@ -303,6 +377,13 @@ namespace trovagiocatoriApp.Views
 
         private async Task CheckParticipationStatusAsync()
         {
+            // MODIFICATO: Non controllare la partecipazione se l'utente è l'autore
+            if (_isPostAuthor)
+            {
+                Debug.WriteLine("[DEBUG] Utente è l'autore, skip controllo partecipazione");
+                return;
+            }
+
             try
             {
                 var request = new HttpRequestMessage(HttpMethod.Get, $"{_apiBaseUrl}/events/check/{_postId}");
@@ -373,6 +454,13 @@ namespace trovagiocatoriApp.Views
 
         private async void OnJoinLeaveEventClicked(object sender, EventArgs e)
         {
+            // MODIFICATO: Controllo aggiuntivo per sicurezza
+            if (_isPostAuthor)
+            {
+                await DisplayAlert("Informazione", "Non puoi partecipare al tuo stesso evento!", "OK");
+                return;
+            }
+
             try
             {
                 string endpoint = _isParticipant ? "/events/leave" : "/events/join";
@@ -449,50 +537,68 @@ namespace trovagiocatoriApp.Views
                 NumeroGiocatoriLabel.TextColor = Colors.Blue;
             }
 
-            // Aggiorna le informazioni sui posti disponibili
-            if (PostiDisponibiliLabel != null)
+            // NUOVO: Aggiorna anche il label della sezione organizzatore se applicabile
+            if (_isPostAuthor && OrganizerPostiLabel != null)
             {
                 if (_isEventFull)
                 {
-                    PostiDisponibiliLabel.Text = "Evento completo";
-                    PostiDisponibiliLabel.TextColor = Colors.Red;
+                    OrganizerPostiLabel.Text = "Evento completo! 🎉";
+                    OrganizerPostiLabel.TextColor = Colors.Green;
                 }
                 else
                 {
-                    PostiDisponibiliLabel.Text = $"{_postiDisponibili} posti disponibili su {_currentPost.numero_giocatori}";
-                    PostiDisponibiliLabel.TextColor = Colors.Green;
+                    OrganizerPostiLabel.Text = $"{_postiDisponibili} posti disponibili su {_currentPost.numero_giocatori}";
+                    OrganizerPostiLabel.TextColor = Colors.Orange;
                 }
             }
 
-            // Aggiorna lo status di partecipazione
-            if (StatusPartecipazioneLabel != null)
+            // Aggiorna le informazioni sui posti disponibili per i non-autori
+            if (!_isPostAuthor)
             {
-                if (_isParticipant)
+                if (PostiDisponibiliLabel != null)
                 {
-                    StatusPartecipazioneLabel.Text = "✅ Sei iscritto a questo evento";
-                    StatusPartecipazioneLabel.TextColor = Colors.Green;
+                    if (_isEventFull)
+                    {
+                        PostiDisponibiliLabel.Text = "Evento completo";
+                        PostiDisponibiliLabel.TextColor = Colors.Red;
+                    }
+                    else
+                    {
+                        PostiDisponibiliLabel.Text = $"{_postiDisponibili} posti disponibili su {_currentPost.numero_giocatori}";
+                        PostiDisponibiliLabel.TextColor = Colors.Green;
+                    }
                 }
-                else
-                {
-                    StatusPartecipazioneLabel.Text = "Non sei ancora iscritto a questo evento";
-                    StatusPartecipazioneLabel.TextColor = Colors.Gray;
-                }
-            }
 
-            // Aggiorna il pulsante di partecipazione
-            if (JoinLeaveButton != null)
-            {
-                if (_isEventFull && !_isParticipant)
+                // Aggiorna lo status di partecipazione
+                if (StatusPartecipazioneLabel != null)
                 {
-                    JoinLeaveButton.Text = "EVENTO COMPLETO";
-                    JoinLeaveButton.IsEnabled = false;
-                    JoinLeaveButton.BackgroundColor = Colors.Gray;
+                    if (_isParticipant)
+                    {
+                        StatusPartecipazioneLabel.Text = "✅ Sei iscritto a questo evento";
+                        StatusPartecipazioneLabel.TextColor = Colors.Green;
+                    }
+                    else
+                    {
+                        StatusPartecipazioneLabel.Text = "Non sei ancora iscritto a questo evento";
+                        StatusPartecipazioneLabel.TextColor = Colors.Gray;
+                    }
                 }
-                else
+
+                // Aggiorna il pulsante di partecipazione
+                if (JoinLeaveButton != null)
                 {
-                    JoinLeaveButton.Text = _isParticipant ? "DISISCRIVITI" : "PARTECIPA ALL'EVENTO";
-                    JoinLeaveButton.IsEnabled = true;
-                    JoinLeaveButton.BackgroundColor = _isParticipant ? Colors.Orange : Colors.Green;
+                    if (_isEventFull && !_isParticipant)
+                    {
+                        JoinLeaveButton.Text = "EVENTO COMPLETO";
+                        JoinLeaveButton.IsEnabled = false;
+                        JoinLeaveButton.BackgroundColor = Colors.Gray;
+                    }
+                    else
+                    {
+                        JoinLeaveButton.Text = _isParticipant ? "DISISCRIVITI" : "PARTECIPA ALL'EVENTO";
+                        JoinLeaveButton.IsEnabled = true;
+                        JoinLeaveButton.BackgroundColor = _isParticipant ? Colors.Orange : Colors.Green;
+                    }
                 }
             }
 
