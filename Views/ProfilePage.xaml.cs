@@ -440,7 +440,8 @@ namespace trovagiocatoriApp.Views
             if (e.CurrentSelection.FirstOrDefault() is PostResponse selectedPost)
             {
                 ((CollectionView)sender).SelectedItem = null;
-                await Navigation.PushAsync(new PostDetailPage(selectedPost.id));
+                await Navigation.PushAsync(new PostDetailMainPage(selectedPost.id));
+
             }
         }
 
@@ -450,7 +451,8 @@ namespace trovagiocatoriApp.Views
             if (e.CurrentSelection.FirstOrDefault() is PostResponse selectedPost)
             {
                 ((CollectionView)sender).SelectedItem = null;
-                await Navigation.PushAsync(new PostDetailPage(selectedPost.id));
+                await Navigation.PushAsync(new PostDetailMainPage(selectedPost.id));
+
             }
         }
 
@@ -460,7 +462,8 @@ namespace trovagiocatoriApp.Views
             if (e.CurrentSelection.FirstOrDefault() is PostResponse selectedEvent)
             {
                 ((CollectionView)sender).SelectedItem = null;
-                await Navigation.PushAsync(new PostDetailPage(selectedEvent.id));
+                await Navigation.PushAsync(new PostDetailMainPage(selectedEvent.id));
+
             }
         }
 

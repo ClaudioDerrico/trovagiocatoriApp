@@ -224,7 +224,7 @@ namespace trovagiocatoriApp.Views
             if (e.CurrentSelection.FirstOrDefault() is PostResponse selectedPost)
             {
                 PostsCollectionView.SelectedItem = null;
-                await Navigation.PushAsync(new PostDetailPage(selectedPost.id));
+                await Navigation.PushAsync(new PostDetailMainPage(selectedPost.id));
             }
         }
     }

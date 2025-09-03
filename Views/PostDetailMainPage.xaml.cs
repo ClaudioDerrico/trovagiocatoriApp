@@ -1,12 +1,9 @@
 ﻿using Microsoft.Maui.Controls;
 using Microsoft.Maui.Storage;
 using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Globalization;
-using System.Linq;
 using System.Net.Http;
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -16,7 +13,7 @@ using trovagiocatoriApp.Models;
 
 namespace trovagiocatoriApp.Views
 {
-    public partial class PostDetailPage : ContentPage, INotifyPropertyChanged
+    public partial class PostDetailMainPage : ContentPage, INotifyPropertyChanged
     {
         private readonly int _postId;
         private static readonly HttpClient _sharedClient = CreateHttpClient();
@@ -31,19 +28,14 @@ namespace trovagiocatoriApp.Views
         private int _participantsCount = 0;
         private int _postiDisponibili = 0;
         private bool _isEventFull = false;
-        private List<ParticipantInfo> _participants = new List<ParticipantInfo>();
 
         // Dati del post per riferimento
         private PostResponse _currentPost;
 
-        // NUOVO: Per identificare se l'utente corrente è l'autore del post
+        // Per identificare se l'utente corrente è l'autore del post
         private string _postAuthorEmail = "";
         private string _currentUserEmail = "";
         private bool _isPostAuthor = false;
-
-        // ObservableCollection per i commenti e partecipanti
-        public ObservableCollection<Comment> Comments { get; set; } = new ObservableCollection<Comment>();
-        public ObservableCollection<ParticipantInfo> Participants { get; set; } = new ObservableCollection<ParticipantInfo>();
 
         // Proprietà per il campo sportivo
         private SportField _campo;
@@ -57,7 +49,7 @@ namespace trovagiocatoriApp.Views
             }
         }
 
-        public PostDetailPage(int postId)
+        public PostDetailMainPage(int postId)
         {
             InitializeComponent();
             _postId = postId;
@@ -76,15 +68,14 @@ namespace trovagiocatoriApp.Views
         protected override async void OnAppearing()
         {
             base.OnAppearing();
-            await LoadCurrentUserEmailAsync(); // NUOVO: Carica l'email dell'utente corrente
+            await LoadCurrentUserEmailAsync();
             await LoadPostDetailAsync();
-            await LoadCommentsAsync();
             await CheckFavoriteStatusAsync();
             await CheckParticipationStatusAsync();
-            await LoadParticipantsAsync();
+            await LoadParticipantsCountAsync();
         }
 
-        // NUOVO: Metodo per ottenere l'email dell'utente corrente
+        // Carica l'email dell'utente corrente
         private async Task LoadCurrentUserEmailAsync()
         {
             try
@@ -128,7 +119,7 @@ namespace trovagiocatoriApp.Views
                 // 2. Salva l'email dell'autore del post
                 _postAuthorEmail = post.autore_email;
 
-                // NUOVO: 3. Determina se l'utente corrente è l'autore del post
+                // 3. Determina se l'utente corrente è l'autore del post
                 _isPostAuthor = !string.IsNullOrEmpty(_currentUserEmail) &&
                                 _currentUserEmail.Equals(_postAuthorEmail, StringComparison.OrdinalIgnoreCase);
 
@@ -157,7 +148,7 @@ namespace trovagiocatoriApp.Views
             }
         }
 
-        // NUOVO: Metodo per aggiornare la UI in base allo status dell'autore
+        // Aggiorna la UI in base allo status dell'autore
         private void UpdateUIBasedOnAuthorStatus()
         {
             if (_isPostAuthor)
@@ -166,9 +157,6 @@ namespace trovagiocatoriApp.Views
                 ParticipationFrame.IsVisible = false;  // Nascondi sezione partecipazione
                 OrganizerFrame.IsVisible = true;       // Mostra sezione organizzatore
 
-                // Cambia il placeholder dell'editor per i commenti
-                RispostaEditor.Placeholder = "Rispondi ai partecipanti e organizza i dettagli...";
-
                 Debug.WriteLine("[DEBUG] UI configurata per l'autore del post");
             }
             else
@@ -176,9 +164,6 @@ namespace trovagiocatoriApp.Views
                 // L'utente NON è l'autore del post
                 ParticipationFrame.IsVisible = true;   // Mostra sezione partecipazione
                 OrganizerFrame.IsVisible = false;      // Nascondi sezione organizzatore
-
-                // Mantieni il placeholder standard
-                RispostaEditor.Placeholder = "Scrivi un messaggio per l'organizzatore...";
 
                 Debug.WriteLine("[DEBUG] UI configurata per partecipante");
             }
@@ -377,7 +362,6 @@ namespace trovagiocatoriApp.Views
 
         private async Task CheckParticipationStatusAsync()
         {
-            // MODIFICATO: Non controllare la partecipazione se l'utente è l'autore
             if (_isPostAuthor)
             {
                 Debug.WriteLine("[DEBUG] Utente è l'autore, skip controllo partecipazione");
@@ -412,36 +396,21 @@ namespace trovagiocatoriApp.Views
             }
         }
 
-        private async Task LoadParticipantsAsync()
+        private async Task LoadParticipantsCountAsync()
         {
             try
             {
-                // Carica i partecipanti e la disponibilità
-                var participantsResponse = await _sharedClient.GetAsync($"{_pythonApiBaseUrl}/posts/{_postId}/participants-count");
                 var availabilityResponse = await _sharedClient.GetAsync($"{_pythonApiBaseUrl}/posts/{_postId}/availability");
 
-                if (participantsResponse.IsSuccessStatusCode && availabilityResponse.IsSuccessStatusCode)
+                if (availabilityResponse.IsSuccessStatusCode)
                 {
-                    var participantsJson = await participantsResponse.Content.ReadAsStringAsync();
                     var availabilityJson = await availabilityResponse.Content.ReadAsStringAsync();
-
-                    var participantsData = JsonSerializer.Deserialize<EventParticipantsResponse>(participantsJson,
-                        new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
                     var availabilityData = JsonSerializer.Deserialize<PostAvailabilityResponse>(availabilityJson,
                         new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
 
-                    _participantsCount = participantsData.count;
+                    _participantsCount = availabilityData.partecipanti_iscritti;
                     _postiDisponibili = availabilityData.posti_disponibili;
                     _isEventFull = availabilityData.is_full;
-
-                    // Aggiorna la collezione dei partecipanti
-                    Participants.Clear();
-                    foreach (var participant in participantsData.participants ?? new List<ParticipantInfo>())
-                    {
-                        // Aggiungi flag per identificare l'organizzatore
-                        participant.IsOrganizer = participant.email.Equals(_postAuthorEmail, StringComparison.OrdinalIgnoreCase);
-                        Participants.Add(participant);
-                    }
 
                     UpdateParticipationUI();
                 }
@@ -454,7 +423,6 @@ namespace trovagiocatoriApp.Views
 
         private async void OnJoinLeaveEventClicked(object sender, EventArgs e)
         {
-            // MODIFICATO: Controllo aggiuntivo per sicurezza
             if (_isPostAuthor)
             {
                 await DisplayAlert("Informazione", "Non puoi partecipare al tuo stesso evento!", "OK");
@@ -494,7 +462,7 @@ namespace trovagiocatoriApp.Views
                     await DisplayAlert("Successo", result.message, "OK");
 
                     // Ricarica i dati dei partecipanti
-                    await LoadParticipantsAsync();
+                    await LoadParticipantsCountAsync();
                 }
                 else
                 {
@@ -537,7 +505,7 @@ namespace trovagiocatoriApp.Views
                 NumeroGiocatoriLabel.TextColor = Colors.Blue;
             }
 
-            // NUOVO: Aggiorna anche il label della sezione organizzatore se applicabile
+            // Aggiorna il label della sezione organizzatore se applicabile
             if (_isPostAuthor && OrganizerPostiLabel != null)
             {
                 if (_isEventFull)
@@ -601,128 +569,18 @@ namespace trovagiocatoriApp.Views
                     }
                 }
             }
-
-            // Aggiorna il badge contatore partecipanti
-            if (ParticipantsCountBadge != null)
-            {
-                ParticipantsCountBadge.Text = _participantsCount.ToString();
-            }
         }
 
-        // ========== FUNZIONI PER I COMMENTI ==========
+        // ========== NAVIGAZIONE ==========
 
-        private async Task LoadCommentsAsync()
+        private async void OnNavigateToParticipantsClicked(object sender, EventArgs e)
         {
-            try
-            {
-                var request = new HttpRequestMessage(HttpMethod.Get, $"{_pythonApiBaseUrl}/posts/{_postId}/comments/");
-
-                if (Preferences.ContainsKey("session_id"))
-                {
-                    string sessionId = Preferences.Get("session_id", "");
-                    request.Headers.Add("Cookie", $"session_id={sessionId}");
-                }
-
-                var response = await _sharedClient.SendAsync(request);
-
-                if (response.IsSuccessStatusCode)
-                {
-                    var json = await response.Content.ReadAsStringAsync();
-                    var comments = JsonSerializer.Deserialize<List<Comment>>(json,
-                        new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-
-                    Comments.Clear();
-                    foreach (var comment in comments ?? new List<Comment>())
-                    {
-                        comment.autore_username = await GetUsernameByEmail(comment.autore_email);
-                        comment.IsAuthorComment = comment.autore_email.Equals(_postAuthorEmail, StringComparison.OrdinalIgnoreCase);
-                        Comments.Add(comment);
-                    }
-                }
-            }
-            catch (Exception)
-            {
-                // Fallback silenzioso
-            }
+            await Navigation.PushAsync(new PostDetailParticipantsPage(_postId, _currentPost, _isPostAuthor));
         }
 
-        private async Task<string> GetUsernameByEmail(string email)
+        private async void OnNavigateToChatClicked(object sender, EventArgs e)
         {
-            try
-            {
-                var encodedEmail = Uri.EscapeDataString(email);
-
-                var response = await _sharedClient.GetAsync($"{_apiBaseUrl}/api/user/by-email?email={encodedEmail}");
-
-                if (response.IsSuccessStatusCode)
-                {
-                    var json = await response.Content.ReadAsStringAsync();
-                    var user = JsonSerializer.Deserialize<User>(json, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-                    return user?.Username ?? email;
-                }
-
-                return email;
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine($"Errore nel recupero username per {email}: {ex.Message}");
-                return email;
-            }
-        }
-
-        private async void OnInviaRispostaClicked(object sender, EventArgs e)
-        {
-            string messaggio = RispostaEditor.Text;
-            if (string.IsNullOrWhiteSpace(messaggio))
-            {
-                await DisplayAlert("Attenzione", "Il messaggio non può essere vuoto.", "OK");
-                return;
-            }
-
-            try
-            {
-                var commentCreate = new CommentCreate
-                {
-                    contenuto = messaggio
-                };
-
-                var request = new HttpRequestMessage(HttpMethod.Post, $"{_pythonApiBaseUrl}/posts/{_postId}/comments/");
-
-                if (Preferences.ContainsKey("session_id"))
-                {
-                    string sessionId = Preferences.Get("session_id", "");
-                    request.Headers.Add("Cookie", $"session_id={sessionId}");
-                }
-                else
-                {
-                    await DisplayAlert("Errore", "Sessione non trovata. Effettua di nuovo il login.", "OK");
-                    return;
-                }
-
-                var json = JsonSerializer.Serialize(commentCreate);
-                request.Content = new StringContent(json, Encoding.UTF8, "application/json");
-
-                var response = await _sharedClient.SendAsync(request);
-
-                if (response.IsSuccessStatusCode)
-                {
-                    await DisplayAlert("Successo", "Commento inviato!", "OK");
-                    RispostaEditor.Text = string.Empty;
-                    await LoadCommentsAsync();
-                }
-                else
-                {
-                    await DisplayAlert("Errore", "Impossibile inviare il commento.", "OK");
-                }
-            }
-            catch (HttpRequestException)
-            {
-                await DisplayAlert("Errore di Connessione", "Impossibile raggiungere il server.", "OK");
-            }
-            catch (Exception ex)
-            {
-                await DisplayAlert("Errore", $"Errore: {ex.Message}", "OK");
-            }
+            await Navigation.PushAsync(new PostDetailParticipantsPage(_postId, _currentPost, _isPostAuthor, true)); // true = vai direttamente alla tab chat
         }
 
         // ========== ALTRE FUNZIONI ==========
@@ -749,11 +607,6 @@ namespace trovagiocatoriApp.Views
                 Debug.WriteLine($"Fallback map open failed: {ex.Message}");
                 await DisplayAlert("Errore", $"Impossibile aprire la mappa: {ex.Message}", "OK");
             }
-        }
-
-        private async void OnBackButtonClicked(object sender, EventArgs e)
-        {
-            await Navigation.PopAsync();
         }
 
         // Implementazione INotifyPropertyChanged
