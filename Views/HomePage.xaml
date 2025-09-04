@@ -73,11 +73,13 @@
             </VerticalStackLayout>
         </ScrollView>
 
+        <!-- AGGIORNATO: Footer con tre icone -->
         <Grid Grid.Row="2" BackgroundColor="#F8F9FA" HeightRequest="70">
             <Grid.Shadow>
                 <Shadow Brush="#000000" Offset="0,-3" Radius="5" Opacity="0.08"/>
             </Grid.Shadow>
             <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
@@ -92,7 +94,18 @@
                 </VerticalStackLayout>
             </Frame>
 
+            <!-- NUOVO: Sezione Amici -->
             <Frame Grid.Column="1" Style="{StaticResource FooterIconFrameStyle}">
+                <Frame.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnFriendsPageTapped"/>
+                </Frame.GestureRecognizers>
+                <VerticalStackLayout Spacing="4" HorizontalOptions="Center" VerticalOptions="Center">
+                    <Image Source="friends_icon.png" Style="{StaticResource FooterIconImageStyle}"/>
+                    <Label Text="Amici" Style="{StaticResource FooterIconLabelStyle}"/>
+                </VerticalStackLayout>
+            </Frame>
+
+            <Frame Grid.Column="2" Style="{StaticResource FooterIconFrameStyle}">
                 <Frame.GestureRecognizers>
                     <TapGestureRecognizer Tapped="ProfilePageTapped"/>
                 </Frame.GestureRecognizers>
@@ -102,13 +115,5 @@
                 </VerticalStackLayout>
             </Frame>
         </Grid>
-<!--
-        <Grid Grid.Row="3" HeightRequest="60" BackgroundColor="black">
-            <VerticalStackLayout HorizontalOptions="Center" VerticalOptions="Center" Spacing="2">
-                <Label Text="TrovagiocatoriApp © 2025" FontSize="14" TextColor="White" HorizontalOptions="Center" />
-                <Label Text="La migliore app per trovare compagni di gioco" FontSize="12" TextColor="White" Opacity="0.8" HorizontalOptions="Center" />
-            </VerticalStackLayout>
-        </Grid>
--->
     </Grid>
 </ContentPage>

@@ -23,7 +23,6 @@ public partial class HomePage : ContentPage
         }
     }
 
-
     private async void PostPageClicked(object sender, EventArgs e)
     {
         var region = RegionPicker.SelectedItem?.ToString();
@@ -51,6 +50,12 @@ public partial class HomePage : ContentPage
     private async void OnAboutAppTapped(object sender, EventArgs e)
     {
         await Navigation.PushAsync(new AboutAppPage());
+    }
+
+    // NUOVO: Gestione navigazione alla pagina Amici
+    private async void OnFriendsPageTapped(object sender, EventArgs e)
+    {
+        await Navigation.PushAsync(new FriendsPage());
     }
 
     private async void ProfilePageTapped(object sender, EventArgs e)
