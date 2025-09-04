@@ -5,324 +5,385 @@
              Title="Partecipanti e Chat"
              BackgroundColor="#F8FAFC">
 
-	<ContentPage.Resources>
-		<ResourceDictionary>
-			<Color x:Key="PrimaryColor">#24292F</Color>
-			<Color x:Key="SecondaryColor">#6366F1</Color>
-			<Color x:Key="AccentColor">#F59E0B</Color>
-			<Color x:Key="SuccessColor">#10B981</Color>
-			<Color x:Key="ErrorColor">#EF4444</Color>
-			<Color x:Key="BackgroundColor">#F8FAFC</Color>
-			<Color x:Key="CardColor">#FFFFFF</Color>
-			<Color x:Key="InputColor">#F1F5F9</Color>
-			<Color x:Key="TextPrimary">#1E293B</Color>
-			<Color x:Key="TextSecondary">#64748B</Color>
-			<Color x:Key="BorderColor">#E2E8F0</Color>
+    <ContentPage.Resources>
+        <ResourceDictionary>
+            <Color x:Key="PrimaryColor">#24292F</Color>
+            <Color x:Key="SecondaryColor">#6366F1</Color>
+            <Color x:Key="AccentColor">#F59E0B</Color>
+            <Color x:Key="SuccessColor">#10B981</Color>
+            <Color x:Key="ErrorColor">#EF4444</Color>
+            <Color x:Key="BackgroundColor">#F8FAFC</Color>
+            <Color x:Key="CardColor">#FFFFFF</Color>
+            <Color x:Key="InputColor">#F1F5F9</Color>
+            <Color x:Key="TextPrimary">#1E293B</Color>
+            <Color x:Key="TextSecondary">#64748B</Color>
+            <Color x:Key="BorderColor">#E2E8F0</Color>
 
-			<Style x:Key="TabButtonStyle" TargetType="Button">
-				<Setter Property="BackgroundColor" Value="Transparent"/>
-				<Setter Property="TextColor" Value="{StaticResource TextSecondary}"/>
-				<Setter Property="FontFamily" Value="OpenSansSemiBold"/>
-				<Setter Property="FontSize" Value="14"/>
-				<Setter Property="BorderWidth" Value="0"/>
-				<Setter Property="CornerRadius" Value="0"/>
-				<Setter Property="HeightRequest" Value="48"/>
-				<Setter Property="Padding" Value="16,0"/>
-			</Style>
+            <Style x:Key="TabButtonStyle" TargetType="Button">
+                <Setter Property="BackgroundColor" Value="Transparent"/>
+                <Setter Property="TextColor" Value="{StaticResource TextSecondary}"/>
+                <Setter Property="FontFamily" Value="OpenSansSemiBold"/>
+                <Setter Property="FontSize" Value="14"/>
+                <Setter Property="BorderWidth" Value="0"/>
+                <Setter Property="CornerRadius" Value="0"/>
+                <Setter Property="HeightRequest" Value="48"/>
+                <Setter Property="Padding" Value="16,0"/>
+            </Style>
 
-			<Style x:Key="ActiveTabButtonStyle" TargetType="Button" BasedOn="{StaticResource TabButtonStyle}">
-				<Setter Property="TextColor" Value="{StaticResource PrimaryColor}"/>
-				<Setter Property="FontAttributes" Value="Bold"/>
-			</Style>
+            <Style x:Key="ActiveTabButtonStyle" TargetType="Button" BasedOn="{StaticResource TabButtonStyle}">
+                <Setter Property="TextColor" Value="{StaticResource PrimaryColor}"/>
+                <Setter Property="FontAttributes" Value="Bold"/>
+            </Style>
 
-			<Style x:Key="CleanButtonStyle" TargetType="Button">
-				<Setter Property="BackgroundColor" Value="{StaticResource PrimaryColor}"/>
-				<Setter Property="TextColor" Value="White"/>
-				<Setter Property="FontFamily" Value="OpenSansBold"/>
-				<Setter Property="FontSize" Value="16"/>
-				<Setter Property="CornerRadius" Value="12"/>
-				<Setter Property="HeightRequest" Value="48"/>
-				<Setter Property="Shadow">
-					<Shadow Brush="{StaticResource PrimaryColor}" Offset="0,4" Radius="12" Opacity="0.2"/>
-				</Setter>
-			</Style>
+            <Style x:Key="CleanButtonStyle" TargetType="Button">
+                <Setter Property="BackgroundColor" Value="{StaticResource PrimaryColor}"/>
+                <Setter Property="TextColor" Value="White"/>
+                <Setter Property="FontFamily" Value="OpenSansBold"/>
+                <Setter Property="FontSize" Value="16"/>
+                <Setter Property="CornerRadius" Value="12"/>
+                <Setter Property="HeightRequest" Value="48"/>
+                <Setter Property="Shadow">
+                    <Shadow Brush="{StaticResource PrimaryColor}" Offset="0,4" Radius="12" Opacity="0.2"/>
+                </Setter>
+            </Style>
 
-			<Style x:Key="AuthorBadgeStyle" TargetType="Frame">
-				<Setter Property="BackgroundColor" Value="#FF6B35"/>
-				<Setter Property="CornerRadius" Value="10"/>
-				<Setter Property="Padding" Value="8,4"/>
-				<Setter Property="HasShadow" Value="False"/>
-				<Setter Property="BorderColor" Value="Transparent"/>
-				<Setter Property="VerticalOptions" Value="Center"/>
-			</Style>
-		</ResourceDictionary>
-	</ContentPage.Resources>
+            <Style x:Key="AuthorBadgeStyle" TargetType="Frame">
+                <Setter Property="BackgroundColor" Value="#FF6B35"/>
+                <Setter Property="CornerRadius" Value="10"/>
+                <Setter Property="Padding" Value="8,4"/>
+                <Setter Property="HasShadow" Value="False"/>
+                <Setter Property="BorderColor" Value="Transparent"/>
+                <Setter Property="VerticalOptions" Value="Center"/>
+            </Style>
 
-	<Grid RowDefinitions="Auto,Auto,*,Auto" BackgroundColor="{StaticResource BackgroundColor}">
+            <!-- NUOVO: Stile per il pulsante chat -->
+            <Style x:Key="ChatButtonStyle" TargetType="ImageButton">
+                <Setter Property="BackgroundColor" Value="#10B981"/>
+                <Setter Property="CornerRadius" Value="20"/>
+                <Setter Property="WidthRequest" Value="40"/>
+                <Setter Property="HeightRequest" Value="40"/>
+                <Setter Property="Padding" Value="8"/>
+                <Setter Property="VerticalOptions" Value="Center"/>
+                <Setter Property="Source" Value="chat_icon.png"/>
+            </Style>
+        </ResourceDictionary>
+    </ContentPage.Resources>
 
-		<!-- Header con titolo evento -->
-		<Frame Grid.Row="0" BackgroundColor="White" CornerRadius="0" HasShadow="True" Padding="20,16">
-			<VerticalStackLayout Spacing="8">
-				<Label x:Name="EventTitleLabel"
+    <Grid RowDefinitions="Auto,Auto,*,Auto" BackgroundColor="{StaticResource BackgroundColor}">
+
+        <!-- Header con titolo evento -->
+        <Frame Grid.Row="0" BackgroundColor="White" CornerRadius="0" HasShadow="True" Padding="20,16">
+            <VerticalStackLayout Spacing="8">
+                <Label x:Name="EventTitleLabel"
                        Text="Titolo dell'evento"
                        FontFamily="OpenSansBold"
                        FontSize="18"
                        TextColor="{StaticResource TextPrimary}"/>
-				<HorizontalStackLayout Spacing="12">
-					<Label x:Name="EventDateLabel"
+                <HorizontalStackLayout Spacing="12">
+                    <Label x:Name="EventDateLabel"
                            Text="15 Mar 2024"
                            FontSize="14"
                            TextColor="{StaticResource TextSecondary}"/>
-					<Label Text="•"
+                    <Label Text="•"
                            FontSize="14"
                            TextColor="{StaticResource TextSecondary}"/>
-					<Label x:Name="EventLocationLabel"
+                    <Label x:Name="EventLocationLabel"
                            Text="Milano, Lombardia"
                            FontSize="14"
                            TextColor="{StaticResource TextSecondary}"/>
-				</HorizontalStackLayout>
-			</VerticalStackLayout>
-		</Frame>
+                </HorizontalStackLayout>
+            </VerticalStackLayout>
+        </Frame>
 
-		<!-- Tab Navigation -->
-		<Grid Grid.Row="1" BackgroundColor="White" ColumnDefinitions="*,*">
-			<Button Grid.Column="0"
+        <!-- Tab Navigation -->
+        <Grid Grid.Row="1" BackgroundColor="White" ColumnDefinitions="*,*">
+            <Button Grid.Column="0"
                     x:Name="ParticipantsTabButton"
                     Text="👥 Partecipanti"
                     Style="{StaticResource ActiveTabButtonStyle}"
                     Clicked="OnParticipantsTabClicked"/>
-			<Button Grid.Column="1"
+            <Button Grid.Column="1"
                     x:Name="ChatTabButton"
                     Text="💬 Chat"
                     Style="{StaticResource TabButtonStyle}"
                     Clicked="OnChatTabClicked"/>
 
-			<!-- Indicator line -->
-			<BoxView Grid.Column="0"
+            <!-- Indicator line -->
+            <BoxView Grid.Column="0"
                      x:Name="TabIndicator"
                      HeightRequest="3"
                      BackgroundColor="{StaticResource PrimaryColor}"
                      VerticalOptions="End"
                      HorizontalOptions="FillAndExpand"/>
-		</Grid>
+        </Grid>
 
-		<!-- Content Area -->
-		<Grid Grid.Row="2">
+        <!-- Content Area -->
+        <Grid Grid.Row="2">
 
-			<!-- Participants Content -->
-			<VerticalStackLayout x:Name="ParticipantsContent" IsVisible="True" Spacing="16" Padding="16">
+            <!-- Participants Content -->
+            <VerticalStackLayout x:Name="ParticipantsContent" IsVisible="True" Spacing="16" Padding="16">
 
-				<!-- Statistics Card -->
-				<Frame BackgroundColor="White" CornerRadius="12" Padding="20" HasShadow="True">
-					<VerticalStackLayout Spacing="16">
-						<Label Text="📊 Statistiche Evento"
+                <!-- Statistics Card -->
+                <Frame BackgroundColor="White" CornerRadius="12" Padding="20" HasShadow="True">
+                    <VerticalStackLayout Spacing="16">
+                        <Label Text="📊 Statistiche Evento"
                                FontFamily="OpenSansBold"
                                FontSize="16"
                                TextColor="{StaticResource TextPrimary}"/>
 
-						<Grid ColumnDefinitions="*,*,*" ColumnSpacing="16">
-							<VerticalStackLayout Grid.Column="0" Spacing="4" HorizontalOptions="Center">
-								<Label x:Name="RequiredPlayersLabel"
+                        <Grid ColumnDefinitions="*,*,*" ColumnSpacing="16">
+                            <VerticalStackLayout Grid.Column="0" Spacing="4" HorizontalOptions="Center">
+                                <Label x:Name="RequiredPlayersLabel"
                                        Text="5"
                                        FontFamily="OpenSansBold"
                                        FontSize="20"
                                        TextColor="{StaticResource SecondaryColor}"
                                        HorizontalOptions="Center"/>
-								<Label Text="Richiesti"
+                                <Label Text="Richiesti"
                                        FontSize="12"
                                        TextColor="{StaticResource TextSecondary}"
                                        HorizontalOptions="Center"/>
-							</VerticalStackLayout>
+                            </VerticalStackLayout>
 
-							<VerticalStackLayout Grid.Column="1" Spacing="4" HorizontalOptions="Center">
-								<Label x:Name="RegisteredPlayersLabel"
+                            <VerticalStackLayout Grid.Column="1" Spacing="4" HorizontalOptions="Center">
+                                <Label x:Name="RegisteredPlayersLabel"
                                        Text="3"
                                        FontFamily="OpenSansBold"
                                        FontSize="20"
                                        TextColor="{StaticResource SuccessColor}"
                                        HorizontalOptions="Center"/>
-								<Label Text="Iscritti"
+                                <Label Text="Iscritti"
                                        FontSize="12"
                                        TextColor="{StaticResource TextSecondary}"
                                        HorizontalOptions="Center"/>
-							</VerticalStackLayout>
+                            </VerticalStackLayout>
 
-							<VerticalStackLayout Grid.Column="2" Spacing="4" HorizontalOptions="Center">
-								<Label x:Name="AvailableSpotsLabel"
+                            <VerticalStackLayout Grid.Column="2" Spacing="4" HorizontalOptions="Center">
+                                <Label x:Name="AvailableSpotsLabel"
                                        Text="2"
                                        FontFamily="OpenSansBold"
                                        FontSize="20"
                                        TextColor="{StaticResource AccentColor}"
                                        HorizontalOptions="Center"/>
-								<Label Text="Liberi"
+                                <Label Text="Liberi"
                                        FontSize="12"
                                        TextColor="{StaticResource TextSecondary}"
                                        HorizontalOptions="Center"/>
-							</VerticalStackLayout>
-						</Grid>
-					</VerticalStackLayout>
-				</Frame>
+                            </VerticalStackLayout>
+                        </Grid>
+                    </VerticalStackLayout>
+                </Frame>
 
-				<!-- Participants List -->
-				<Frame BackgroundColor="White" CornerRadius="12" Padding="20" HasShadow="True">
-					<VerticalStackLayout Spacing="16">
-						<HorizontalStackLayout Spacing="12" VerticalOptions="Center">
-							<Label Text="👫 Lista Partecipanti"
+                <!-- Participants List -->
+                <Frame BackgroundColor="White" CornerRadius="12" Padding="20" HasShadow="True">
+                    <VerticalStackLayout Spacing="16">
+                        <HorizontalStackLayout Spacing="12" VerticalOptions="Center">
+                            <Label Text="👫 Lista Partecipanti"
                                    FontFamily="OpenSansBold"
                                    FontSize="16"
                                    TextColor="{StaticResource TextPrimary}"/>
-							<Frame BackgroundColor="{StaticResource AccentColor}"
+                            <Frame BackgroundColor="{StaticResource AccentColor}"
                                    CornerRadius="10"
                                    Padding="6,3"
                                    HasShadow="False"
                                    VerticalOptions="Center">
-								<Label x:Name="ParticipantsCountBadge"
+                                <Label x:Name="ParticipantsCountBadge"
                                        Text="3"
                                        TextColor="White"
                                        FontSize="12"
                                        FontAttributes="Bold"/>
-							</Frame>
-						</HorizontalStackLayout>
+                            </Frame>
+                        </HorizontalStackLayout>
 
-						<CollectionView x:Name="ParticipantsCollectionView"
+                        <!-- NUOVO: Messaggio informativo per organizzatore -->
+                        <Frame x:Name="OrganizerChatInfo"
+                               BackgroundColor="#E8F5E8"
+                               BorderColor="#4CAF50"
+                               CornerRadius="8"
+                               Padding="12"
+                               HasShadow="False"
+                               IsVisible="False">
+                            <HorizontalStackLayout Spacing="12">
+                                <Label Text="💬" FontSize="20" VerticalOptions="Center"/>
+                                <Label Text="Come organizzatore, puoi iniziare una chat privata con ogni partecipante cliccando sull'icona chat verde."
+                                       FontSize="13"
+                                       TextColor="#2E7D32"
+                                       LineBreakMode="WordWrap"
+                                       VerticalOptions="Center"
+                                       HorizontalOptions="StartAndExpand"/>
+                            </HorizontalStackLayout>
+                        </Frame>
+
+                        <CollectionView x:Name="ParticipantsCollectionView"
                                         EmptyView="Nessun partecipante ancora iscritto">
-							<CollectionView.ItemsLayout>
-								<LinearItemsLayout Orientation="Vertical" ItemSpacing="12"/>
-							</CollectionView.ItemsLayout>
-							<CollectionView.ItemTemplate>
-								<DataTemplate>
-									<Border Stroke="{StaticResource BorderColor}"
+                            <CollectionView.ItemsLayout>
+                                <LinearItemsLayout Orientation="Vertical" ItemSpacing="12"/>
+                            </CollectionView.ItemsLayout>
+                            <CollectionView.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Stroke="{StaticResource BorderColor}"
                                             StrokeThickness="1"
                                             StrokeShape="RoundRectangle 10"
                                             BackgroundColor="{StaticResource InputColor}"
                                             Padding="12">
-										<HorizontalStackLayout Spacing="12" VerticalOptions="Center">
-											<Frame WidthRequest="40"
+                                        <Grid ColumnDefinitions="Auto,*,Auto,Auto" ColumnSpacing="12">
+                                            <!-- Avatar -->
+                                            <Frame Grid.Column="0"
+                                                   WidthRequest="40"
                                                    HeightRequest="40"
                                                    CornerRadius="20"
                                                    Padding="0"
                                                    IsClippedToBounds="True"
                                                    BorderColor="{StaticResource BorderColor}"
                                                    HasShadow="False">
-												<Image Source="{Binding profile_picture, StringFormat='{0}'}"
+                                                <Image Source="{Binding profile_picture, StringFormat='{0}'}"
                                                        Aspect="AspectFill"/>
-											</Frame>
-											<VerticalStackLayout Spacing="2"
+                                            </Frame>
+
+                                            <!-- Info Partecipante -->
+                                            <VerticalStackLayout Grid.Column="1"
+                                                                 Spacing="2"
                                                                  VerticalOptions="Center"
                                                                  HorizontalOptions="StartAndExpand">
-												<Label Text="{Binding DisplayName}"
+                                                <Label Text="{Binding DisplayName}"
                                                        FontAttributes="Bold"
                                                        FontSize="14"
                                                        TextColor="{StaticResource TextPrimary}"/>
-												<Label Text="{Binding registered_at, StringFormat='Iscritto il {0:dd/MM/yyyy}'}"
+                                                <Label Text="{Binding registered_at, StringFormat='Iscritto il {0:dd/MM/yyyy}'}"
                                                        FontSize="12"
                                                        TextColor="{StaticResource TextSecondary}"/>
-											</VerticalStackLayout>
-											<Frame Style="{StaticResource AuthorBadgeStyle}"
+                                            </VerticalStackLayout>
+
+                                            <!-- Badge Organizzatore -->
+                                            <Frame Grid.Column="2"
+                                                   Style="{StaticResource AuthorBadgeStyle}"
                                                    IsVisible="{Binding IsOrganizer}">
-												<Label Text="ORGANIZZATORE"
+                                                <Label Text="ORGANIZZATORE"
                                                        TextColor="White"
                                                        FontSize="10"
                                                        FontAttributes="Bold"/>
-											</Frame>
-										</HorizontalStackLayout>
-									</Border>
-								</DataTemplate>
-							</CollectionView.ItemTemplate>
-						</CollectionView>
-					</VerticalStackLayout>
-				</Frame>
-			</VerticalStackLayout>
+                                            </Frame>
 
-			<!-- Chat Content -->
-			<Grid x:Name="ChatContent" IsVisible="False" RowDefinitions="*,Auto" Padding="16">
+                                            <!-- NUOVO: Pulsante Chat (visibile solo se utente è organizzatore E il partecipante NON è organizzatore) -->
+                                            <ImageButton Grid.Column="3"
+                                                         BackgroundColor="#10B981"
+                                                         CornerRadius="20"
+                                                         WidthRequest="40"
+                                                         HeightRequest="40"
+                                                         Padding="8"
+                                                         VerticalOptions="Center"
+                                                         Source="chat_icon.png"
+                                                         x:Name="ChatWithParticipantButton"
+                                                         Clicked="OnChatWithParticipantClicked"
+                                                         CommandParameter="{Binding .}">
+                                                <!-- Logica di visibilità: mostra solo se l'utente corrente è organizzatore E questo partecipante NON è organizzatore -->
+                                                <ImageButton.Triggers>
+                                                    <DataTrigger TargetType="ImageButton" Binding="{Binding IsOrganizer}" Value="True">
+                                                        <Setter Property="IsVisible" Value="False"/>
+                                                    </DataTrigger>
+                                                    <DataTrigger TargetType="ImageButton" Binding="{Binding IsOrganizer}" Value="False">
+                                                        <Setter Property="IsVisible" Value="{Binding Source={x:Reference ParticipantsCollectionView}, Path=BindingContext.IsPostAuthor}"/>
+                                                    </DataTrigger>
+                                                </ImageButton.Triggers>
+                                            </ImageButton>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </CollectionView.ItemTemplate>
+                        </CollectionView>
+                    </VerticalStackLayout>
+                </Frame>
+            </VerticalStackLayout>
 
-				<!-- Messages List -->
-				<ScrollView Grid.Row="0" x:Name="MessagesScrollView">
-					<VerticalStackLayout Spacing="12" Padding="0,16">
-						<CollectionView x:Name="CommentsCollectionView">
-							<CollectionView.ItemsLayout>
-								<LinearItemsLayout Orientation="Vertical" ItemSpacing="12"/>
-							</CollectionView.ItemsLayout>
-							<CollectionView.ItemTemplate>
-								<DataTemplate>
-									<Frame BackgroundColor="White"
+            <!-- Chat Content -->
+            <Grid x:Name="ChatContent" IsVisible="False" RowDefinitions="*,Auto" Padding="16">
+
+                <!-- Messages List -->
+                <ScrollView Grid.Row="0" x:Name="MessagesScrollView">
+                    <VerticalStackLayout Spacing="12" Padding="0,16">
+                        <CollectionView x:Name="CommentsCollectionView">
+                            <CollectionView.ItemsLayout>
+                                <LinearItemsLayout Orientation="Vertical" ItemSpacing="12"/>
+                            </CollectionView.ItemsLayout>
+                            <CollectionView.ItemTemplate>
+                                <DataTemplate>
+                                    <Frame BackgroundColor="White"
                                            CornerRadius="12"
                                            Padding="16"
                                            HasShadow="True"
                                            Margin="0">
-										<VerticalStackLayout Spacing="8">
-											<HorizontalStackLayout Spacing="8" VerticalOptions="Center">
-												<Frame WidthRequest="32"
+                                        <VerticalStackLayout Spacing="8">
+                                            <HorizontalStackLayout Spacing="8" VerticalOptions="Center">
+                                                <Frame WidthRequest="32"
                                                        HeightRequest="32"
                                                        CornerRadius="16"
                                                        Padding="0"
                                                        IsClippedToBounds="True"
                                                        BorderColor="{StaticResource BorderColor}"
                                                        HasShadow="False">
-													<Label Text="👤"
+                                                    <Label Text="👤"
                                                            FontSize="16"
                                                            TextColor="{StaticResource AccentColor}"
                                                            HorizontalOptions="Center"
                                                            VerticalOptions="Center"/>
-												</Frame>
-												<Label Text="{Binding autore_username}"
+                                                </Frame>
+                                                <Label Text="{Binding autore_username}"
                                                        FontFamily="OpenSansBold"
                                                        FontSize="14"
                                                        TextColor="{StaticResource TextPrimary}"/>
-												<Frame Style="{StaticResource AuthorBadgeStyle}"
+                                                <Frame Style="{StaticResource AuthorBadgeStyle}"
                                                        IsVisible="{Binding IsAuthorComment}">
-													<Label Text="AUTORE"
+                                                    <Label Text="AUTORE"
                                                            TextColor="White"
                                                            FontSize="10"
                                                            FontAttributes="Bold"/>
-												</Frame>
-												<Label Text="{Binding created_at, StringFormat='{0:dd/MM/yyyy HH:mm}'}"
+                                                </Frame>
+                                                <Label Text="{Binding created_at, StringFormat='{0:dd/MM/yyyy HH:mm}'}"
                                                        FontSize="12"
                                                        TextColor="{StaticResource TextSecondary}"
                                                        HorizontalOptions="EndAndExpand"/>
-											</HorizontalStackLayout>
-											<Label Text="{Binding contenuto}"
+                                            </HorizontalStackLayout>
+                                            <Label Text="{Binding contenuto}"
                                                    FontSize="14"
                                                    TextColor="{StaticResource TextPrimary}"
                                                    LineBreakMode="WordWrap"
                                                    LineHeight="1.4"
                                                    Margin="40,0,0,0"/>
-										</VerticalStackLayout>
-									</Frame>
-								</DataTemplate>
-							</CollectionView.ItemTemplate>
-							<CollectionView.EmptyView>
-								<VerticalStackLayout Spacing="12" HorizontalOptions="Center" Padding="32">
-									<Label Text="💬" FontSize="32" HorizontalOptions="Center" Opacity="0.5"/>
-									<Label Text="Nessun messaggio ancora..."
+                                        </VerticalStackLayout>
+                                    </Frame>
+                                </DataTemplate>
+                            </CollectionView.ItemTemplate>
+                            <CollectionView.EmptyView>
+                                <VerticalStackLayout Spacing="12" HorizontalOptions="Center" Padding="32">
+                                    <Label Text="💬" FontSize="32" HorizontalOptions="Center" Opacity="0.5"/>
+                                    <Label Text="Nessun messaggio ancora..."
                                            HorizontalOptions="Center"
                                            FontSize="16"
                                            TextColor="{StaticResource TextSecondary}"/>
-									<Label Text="Inizia la conversazione!"
+                                    <Label Text="Inizia la conversazione!"
                                            HorizontalOptions="Center"
                                            FontSize="14"
                                            TextColor="{StaticResource TextSecondary}"/>
-								</VerticalStackLayout>
-							</CollectionView.EmptyView>
-						</CollectionView>
-					</VerticalStackLayout>
-				</ScrollView>
+                                </VerticalStackLayout>
+                            </CollectionView.EmptyView>
+                        </CollectionView>
+                    </VerticalStackLayout>
+                </ScrollView>
 
-				<!-- Message Input Area -->
-				<Frame Grid.Row="1"
+                <!-- Message Input Area -->
+                <Frame Grid.Row="1"
                        BackgroundColor="White"
                        CornerRadius="12"
                        HasShadow="True"
                        Padding="16"
                        Margin="0,16,0,0">
-					<Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
-						<Frame Grid.Column="0"
+                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                        <Frame Grid.Column="0"
                                BackgroundColor="{StaticResource InputColor}"
                                CornerRadius="20"
                                Padding="0"
                                HasShadow="False">
-							<Editor x:Name="MessageEntry"
+                            <Editor x:Name="MessageEntry"
                                     Placeholder="Scrivi un messaggio..."
                                     AutoSize="TextChanges"
                                     MinimumHeightRequest="40"
@@ -332,8 +393,8 @@
                                     BackgroundColor="Transparent"
                                     FontSize="14"
                                     Margin="16,8"/>
-						</Frame>
-						<Button Grid.Column="1"
+                        </Frame>
+                        <Button Grid.Column="1"
                                 x:Name="SendMessageButton"
                                 Text="📤"
                                 FontSize="18"
@@ -343,9 +404,9 @@
                                 BackgroundColor="{StaticResource PrimaryColor}"
                                 TextColor="White"
                                 Clicked="OnSendMessageClicked"/>
-					</Grid>
-				</Frame>
-			</Grid>
-		</Grid>
-	</Grid>
+                    </Grid>
+                </Frame>
+            </Grid>
+        </Grid>
+    </Grid>
 </ContentPage>
