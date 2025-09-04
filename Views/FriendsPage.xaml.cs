@@ -34,18 +34,108 @@ namespace trovagiocatoriApp.Views
             SentRequestsCollectionView.ItemsSource = SentRequests;
             ReceivedRequestsCollectionView.ItemsSource = ReceivedRequests;
             SearchResultsCollectionView.ItemsSource = SearchResults;
-
-            // Carica dati di esempio (da rimuovere quando implementerai il backend)
-            LoadSampleData();
         }
 
-        protected override void OnAppearing()
+        protected override async void OnAppearing()
         {
             base.OnAppearing();
-            // Qui caricherai i dati dal backend
-            // LoadFriends();
-            // LoadSentRequests();
-            // LoadReceivedRequests();
+
+            // Carica tutti i dati dal backend
+            await LoadFriendsFromBackend();
+            await LoadSentRequestsFromBackend();
+            await LoadReceivedRequestsFromBackend();
+        }
+
+        // ========== CARICAMENTO DATI DAL BACKEND ==========
+
+        private async Task LoadFriendsFromBackend()
+        {
+            try
+            {
+                // TODO: Implementare chiamata API per ottenere la lista amici
+                // var friends = await ApiService.GetFriendsListAsync();
+
+                Friends.Clear();
+
+                // Esempio di come popolare la lista quando avrai i dati:
+                // foreach (var friend in friends)
+                // {
+                //     Friends.Add(new FriendInfo
+                //     {
+                //         UserId = friend.UserId,
+                //         Username = friend.Username,
+                //         FullName = $"{friend.Nome} {friend.Cognome}",
+                //         Email = friend.Email,
+                //         ProfilePicture = friend.ProfilePic ?? "default_avatar.png",
+                //         FriendsSince = DateTime.Parse(friend.FriendsSince)
+                //     });
+                // }
+            }
+            catch (Exception ex)
+            {
+                await DisplayAlert("Errore", $"Errore nel caricamento degli amici: {ex.Message}", "OK");
+            }
+        }
+
+        private async Task LoadSentRequestsFromBackend()
+        {
+            try
+            {
+                // TODO: Implementare chiamata API per ottenere le richieste inviate
+                // var sentRequests = await ApiService.GetSentFriendRequestsAsync();
+
+                SentRequests.Clear();
+
+                // Esempio di come popolare la lista quando avrai i dati:
+                // foreach (var request in sentRequests)
+                // {
+                //     SentRequests.Add(new FriendRequest
+                //     {
+                //         UserId = request.UserId,
+                //         Username = request.Username,
+                //         FullName = $"{request.Nome} {request.Cognome}",
+                //         Email = request.Email,
+                //         ProfilePicture = request.ProfilePic ?? "default_avatar.png",
+                //         RequestSent = DateTime.Parse(request.RequestDate),
+                //         Status = FriendRequestStatus.Pending
+                //     });
+                // }
+            }
+            catch (Exception ex)
+            {
+                await DisplayAlert("Errore", $"Errore nel caricamento delle richieste inviate: {ex.Message}", "OK");
+            }
+        }
+
+        private async Task LoadReceivedRequestsFromBackend()
+        {
+            try
+            {
+                // TODO: Implementare chiamata API per ottenere le richieste ricevute
+                // var receivedRequests = await ApiService.GetReceivedFriendRequestsAsync();
+
+                ReceivedRequests.Clear();
+
+                // Esempio di come popolare la lista quando avrai i dati:
+                // foreach (var request in receivedRequests)
+                // {
+                //     ReceivedRequests.Add(new FriendRequest
+                //     {
+                //         RequestId = request.RequestId, // Aggiungi questo campo alla classe FriendRequest
+                //         UserId = request.UserId,
+                //         Username = request.Username,
+                //         FullName = $"{request.Nome} {request.Cognome}",
+                //         Email = request.Email,
+                //         ProfilePicture = request.ProfilePic ?? "default_avatar.png",
+                //         RequestReceived = DateTime.Parse(request.RequestDate),
+                //         Status = FriendRequestStatus.Pending
+                //     });
+                // }
+            }
+            catch (Exception ex)
+            {
+                await DisplayAlert("Errore", $"Errore nel caricamento delle richieste ricevute: {ex.Message}", "OK");
+            }
         }
 
         // ========== GESTIONE TAB ==========
@@ -130,7 +220,6 @@ namespace trovagiocatoriApp.Views
                 return;
             }
 
-            // Simula ricerca (sostituire con chiamata API)
             await SearchUsers(searchText);
         }
 
@@ -138,40 +227,34 @@ namespace trovagiocatoriApp.Views
         {
             try
             {
-                // Simula caricamento
                 SearchButton.IsEnabled = false;
-                SearchButton.Text = "⏳";
+                SearchButton.Text = "Ricerca...";
 
-                // Simula delay API
-                await Task.Delay(1000);
+                // TODO: Implementare chiamata API per la ricerca utenti
+                // var searchResults = await ApiService.SearchUsersAsync(searchText);
 
-                // Dati di esempio - sostituire con chiamata API reale
                 SearchResults.Clear();
 
-                // Aggiungi alcuni risultati di esempio se il testo contiene certe parole
-                if (searchText.ToLower().Contains("test") || searchText.ToLower().Contains("demo"))
-                {
-                    SearchResults.Add(new UserSearchResult
-                    {
-                        UserId = 1,
-                        Username = "test_user1",
-                        FullName = "Mario Rossi",
-                        Email = "mario.rossi@example.com",
-                        ProfilePicture = "default_avatar.png"
-                    });
-
-                    SearchResults.Add(new UserSearchResult
-                    {
-                        UserId = 2,
-                        Username = "demo_user",
-                        FullName = "Anna Verdi",
-                        Email = "anna.verdi@example.com",
-                        ProfilePicture = "default_avatar.png"
-                    });
-                }
+                // Esempio di come popolare i risultati quando avrai i dati:
+                // foreach (var user in searchResults)
+                // {
+                //     SearchResults.Add(new UserSearchResult
+                //     {
+                //         UserId = user.UserId,
+                //         Username = user.Username,
+                //         FullName = $"{user.Nome} {user.Cognome}",
+                //         Email = user.Email,
+                //         ProfilePicture = user.ProfilePic ?? "default_avatar.png"
+                //     });
+                // }
 
                 // Mostra i risultati
                 SearchResultsCollectionView.IsVisible = SearchResults.Count > 0;
+
+                if (SearchResults.Count == 0)
+                {
+                    await DisplayAlert("Ricerca", "Nessun utente trovato con questi criteri", "OK");
+                }
             }
             catch (Exception ex)
             {
@@ -180,7 +263,7 @@ namespace trovagiocatoriApp.Views
             finally
             {
                 SearchButton.IsEnabled = true;
-                SearchButton.Text = "🔍";
+                SearchButton.Text = "Cerca";
             }
         }
 
@@ -198,31 +281,28 @@ namespace trovagiocatoriApp.Views
 
                 if (confirm)
                 {
-                    // Simula invio richiesta
-                    button.IsEnabled = false;
-                    button.Text = "⏳ Invio...";
-
-                    await Task.Delay(1000);
-
-                    // Aggiungi alla lista delle richieste inviate
-                    SentRequests.Add(new FriendRequest
+                    try
                     {
-                        UserId = user.UserId,
-                        Username = user.Username,
-                        FullName = user.FullName,
-                        Email = user.Email,
-                        ProfilePicture = user.ProfilePicture,
-                        RequestSent = DateTime.Now,
-                        Status = FriendRequestStatus.Pending
-                    });
+                        button.IsEnabled = false;
+                        button.Text = "Invio...";
 
-                    // Rimuovi dai risultati di ricerca
-                    SearchResults.Remove(user);
+                        // TODO: Implementare chiamata API per inviare richiesta di amicizia
+                        // await ApiService.SendFriendRequestAsync(user.Email);
 
-                    button.IsEnabled = true;
-                    button.Text = "✅ Inviata";
+                        // Rimuovi dai risultati di ricerca
+                        SearchResults.Remove(user);
 
-                    await DisplayAlert("Successo", $"Richiesta di amicizia inviata a {user.Username}!", "OK");
+                        // Ricarica le richieste inviate per mostrare la nuova richiesta
+                        await LoadSentRequestsFromBackend();
+
+                        await DisplayAlert("Successo", $"Richiesta di amicizia inviata a {user.Username}!", "OK");
+                    }
+                    catch (Exception ex)
+                    {
+                        await DisplayAlert("Errore", $"Errore nell'invio della richiesta: {ex.Message}", "OK");
+                        button.IsEnabled = true;
+                        button.Text = "Aggiungi";
+                    }
                 }
             }
         }
@@ -232,7 +312,7 @@ namespace trovagiocatoriApp.Views
             if (sender is Button button && button.CommandParameter is FriendInfo friend)
             {
                 await DisplayAlert("Messaggio", $"Aprendo chat con {friend.Username}...", "OK");
-                // Qui implementerai la navigazione alla chat
+                // TODO: Implementare navigazione alla chat
                 // await Navigation.PushAsync(new ChatPage(friend));
             }
         }
@@ -252,7 +332,7 @@ namespace trovagiocatoriApp.Views
                 {
                     case "Visualizza profilo":
                         await DisplayAlert("Profilo", $"Visualizzando profilo di {friend.Username}...", "OK");
-                        // Implementa navigazione al profilo
+                        // TODO: Implementare navigazione al profilo
                         break;
 
                     case "Rimuovi amicizia":
@@ -264,8 +344,18 @@ namespace trovagiocatoriApp.Views
 
                         if (confirm)
                         {
-                            Friends.Remove(friend);
-                            await DisplayAlert("Amicizia rimossa", $"Hai rimosso {friend.Username} dai tuoi amici.", "OK");
+                            try
+                            {
+                                // TODO: Implementare chiamata API per rimuovere amicizia
+                                // await ApiService.RemoveFriendshipAsync(friend.Email);
+
+                                Friends.Remove(friend);
+                                await DisplayAlert("Amicizia rimossa", $"Hai rimosso {friend.Username} dai tuoi amici.", "OK");
+                            }
+                            catch (Exception ex)
+                            {
+                                await DisplayAlert("Errore", $"Errore nella rimozione dell'amicizia: {ex.Message}", "OK");
+                            }
                         }
                         break;
                 }
@@ -286,8 +376,18 @@ namespace trovagiocatoriApp.Views
 
                 if (confirm)
                 {
-                    SentRequests.Remove(request);
-                    await DisplayAlert("Richiesta annullata", $"Richiesta a {request.Username} annullata.", "OK");
+                    try
+                    {
+                        // TODO: Implementare chiamata API per annullare richiesta
+                        // await ApiService.CancelFriendRequestAsync(request.RequestId);
+
+                        SentRequests.Remove(request);
+                        await DisplayAlert("Richiesta annullata", $"Richiesta a {request.Username} annullata.", "OK");
+                    }
+                    catch (Exception ex)
+                    {
+                        await DisplayAlert("Errore", $"Errore nell'annullamento della richiesta: {ex.Message}", "OK");
+                    }
                 }
             }
         }
@@ -296,21 +396,28 @@ namespace trovagiocatoriApp.Views
         {
             if (sender is Button button && button.CommandParameter is FriendRequest request)
             {
-                // Aggiungi agli amici
-                Friends.Add(new FriendInfo
+                try
                 {
-                    UserId = request.UserId,
-                    Username = request.Username,
-                    FullName = request.FullName,
-                    Email = request.Email,
-                    ProfilePicture = request.ProfilePicture,
-                    FriendsSince = DateTime.Now
-                });
+                    button.IsEnabled = false;
+                    button.Text = "Accetto...";
 
-                // Rimuovi dalle richieste ricevute
-                ReceivedRequests.Remove(request);
+                    // TODO: Implementare chiamata API per accettare richiesta
+                    // await ApiService.AcceptFriendRequestAsync(request.RequestId);
 
-                await DisplayAlert("Amicizia accettata", $"Ora sei amico di {request.Username}!", "OK");
+                    // Rimuovi dalle richieste ricevute
+                    ReceivedRequests.Remove(request);
+
+                    // Ricarica la lista amici
+                    await LoadFriendsFromBackend();
+
+                    await DisplayAlert("Amicizia accettata", $"Ora sei amico di {request.Username}!", "OK");
+                }
+                catch (Exception ex)
+                {
+                    await DisplayAlert("Errore", $"Errore nell'accettazione della richiesta: {ex.Message}", "OK");
+                    button.IsEnabled = true;
+                    button.Text = "Accetta";
+                }
             }
         }
 
@@ -326,71 +433,25 @@ namespace trovagiocatoriApp.Views
 
                 if (confirm)
                 {
-                    ReceivedRequests.Remove(request);
-                    await DisplayAlert("Richiesta rifiutata", $"Richiesta di {request.Username} rifiutata.", "OK");
+                    try
+                    {
+                        button.IsEnabled = false;
+                        button.Text = "Rifiuto...";
+
+                        // TODO: Implementare chiamata API per rifiutare richiesta
+                        // await ApiService.RejectFriendRequestAsync(request.RequestId);
+
+                        ReceivedRequests.Remove(request);
+                        await DisplayAlert("Richiesta rifiutata", $"Richiesta di {request.Username} rifiutata.", "OK");
+                    }
+                    catch (Exception ex)
+                    {
+                        await DisplayAlert("Errore", $"Errore nel rifiuto della richiesta: {ex.Message}", "OK");
+                        button.IsEnabled = true;
+                        button.Text = "Rifiuta";
+                    }
                 }
             }
-        }
-
-        // ========== DATI DI ESEMPIO ==========
-
-        private void LoadSampleData()
-        {
-            // Aggiungi alcuni amici di esempio
-            Friends.Add(new FriendInfo
-            {
-                UserId = 1,
-                Username = "mario_rossi",
-                FullName = "Mario Rossi",
-                Email = "mario.rossi@example.com",
-                ProfilePicture = "default_avatar.png",
-                FriendsSince = DateTime.Now.AddDays(-30)
-            });
-
-            Friends.Add(new FriendInfo
-            {
-                UserId = 2,
-                Username = "anna_verdi",
-                FullName = "Anna Verdi",
-                Email = "anna.verdi@example.com",
-                ProfilePicture = "default_avatar.png",
-                FriendsSince = DateTime.Now.AddDays(-15)
-            });
-
-            // Aggiungi alcune richieste inviate di esempio
-            SentRequests.Add(new FriendRequest
-            {
-                UserId = 3,
-                Username = "luca_bianchi",
-                FullName = "Luca Bianchi",
-                Email = "luca.bianchi@example.com",
-                ProfilePicture = "default_avatar.png",
-                RequestSent = DateTime.Now.AddDays(-2),
-                Status = FriendRequestStatus.Pending
-            });
-
-            // Aggiungi alcune richieste ricevute di esempio
-            ReceivedRequests.Add(new FriendRequest
-            {
-                UserId = 4,
-                Username = "sara_neri",
-                FullName = "Sara Neri",
-                Email = "sara.neri@example.com",
-                ProfilePicture = "default_avatar.png",
-                RequestReceived = DateTime.Now.AddDays(-1),
-                Status = FriendRequestStatus.Pending
-            });
-
-            ReceivedRequests.Add(new FriendRequest
-            {
-                UserId = 5,
-                Username = "giuseppe_blu",
-                FullName = "Giuseppe Blu",
-                Email = "giuseppe.blu@example.com",
-                ProfilePicture = "default_avatar.png",
-                RequestReceived = DateTime.Now.AddHours(-3),
-                Status = FriendRequestStatus.Pending
-            });
         }
 
         // ========== INotifyPropertyChanged ==========
@@ -417,6 +478,7 @@ namespace trovagiocatoriApp.Views
 
     public class FriendRequest
     {
+        public int RequestId { get; set; } // Aggiunto per identificare la richiesta specifica
         public int UserId { get; set; }
         public string Username { get; set; }
         public string FullName { get; set; }

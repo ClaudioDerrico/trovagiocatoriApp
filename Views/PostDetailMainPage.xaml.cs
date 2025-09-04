@@ -38,8 +38,8 @@ namespace trovagiocatoriApp.Views
         private string _currentUserEmail = "";
         private bool _isPostAuthor = false;
 
-        // NUOVO: Proprietà pubblica per il binding XAML
-        public bool IsPostAuthor => _isPostAuthor;
+        // NUOVO: Stato dell'amicizia
+        private bool _isAuthorFriend = false;
 
         // Proprietà per il campo sportivo
         private SportField _campo;
@@ -52,6 +52,9 @@ namespace trovagiocatoriApp.Views
                 OnPropertyChanged();
             }
         }
+
+        // Proprietà pubblica per il binding XAML
+        public bool IsPostAuthor => _isPostAuthor;
 
         public PostDetailMainPage(int postId)
         {
@@ -77,6 +80,465 @@ namespace trovagiocatoriApp.Views
             await CheckFavoriteStatusAsync();
             await CheckParticipationStatusAsync();
             await LoadParticipantsCountAsync();
+            await CheckFriendshipStatusAsync(); // NUOVO
+        }
+
+        // NUOVO: Controlla se l'autore del post è un amico
+        private async Task CheckFriendshipStatusAsync()
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(_postAuthorEmail) || string.IsNullOrEmpty(_currentUserEmail))
+                {
+                    Debug.WriteLine("[FRIENDS] Email mancanti per controllo amicizia");
+                    return;
+                }
+
+                // Se l'utente sta guardando il proprio post, non mostrare badge amico
+                if (_isPostAuthor)
+                {
+                    _isAuthorFriend = false;
+                    UpdateFriendshipUI();
+                    return;
+                }
+
+                // TODO: Implementa qui la chiamata API per verificare se l'autore è un amico
+                // Per ora simulo il controllo
+                _isAuthorFriend = await CheckIfUserIsFriendAsync(_postAuthorEmail);
+
+                UpdateFriendshipUI();
+
+                Debug.WriteLine($"[FRIENDS] Controllo amicizia: {_postAuthorEmail} è amico: {_isAuthorFriend}");
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[FRIENDS] Errore nel controllo amicizia: {ex.Message}");
+                _isAuthorFriend = false;
+                UpdateFriendshipUI();
+            }
+        }
+
+        // NUOVO: Simula il controllo amicizia (sostituisci con chiamata API reale)
+        private async Task<bool> CheckIfUserIsFriendAsync(string userEmail)
+        {
+            try
+            {
+                // TODO: Sostituisci con la tua API degli amici quando sarà implementata
+                // Per ora restituisco false (nessuna amicizia)
+
+                // Esempio di come potrebbe essere la chiamata API:
+                /*
+                var request = new HttpRequestMessage(HttpMethod.Get, $"{_apiBaseUrl}/friends/check?email={Uri.EscapeDataString(userEmail)}");
+                
+                if (Preferences.ContainsKey("session_id"))
+                {
+                    string sessionId = Preferences.Get("session_id", "");
+                    request.Headers.Add("Cookie", $"session_id={sessionId}");
+                }
+
+                var response = await _sharedClient.SendAsync(request);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var json = await response.Content.ReadAsStringAsync();
+                    var result = JsonSerializer.Deserialize<Dictionary<string, object>>(json);
+                    
+                    if (result.ContainsKey("is_friend") && result["is_friend"] is JsonElement element)
+                    {
+                        return element.GetBoolean();
+                    }
+                }
+                */
+
+                // Simulazione: restituisce true se l'email contiene "friend" (per testing)
+                await Task.Delay(100); // Simula chiamata API
+                return userEmail.ToLower().Contains("friend");
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[FRIENDS] Errore nella verifica amicizia: {ex.Message}");
+                return false;
+            }
+        }
+
+        // NUOVO: Aggiorna UI in base allo stato dell'amicizia
+        private void UpdateFriendshipUI()
+        {
+            MainThread.BeginInvokeOnMainThread(() =>
+            {
+                // Mostra/nascondi badge amico
+                if (FriendBadge != null)
+                {
+                    FriendBadge.IsVisible = _isAuthorFriend;
+                }
+
+                // Aggiorna colore e stile icona amici
+                if (FriendsButton != null)
+                {
+                    if (_isAuthorFriend)
+                    {
+                        FriendsButton.BackgroundColor = Color.FromArgb("#4CAF50"); // Verde per amico
+                    }
+                    else if (_isPostAuthor)
+                    {
+                        FriendsButton.BackgroundColor = Color.FromArgb("#FF9800"); // Arancione per proprio post
+                    }
+                    else
+                    {
+                        FriendsButton.BackgroundColor = Color.FromArgb("#2196F3"); // Blu per non amico
+                    }
+                }
+            });
+        }
+
+        // NUOVO: Gestisce click su icona amici
+        private async void OnFriendsButtonClicked(object sender, EventArgs e)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(_postAuthorEmail))
+                {
+                    await DisplayAlert("Errore", "Informazioni autore non disponibili", "OK");
+                    return;
+                }
+
+                if (_isPostAuthor)
+                {
+                    // Se è il proprio post, mostra opzioni per gestire amici
+                    await ShowOwnPostFriendsOptions();
+                }
+                else if (_isAuthorFriend)
+                {
+                    // Se è già amico, mostra opzioni amico
+                    await ShowFriendOptions();
+                }
+                else
+                {
+                    // Se non è amico, mostra opzioni per aggiungere
+                    await ShowAddFriendOptions();
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[FRIENDS] Errore gestione click amici: {ex.Message}");
+                await DisplayAlert("Errore", "Errore nell'apertura opzioni amici", "OK");
+            }
+        }
+
+        // NUOVO: Opzioni per il proprio post
+        private async Task ShowOwnPostFriendsOptions()
+        {
+            var action = await DisplayActionSheet(
+                "Gestisci Amici per questo Evento",
+                "Annulla",
+                null,
+                "👥 Invita Amici all'Evento",
+                "🔍 Vedi Chi Ha Partecipato",
+                "📨 Condividi Evento"
+            );
+
+            switch (action)
+            {
+                case "👥 Invita Amici all'Evento":
+                    await InviteFriendsToEvent();
+                    break;
+                case "🔍 Vedi Chi Ha Partecipato":
+                    await Navigation.PushAsync(new PostDetailParticipantsPage(_postId, _currentPost, _isPostAuthor));
+                    break;
+                case "📨 Condividi Evento":
+                    await ShareEvent();
+                    break;
+            }
+        }
+
+        // NUOVO: Opzioni per un amico
+        private async Task ShowFriendOptions()
+        {
+            var action = await DisplayActionSheet(
+                $"Opzioni Amico",
+                "Annulla",
+                null,
+                "💬 Chatta con l'Organizzatore",
+                "👤 Vedi Profilo",
+                "❌ Rimuovi dai Preferiti" // Opzione per unfriend se implementata
+            );
+
+            switch (action)
+            {
+                case "💬 Chatta con l'Organizzatore":
+                    await StartChatWithAuthor();
+                    break;
+                case "👤 Vedi Profilo":
+                    await ViewAuthorProfile();
+                    break;
+                case "❌ Rimuovi dai Preferiti":
+                    await RemoveFriend();
+                    break;
+            }
+        }
+
+        // NUOVO: Opzioni per aggiungere come amico
+        private async Task ShowAddFriendOptions()
+        {
+            var action = await DisplayActionSheet(
+                "Opzioni Utente",
+                "Annulla",
+                null,
+                "👥 Aggiungi come Amico",
+                "👤 Vedi Profilo",
+                "💬 Chatta (se partecipante)"
+            );
+
+            switch (action)
+            {
+                case "👥 Aggiungi come Amico":
+                    await SendFriendRequest();
+                    break;
+                case "👤 Vedi Profilo":
+                    await ViewAuthorProfile();
+                    break;
+                case "💬 Chatta (se partecipante)":
+                    await StartChatWithAuthor();
+                    break;
+            }
+        }
+
+        // NUOVO: Invia richiesta di amicizia
+        private async Task SendFriendRequest()
+        {
+            try
+            {
+                var confirm = await DisplayAlert(
+                    "Richiesta di Amicizia",
+                    $"Vuoi inviare una richiesta di amicizia all'organizzatore?",
+                    "Invia",
+                    "Annulla"
+                );
+
+                if (!confirm) return;
+
+                // TODO: Implementa chiamata API per inviare richiesta amicizia
+                /*
+                var request = new HttpRequestMessage(HttpMethod.Post, $"{_apiBaseUrl}/friends/request");
+                
+                if (Preferences.ContainsKey("session_id"))
+                {
+                    string sessionId = Preferences.Get("session_id", "");
+                    request.Headers.Add("Cookie", $"session_id={sessionId}");
+                }
+
+                var payload = new { target_email = _postAuthorEmail };
+                var json = JsonSerializer.Serialize(payload);
+                request.Content = new StringContent(json, Encoding.UTF8, "application/json");
+
+                var response = await _sharedClient.SendAsync(request);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    await DisplayAlert("Successo", "Richiesta di amicizia inviata!", "OK");
+                }
+                else
+                {
+                    await DisplayAlert("Errore", "Impossibile inviare la richiesta", "OK");
+                }
+                */
+
+                // Simulazione per ora
+                await DisplayAlert("Richiesta Inviata", "La richiesta di amicizia è stata inviata! Quando verrà accettata, potrai vedere l'utente nei tuoi amici.", "OK");
+
+                Debug.WriteLine($"[FRIENDS] Richiesta amicizia inviata a {_postAuthorEmail}");
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[FRIENDS] Errore invio richiesta amicizia: {ex.Message}");
+                await DisplayAlert("Errore", "Errore nell'invio della richiesta", "OK");
+            }
+        }
+
+        // NUOVO: Rimuovi amico
+        private async Task RemoveFriend()
+        {
+            try
+            {
+                var confirm = await DisplayAlert(
+                    "Rimuovi Amicizia",
+                    "Sei sicuro di voler rimuovere questa persona dai tuoi amici?",
+                    "Rimuovi",
+                    "Annulla"
+                );
+
+                if (!confirm) return;
+
+                // TODO: Implementa chiamata API per rimuovere amicizia
+                /*
+                var request = new HttpRequestMessage(HttpMethod.Delete, $"{_apiBaseUrl}/friends/remove");
+                
+                if (Preferences.ContainsKey("session_id"))
+                {
+                    string sessionId = Preferences.Get("session_id", "");
+                    request.Headers.Add("Cookie", $"session_id={sessionId}");
+                }
+
+                var payload = new { friend_email = _postAuthorEmail };
+                var json = JsonSerializer.Serialize(payload);
+                request.Content = new StringContent(json, Encoding.UTF8, "application/json");
+
+                var response = await _sharedClient.SendAsync(request);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    _isAuthorFriend = false;
+                    UpdateFriendshipUI();
+                    await DisplayAlert("Amicizia Rimossa", "L'amicizia è stata rimossa", "OK");
+                }
+                else
+                {
+                    await DisplayAlert("Errore", "Impossibile rimuovere l'amicizia", "OK");
+                }
+                */
+
+                // Simulazione per ora
+                _isAuthorFriend = false;
+                UpdateFriendshipUI();
+                await DisplayAlert("Amicizia Rimossa", "L'amicizia è stata rimossa con successo", "OK");
+
+                Debug.WriteLine($"[FRIENDS] Amicizia rimossa con {_postAuthorEmail}");
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[FRIENDS] Errore rimozione amicizia: {ex.Message}");
+                await DisplayAlert("Errore", "Errore nella rimozione dell'amicizia", "OK");
+            }
+        }
+
+        // NUOVO: Invita amici all'evento
+        private async Task InviteFriendsToEvent()
+        {
+            try
+            {
+                // TODO: Naviga a pagina per invitare amici
+                // await Navigation.PushAsync(new InviteFriendsPage(_postId, _currentPost));
+
+                await DisplayAlert(
+                    "Invita Amici",
+                    "Funzione di invito amici in arrivo! Potrai selezionare i tuoi amici e invitarli direttamente a partecipare a questo evento.",
+                    "OK"
+                );
+
+                Debug.WriteLine($"[FRIENDS] Invito amici all'evento {_postId}");
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[FRIENDS] Errore invito amici: {ex.Message}");
+                await DisplayAlert("Errore", "Errore nell'apertura inviti", "OK");
+            }
+        }
+
+        // NUOVO: Visualizza profilo autore
+        private async Task ViewAuthorProfile()
+        {
+            try
+            {
+                // TODO: Naviga al profilo dell'utente
+                // await Navigation.PushAsync(new UserProfilePage(_postAuthorEmail));
+
+                await DisplayAlert(
+                    "Profilo Utente",
+                    $"Apertura profilo di {_postAuthorEmail} in arrivo! Potrai vedere le statistiche, gli eventi creati e altre informazioni pubbliche.",
+                    "OK"
+                );
+
+                Debug.WriteLine($"[FRIENDS] Visualizzazione profilo {_postAuthorEmail}");
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[FRIENDS] Errore visualizzazione profilo: {ex.Message}");
+                await DisplayAlert("Errore", "Errore nell'apertura del profilo", "OK");
+            }
+        }
+
+        // NUOVO: Avvia chat con autore
+        private async Task StartChatWithAuthor()
+        {
+            try
+            {
+                if (_currentPost == null)
+                {
+                    await DisplayAlert("Errore", "Informazioni del post non disponibili", "OK");
+                    return;
+                }
+
+                if (_isPostAuthor)
+                {
+                    await DisplayAlert("Info", "Non puoi chattare con te stesso!", "OK");
+                    return;
+                }
+
+                // Se non è partecipante, chiedi se vuole iscriversi
+                if (!_isParticipant)
+                {
+                    var shouldJoin = await DisplayAlert(
+                        "Iscriviti per chattare",
+                        "Per chattare con l'organizzatore devi essere iscritto all'evento. Vuoi iscriverti ora?",
+                        "Iscriviti",
+                        "Annulla"
+                    );
+
+                    if (shouldJoin)
+                    {
+                        await JoinEventAutomatically();
+                        return;
+                    }
+                    else
+                    {
+                        return;
+                    }
+                }
+
+                // Avvia chat
+                var chatPage = new ChatPage(_currentPost, _currentUserEmail, _postAuthorEmail, false);
+                await Navigation.PushAsync(chatPage);
+
+                Debug.WriteLine($"[FRIENDS] Chat avviata con autore {_postAuthorEmail}");
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[FRIENDS] Errore avvio chat: {ex.Message}");
+                await DisplayAlert("Errore", "Impossibile aprire la chat", "OK");
+            }
+        }
+
+        // NUOVO: Condividi evento
+        private async Task ShareEvent()
+        {
+            try
+            {
+                if (_currentPost == null)
+                {
+                    await DisplayAlert("Errore", "Informazioni del post non disponibili", "OK");
+                    return;
+                }
+
+                var shareText = $"🏃‍♂️ {_currentPost.titolo}\n" +
+                               $"📅 {_currentPost.data_partita} alle {_currentPost.ora_partita}\n" +
+                               $"📍 {_currentPost.citta}, {_currentPost.provincia}\n" +
+                               $"⚽ {_currentPost.sport} - {_currentPost.livello}\n" +
+                               $"👥 Cerco {_currentPost.numero_giocatori} giocatori\n\n" +
+                               $"Partecipa anche tu! Scarica TrovaGiocatori";
+
+                await Share.RequestAsync(new ShareTextRequest
+                {
+                    Text = shareText,
+                    Title = "Condividi Evento Sportivo"
+                });
+
+                Debug.WriteLine($"[FRIENDS] Evento condiviso: {_currentPost.titolo}");
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[FRIENDS] Errore condivisione: {ex.Message}");
+                await DisplayAlert("Errore", "Errore nella condivisione", "OK");
+            }
         }
 
         // Carica l'email dell'utente corrente
@@ -479,6 +941,48 @@ namespace trovagiocatoriApp.Views
             }
         }
 
+        private async Task JoinEventAutomatically()
+        {
+            try
+            {
+                var request = new HttpRequestMessage(HttpMethod.Post, $"{_apiBaseUrl}/events/join");
+
+                if (Preferences.ContainsKey("session_id"))
+                {
+                    string sessionId = Preferences.Get("session_id", "");
+                    request.Headers.Add("Cookie", $"session_id={sessionId}");
+                }
+
+                var payload = new ParticipationRequest { post_id = _postId };
+                var json = JsonSerializer.Serialize(payload);
+                request.Content = new StringContent(json, Encoding.UTF8, "application/json");
+
+                var response = await _sharedClient.SendAsync(request);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    _isParticipant = true;
+                    await LoadParticipantsCountAsync();
+
+                    await DisplayAlert("Successo", "Ti sei iscritto all'evento! Ora puoi chattare con l'organizzatore.", "OK");
+
+                    // Ora avvia la chat
+                    string recipientEmail = _currentPost.autore_email;
+                    var chatPage = new ChatPage(_currentPost, _currentUserEmail, recipientEmail, false);
+                    await Navigation.PushAsync(chatPage);
+                }
+                else
+                {
+                    await DisplayAlert("Errore", "Impossibile iscriversi all'evento. Riprova più tardi.", "OK");
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Errore nell'iscrizione automatica: {ex.Message}");
+                await DisplayAlert("Errore", "Errore nell'iscrizione all'evento.", "OK");
+            }
+        }
+
         private void UpdateParticipationUI()
         {
             if (_currentPost == null) return;
@@ -582,7 +1086,6 @@ namespace trovagiocatoriApp.Views
             await Navigation.PushAsync(new PostDetailParticipantsPage(_postId, _currentPost, _isPostAuthor));
         }
 
-        // AGGIORNATO: Logica Chat corretta
         private async void OnNavigateToChatClicked(object sender, EventArgs e)
         {
             if (_currentPost == null)
@@ -641,48 +1144,6 @@ namespace trovagiocatoriApp.Views
             {
                 Debug.WriteLine($"[CHAT] Errore apertura chat: {ex.Message}");
                 await DisplayAlert("Errore", "Impossibile aprire la chat. Riprova più tardi.", "OK");
-            }
-        }
-
-        private async Task JoinEventAutomatically()
-        {
-            try
-            {
-                var request = new HttpRequestMessage(HttpMethod.Post, $"{_apiBaseUrl}/events/join");
-
-                if (Preferences.ContainsKey("session_id"))
-                {
-                    string sessionId = Preferences.Get("session_id", "");
-                    request.Headers.Add("Cookie", $"session_id={sessionId}");
-                }
-
-                var payload = new ParticipationRequest { post_id = _postId };
-                var json = JsonSerializer.Serialize(payload);
-                request.Content = new StringContent(json, Encoding.UTF8, "application/json");
-
-                var response = await _sharedClient.SendAsync(request);
-
-                if (response.IsSuccessStatusCode)
-                {
-                    _isParticipant = true;
-                    await LoadParticipantsCountAsync();
-
-                    await DisplayAlert("Successo", "Ti sei iscritto all'evento! Ora puoi chattare con l'organizzatore.", "OK");
-
-                    // Ora avvia la chat
-                    string recipientEmail = _currentPost.autore_email;
-                    var chatPage = new ChatPage(_currentPost, _currentUserEmail, recipientEmail, false);
-                    await Navigation.PushAsync(chatPage);
-                }
-                else
-                {
-                    await DisplayAlert("Errore", "Impossibile iscriversi all'evento. Riprova più tardi.", "OK");
-                }
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine($"Errore nell'iscrizione automatica: {ex.Message}");
-                await DisplayAlert("Errore", "Errore nell'iscrizione all'evento.", "OK");
             }
         }
 
