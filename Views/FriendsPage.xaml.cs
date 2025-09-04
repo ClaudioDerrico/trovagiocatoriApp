@@ -115,7 +115,7 @@ namespace trovagiocatoriApp.Views
         {
             try
             {
-                // IMPLEMENTATO: Chiamata API per ottenere le richieste inviate
+                // CORREZIONE: Usa l'endpoint corretto
                 var request = new HttpRequestMessage(HttpMethod.Get, $"{_apiBaseUrl}/friends/sent-requests");
 
                 if (Preferences.ContainsKey("session_id"))
