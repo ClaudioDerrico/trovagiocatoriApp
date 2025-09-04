@@ -31,6 +31,12 @@ namespace trovagiocatoriApp.Views
         private int _postiDisponibili = 0;
         private string _postAuthorEmail = "";
 
+        // Email utente corrente per la chat
+        private string _currentUserEmail = "";
+
+        // Proprietà pubblica per il binding XAML
+        public bool IsPostAuthor => _isPostAuthor;
+
         // ObservableCollection per i partecipanti e commenti
         public ObservableCollection<ParticipantInfo> Participants { get; set; } = new ObservableCollection<ParticipantInfo>();
         public ObservableCollection<Comment> Comments { get; set; } = new ObservableCollection<Comment>();
@@ -47,6 +53,9 @@ namespace trovagiocatoriApp.Views
 
             // Imposta le informazioni dell'evento nell'header
             UpdateEventHeader();
+
+            // Mostra info chat per organizzatore
+            OrganizerChatInfo.IsVisible = _isPostAuthor;
 
             // Se richiesto, inizia con la tab chat
             if (startWithChat)
@@ -68,8 +77,43 @@ namespace trovagiocatoriApp.Views
         protected override async void OnAppearing()
         {
             base.OnAppearing();
+            await LoadCurrentUserEmailAsync();
             await LoadParticipantsAsync();
             await LoadCommentsAsync();
+        }
+
+        // ========== CARICAMENTO DATI ==========
+
+        private async Task LoadCurrentUserEmailAsync()
+        {
+            try
+            {
+                var request = new HttpRequestMessage(HttpMethod.Get, $"{_apiBaseUrl}/api/user");
+
+                if (Preferences.ContainsKey("session_id"))
+                {
+                    string sessionId = Preferences.Get("session_id", "");
+                    request.Headers.Add("Cookie", $"session_id={sessionId}");
+                }
+
+                var response = await _sharedClient.SendAsync(request);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var json = await response.Content.ReadAsStringAsync();
+                    var userData = JsonSerializer.Deserialize<Dictionary<string, object>>(json);
+
+                    if (userData.ContainsKey("email"))
+                    {
+                        _currentUserEmail = userData["email"].ToString();
+                        Debug.WriteLine($"[PARTICIPANTS] Email utente corrente: {_currentUserEmail}");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[PARTICIPANTS] Errore nel caricamento email utente: {ex.Message}");
+            }
         }
 
         private void UpdateEventHeader()
@@ -169,6 +213,9 @@ namespace trovagiocatoriApp.Views
                         Participants.Add(participant);
                     }
 
+                    // Aggiorna la UI dopo aver caricato i partecipanti
+                    UpdateParticipantsUI();
+
                     ParticipantsCollectionView.ItemsSource = Participants;
                     ParticipantsCountBadge.Text = _participantsCount.ToString();
 
@@ -178,6 +225,73 @@ namespace trovagiocatoriApp.Views
             catch (Exception ex)
             {
                 Debug.WriteLine($"[PARTICIPANTS] Errore nel caricamento partecipanti: {ex.Message}");
+            }
+        }
+
+        private void UpdateParticipantsUI()
+        {
+            // Forza l'aggiornamento del binding context per far scattare i trigger XAML
+            OnPropertyChanged(nameof(IsPostAuthor));
+        }
+
+        // ========== GESTIONE CHAT PRIVATA ==========
+
+        private async void OnChatWithParticipantClicked(object sender, EventArgs e)
+        {
+            if (sender is ImageButton button && button.CommandParameter is ParticipantInfo participant)
+            {
+                Debug.WriteLine($"[CHAT] Organizzatore {_currentUserEmail} vuole chattare con {participant.email}");
+
+                try
+                {
+                    // Verifica che l'utente corrente sia effettivamente l'organizzatore
+                    if (!_isPostAuthor)
+                    {
+                        await DisplayAlert("Errore", "Solo l'organizzatore può iniziare chat con i partecipanti", "OK");
+                        return;
+                    }
+
+                    // Verifica che il partecipante non sia l'organizzatore stesso
+                    if (participant.IsOrganizer)
+                    {
+                        await DisplayAlert("Info", "Non puoi chattare con te stesso!", "OK");
+                        return;
+                    }
+
+                    // Verifica che sia effettivamente un partecipante iscritto
+                    if (string.IsNullOrEmpty(participant.email))
+                    {
+                        await DisplayAlert("Errore", "Informazioni partecipante non disponibili", "OK");
+                        return;
+                    }
+
+                    // Conferma prima di avviare la chat
+                    bool startChat = await DisplayAlert(
+                        "Avvia Chat",
+                        $"Vuoi iniziare una chat privata con {participant.DisplayName}?",
+                        "Avvia Chat",
+                        "Annulla"
+                    );
+
+                    if (!startChat)
+                        return;
+
+                    // Avvia la chat con il partecipante selezionato
+                    var chatPage = new ChatPage(_currentPost, _currentUserEmail, participant.email, true); // true = isPostAuthor
+                    await Navigation.PushAsync(chatPage);
+
+                    Debug.WriteLine($"[CHAT] ✅ Chat avviata tra organizzatore {_currentUserEmail} e partecipante {participant.email}");
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine($"[CHAT] Errore nell'avvio chat: {ex.Message}");
+                    await DisplayAlert("Errore", "Impossibile avviare la chat. Riprova più tardi.", "OK");
+                }
+            }
+            else
+            {
+                Debug.WriteLine("[CHAT] Errore: CommandParameter non valido o mancante");
+                await DisplayAlert("Errore", "Impossibile identificare il partecipante selezionato", "OK");
             }
         }
 
@@ -202,7 +316,7 @@ namespace trovagiocatoriApp.Views
             }
         }
 
-        // ========== GESTIONE CHAT ==========
+        // ========== GESTIONE CHAT PUBBLICA (Commenti) ==========
 
         private async Task LoadCommentsAsync()
         {
@@ -234,7 +348,7 @@ namespace trovagiocatoriApp.Views
 
                     CommentsCollectionView.ItemsSource = Comments;
 
-                    Debug.WriteLine($"[CHAT] Caricati {Comments.Count} messaggi");
+                    Debug.WriteLine($"[CHAT] Caricati {Comments.Count} messaggi pubblici");
 
                     // Scrolla alla fine se la chat è visibile
                     if (!_isParticipantsTabActive)
@@ -325,6 +439,8 @@ namespace trovagiocatoriApp.Views
                         await Task.Delay(200);
                         await MessagesScrollView.ScrollToAsync(0, MessagesScrollView.ContentSize.Height, true);
                     });
+
+                    Debug.WriteLine($"[CHAT] ✅ Commento pubblico inviato da {_currentUserEmail}");
                 }
                 else
                 {
@@ -345,12 +461,88 @@ namespace trovagiocatoriApp.Views
             }
         }
 
-        // Implementazione INotifyPropertyChanged
+        // ========== METODI DI SUPPORTO ==========
+
+        private bool CanChatWithParticipant(ParticipantInfo participant)
+        {
+            // Solo l'organizzatore può iniziare chat private
+            if (!_isPostAuthor)
+                return false;
+
+            // Non può chattare con se stesso
+            if (participant.IsOrganizer)
+                return false;
+
+            // Deve essere un partecipante valido
+            if (string.IsNullOrEmpty(participant.email))
+                return false;
+
+            return true;
+        }
+
+        private async Task<int> GetActiveChatCountAsync()
+        {
+            try
+            {
+                // Qui potresti implementare una chiamata API per ottenere 
+                // il numero di chat attive per questo post
+                return Participants.Count(p => !p.IsOrganizer);
+            }
+            catch
+            {
+                return 0;
+            }
+        }
+
+        // ========== INotifyPropertyChanged ==========
+
         public new event PropertyChangedEventHandler PropertyChanged;
 
         protected new void OnPropertyChanged([CallerMemberName] string propertyName = null)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
+    }
+
+    // ========== CLASSI DI SUPPORTO ==========
+
+    /// <summary>
+    /// Estensioni per ParticipantInfo per gestire meglio la logica di chat
+    /// </summary>
+    public static class ParticipantInfoExtensions
+    {
+        public static bool CanChatWith(this ParticipantInfo participant, bool currentUserIsAuthor, string currentUserEmail)
+        {
+            // L'organizzatore può chattare con tutti i partecipanti non-organizzatori
+            if (currentUserIsAuthor)
+            {
+                return !participant.IsOrganizer && !string.IsNullOrEmpty(participant.email);
+            }
+
+            // I partecipanti normali non possono iniziare chat da questa pagina
+            return false;
+        }
+
+        public static string GetChatDisplayName(this ParticipantInfo participant)
+        {
+            return !string.IsNullOrEmpty(participant.username)
+                ? participant.username
+                : (!string.IsNullOrEmpty(participant.nome) && !string.IsNullOrEmpty(participant.cognome))
+                    ? $"{participant.nome} {participant.cognome}"
+                    : participant.email ?? "Utente sconosciuto";
+        }
+    }
+
+    /// <summary>
+    /// Modello per rappresentare una chat attiva
+    /// </summary>
+    public class ActiveChatInfo
+    {
+        public string ParticipantEmail { get; set; }
+        public string ParticipantName { get; set; }
+        public int PostId { get; set; }
+        public DateTime LastActivity { get; set; }
+        public bool HasUnreadMessages { get; set; }
+        public int UnreadCount { get; set; }
     }
 }

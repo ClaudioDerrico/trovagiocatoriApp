@@ -1,4 +1,5 @@
-﻿using Microsoft.Maui.Controls;
+﻿// Views/PostDetailMainPage.xaml.cs
+using Microsoft.Maui.Controls;
 using Microsoft.Maui.Storage;
 using System;
 using System.ComponentModel;
@@ -36,6 +37,9 @@ namespace trovagiocatoriApp.Views
         private string _postAuthorEmail = "";
         private string _currentUserEmail = "";
         private bool _isPostAuthor = false;
+
+        // NUOVO: Proprietà pubblica per il binding XAML
+        public bool IsPostAuthor => _isPostAuthor;
 
         // Proprietà per il campo sportivo
         private SportField _campo;
@@ -578,7 +582,7 @@ namespace trovagiocatoriApp.Views
             await Navigation.PushAsync(new PostDetailParticipantsPage(_postId, _currentPost, _isPostAuthor));
         }
 
-
+        // AGGIORNATO: Logica Chat corretta
         private async void OnNavigateToChatClicked(object sender, EventArgs e)
         {
             if (_currentPost == null)
@@ -589,73 +593,49 @@ namespace trovagiocatoriApp.Views
 
             try
             {
-                // Determina chi è il destinatario della chat
-                string recipientEmail;
-                bool isPostAuthor = _isPostAuthor;
-
-                if (isPostAuthor)
+                if (_isPostAuthor)
                 {
-                    // Se sono l'autore del post, devo scegliere con chi chattare
-                    // Per ora, usiamo il primo partecipante disponibile
-                    // In futuro potresti implementare una lista di partecipanti
+                    // SE SONO L'ORGANIZZATORE: non posso iniziare direttamente la chat
+                    // Devo andare nella sezione partecipanti e scegliere con chi chattare
+                    await DisplayAlert(
+                        "Chat Organizzatore",
+                        "Come organizzatore, puoi chattare con i partecipanti dalla sezione 'Partecipanti'. Clicca sull'icona chat accanto a ogni partecipante per iniziare una conversazione.",
+                        "Vai ai Partecipanti",
+                        "Annulla"
+                    );
 
-                    // Ottieni la lista dei partecipanti
-                    var participantsResponse = await _sharedClient.GetAsync($"{_pythonApiBaseUrl}/posts/{_postId}/participants-count");
+                    // Naviga automaticamente alla sezione partecipanti
+                    await Navigation.PushAsync(new PostDetailParticipantsPage(_postId, _currentPost, _isPostAuthor, startWithChat: false));
+                    return;
+                }
 
-                    if (participantsResponse.IsSuccessStatusCode)
+                // SE SONO UN PARTECIPANTE: posso chattare direttamente con l'organizzatore
+                if (!_isParticipant)
+                {
+                    var shouldJoin = await DisplayAlert(
+                        "Iscriviti per chattare",
+                        "Devi essere iscritto all'evento per poter chattare con l'organizzatore. Vuoi iscriverti ora?",
+                        "Iscriviti",
+                        "Annulla"
+                    );
+
+                    if (shouldJoin)
                     {
-                        var participantsJson = await participantsResponse.Content.ReadAsStringAsync();
-                        var participantsData = JsonSerializer.Deserialize<Dictionary<string, object>>(participantsJson);
-
-                        if (participantsData.ContainsKey("participants"))
-                        {
-                            var participantsArray = JsonSerializer.Deserialize<List<Dictionary<string, object>>>(
-                                participantsData["participants"].ToString());
-
-                            if (participantsArray != null && participantsArray.Count > 0)
-                            {
-                                // Trova il primo partecipante che non è l'organizzatore
-                                var firstParticipant = participantsArray.FirstOrDefault(p =>
-                                    p.ContainsKey("email") &&
-                                    !p["email"].ToString().Equals(_currentUserEmail, StringComparison.OrdinalIgnoreCase));
-
-                                if (firstParticipant != null)
-                                {
-                                    recipientEmail = firstParticipant["email"].ToString();
-                                }
-                                else
-                                {
-                                    await DisplayAlert("Info", "Nessun partecipante con cui chattare al momento.", "OK");
-                                    return;
-                                }
-                            }
-                            else
-                            {
-                                await DisplayAlert("Info", "Nessun partecipante iscritto al momento.", "OK");
-                                return;
-                            }
-                        }
-                        else
-                        {
-                            await DisplayAlert("Errore", "Impossibile ottenere la lista dei partecipanti.", "OK");
-                            return;
-                        }
+                        // Prova ad iscriversi automaticamente
+                        await JoinEventAutomatically();
+                        return;
                     }
                     else
                     {
-                        await DisplayAlert("Errore", "Impossibile caricare i partecipanti.", "OK");
                         return;
                     }
                 }
-                else
-                {
-                    // Se non sono l'autore, chatto con l'organizzatore
-                    recipientEmail = _currentPost.autore_email;
-                }
 
-                // Naviga alla pagina chat
-                var chatPage = new ChatPage(_currentPost, _currentUserEmail, recipientEmail, isPostAuthor);
+                // Se arrivo qui, sono un partecipante iscritto che può chattare con l'organizzatore
+                string recipientEmail = _currentPost.autore_email;
+                var chatPage = new ChatPage(_currentPost, _currentUserEmail, recipientEmail, false);
                 await Navigation.PushAsync(chatPage);
+
             }
             catch (Exception ex)
             {
@@ -663,6 +643,49 @@ namespace trovagiocatoriApp.Views
                 await DisplayAlert("Errore", "Impossibile aprire la chat. Riprova più tardi.", "OK");
             }
         }
+
+        private async Task JoinEventAutomatically()
+        {
+            try
+            {
+                var request = new HttpRequestMessage(HttpMethod.Post, $"{_apiBaseUrl}/events/join");
+
+                if (Preferences.ContainsKey("session_id"))
+                {
+                    string sessionId = Preferences.Get("session_id", "");
+                    request.Headers.Add("Cookie", $"session_id={sessionId}");
+                }
+
+                var payload = new ParticipationRequest { post_id = _postId };
+                var json = JsonSerializer.Serialize(payload);
+                request.Content = new StringContent(json, Encoding.UTF8, "application/json");
+
+                var response = await _sharedClient.SendAsync(request);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    _isParticipant = true;
+                    await LoadParticipantsCountAsync();
+
+                    await DisplayAlert("Successo", "Ti sei iscritto all'evento! Ora puoi chattare con l'organizzatore.", "OK");
+
+                    // Ora avvia la chat
+                    string recipientEmail = _currentPost.autore_email;
+                    var chatPage = new ChatPage(_currentPost, _currentUserEmail, recipientEmail, false);
+                    await Navigation.PushAsync(chatPage);
+                }
+                else
+                {
+                    await DisplayAlert("Errore", "Impossibile iscriversi all'evento. Riprova più tardi.", "OK");
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Errore nell'iscrizione automatica: {ex.Message}");
+                await DisplayAlert("Errore", "Errore nell'iscrizione all'evento.", "OK");
+            }
+        }
+
         // ========== ALTRE FUNZIONI ==========
 
         private async void OnViewOnMapClicked(object sender, EventArgs e)

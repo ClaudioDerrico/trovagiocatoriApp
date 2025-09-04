@@ -232,55 +232,60 @@
 
 
 
-		<!-- Barra di navigazione inferiore -->
-		<Grid Grid.Row="1" BackgroundColor="White" HeightRequest="80" Padding="16,8">
-			<Grid.Shadow>
-				<Shadow Brush="#000000" Offset="0,-3" Radius="8" Opacity="0.1"/>
-			</Grid.Shadow>
-			<Grid.ColumnDefinitions>
-				<ColumnDefinition Width="*" />
-				<ColumnDefinition Width="*" />
-				<ColumnDefinition Width="*" />
-			</Grid.ColumnDefinitions>
+		<!-- Barra di navigazione inferiore -->	
+        <Grid Grid.Row="1" BackgroundColor="White" HeightRequest="80" Padding="16,8">
+            <Grid.Shadow>
+                <Shadow Brush="#000000" Offset="0,-3" Radius="8" Opacity="0.1"/>
+            </Grid.Shadow>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
 
-			<!-- Bottone Partecipanti -->
-			<Button Grid.Column="0"
-					Text="👥 Partecipanti"
-					Style="{StaticResource CleanButtonStyle}"
-					BackgroundColor="#2196F3"
-					FontSize="12"
-					HeightRequest="44"
-					Margin="0,0,4,0"
-					Clicked="OnNavigateToParticipantsClicked"/>
+            <!-- Bottone Partecipanti -->
+            <Button Grid.Column="0"
+			Text="👥 Partecipanti"
+			Style="{StaticResource CleanButtonStyle}"
+			BackgroundColor="#2196F3"
+			FontSize="12"
+			HeightRequest="44"
+			Margin="0,0,4,0"
+			Clicked="OnNavigateToParticipantsClicked"/>
 
-			<!-- NUOVO: Bottone Chat Live -->
-			<Button Grid.Column="1"
-					x:Name="ChatButton"
-					Text="💬 Chat Live"
-					Style="{StaticResource CleanButtonStyle}"
-					BackgroundColor="#10B981"
-					FontSize="12"
-					HeightRequest="44"
-					Margin="2,0,2,0"
-					Clicked="OnNavigateToChatClicked">
-				<!-- Badge notifica messaggi non letti (opzionale) -->
-				<Button.Triggers>
-					<DataTrigger TargetType="Button" Binding="{Binding HasUnreadMessages}" Value="True">
-						<Setter Property="Text" Value="💬 Chat Live (!)"/>
-						<Setter Property="BackgroundColor" Value="#FF6B35"/>
-					</DataTrigger>
-				</Button.Triggers>
-			</Button>
+            <!-- AGGIORNATO: Bottone Chat Live - Visibile solo per partecipanti, non per organizzatori -->
+            <Button Grid.Column="1"
+			x:Name="ChatButton"
+			Style="{StaticResource CleanButtonStyle}"
+			BackgroundColor="#10B981"
+			FontSize="12"
+			HeightRequest="44"
+			Margin="2,0,2,0"
+			Clicked="OnNavigateToChatClicked">
+                <!-- NUOVO: Logica di visibilità e testo dinamico -->
+                <Button.Triggers>
+                    <!-- Se l'utente è l'organizzatore -->
+                    <DataTrigger TargetType="Button" Binding="{Binding IsPostAuthor}" Value="True">
+                        <Setter Property="Text" Value="💬 Gestisci Chat"/>
+                        <Setter Property="BackgroundColor" Value="#FF9800"/>
+                    </DataTrigger>
+                    <!-- Se l'utente è un partecipante -->
+                    <DataTrigger TargetType="Button" Binding="{Binding IsPostAuthor}" Value="False">
+                        <Setter Property="Text" Value="💬 Chat Live"/>
+                        <Setter Property="BackgroundColor" Value="#10B981"/>
+                    </DataTrigger>
+                </Button.Triggers>
+            </Button>
 
-			<!-- Bottone Commenti -->
-			<Button Grid.Column="2"
-					Text="💭 Commenti"
-					Style="{StaticResource CleanButtonStyle}"
-					BackgroundColor="#FF9800"
-					FontSize="12"
-					HeightRequest="44"
-					Margin="4,0,0,0"
-					Clicked="OnNavigateToParticipantsClicked"/>
-		</Grid>
-	</Grid>
+            <!-- Bottone Commenti -->
+            <Button Grid.Column="2"
+			Text="💭 Commenti"
+			Style="{StaticResource CleanButtonStyle}"
+			BackgroundColor="#FF9800"
+			FontSize="12"
+			HeightRequest="44"
+			Margin="4,0,0,0"
+			Clicked="OnNavigateToParticipantsClicked"/>
+        </Grid>
+    </Grid>
 </ContentPage>
