@@ -17,32 +17,106 @@ namespace trovagiocatoriApp.Views
         private readonly string apiBaseUrl = ApiConfig.BaseUrl;
         private readonly string pythonApiBaseUrl = ApiConfig.PythonApiUrl;
 
-        // Lista per i preferiti
+        // Stato dei tab
+        private TabType _activeTab = TabType.MyPosts;
+
+        // Liste per i diversi contenuti
         public ObservableCollection<PostResponse> FavoritePosts { get; set; } = new ObservableCollection<PostResponse>();
-
-        // Lista per gli eventi del calendario
         public ObservableCollection<PostResponse> CalendarEvents { get; set; } = new ObservableCollection<PostResponse>();
-
-        // NUOVO: Lista per i miei post
         public ObservableCollection<PostResponse> MyPosts { get; set; } = new ObservableCollection<PostResponse>();
+
+        // Enum per i tipi di tab
+        private enum TabType
+        {
+            MyPosts,
+            MyEvents,
+            Favorites
+        }
 
         public ProfilePage()
         {
             InitializeComponent();
+
+            // Imposta le CollectionView
             FavoritesCollectionView.ItemsSource = FavoritePosts;
             CalendarEventsCollectionView.ItemsSource = CalendarEvents;
-            MyPostsCollectionView.ItemsSource = MyPosts; // NUOVO
+            MyPostsCollectionView.ItemsSource = MyPosts;
         }
 
-        // Ricarica il profilo ogni volta che la pagina diventa visibile
         protected override void OnAppearing()
         {
             base.OnAppearing();
             LoadProfile();
-            LoadFavorites();
+            LoadMyPosts();
             LoadCalendarEvents();
-            LoadMyPosts(); // NUOVO: Carica i miei post
+            LoadFavorites();
         }
+
+        // ========== GESTIONE TAB ==========
+
+        private void OnMyPostsTabClicked(object sender, EventArgs e)
+        {
+            if (_activeTab != TabType.MyPosts)
+            {
+                _activeTab = TabType.MyPosts;
+                UpdateTabsUI();
+            }
+        }
+
+        private void OnMyEventsTabClicked(object sender, EventArgs e)
+        {
+            if (_activeTab != TabType.MyEvents)
+            {
+                _activeTab = TabType.MyEvents;
+                UpdateTabsUI();
+            }
+        }
+
+        private void OnFavoritesTabClicked(object sender, EventArgs e)
+        {
+            if (_activeTab != TabType.Favorites)
+            {
+                _activeTab = TabType.Favorites;
+                UpdateTabsUI();
+            }
+        }
+
+        private void UpdateTabsUI()
+        {
+            // Reset tutti i tab
+            MyPostsTabButton.Style = (Style)Resources["TabButtonStyle"];
+            MyEventsTabButton.Style = (Style)Resources["TabButtonStyle"];
+            FavoritesTabButton.Style = (Style)Resources["TabButtonStyle"];
+
+            // Nascondi tutti i contenuti
+            MyPostsContent.IsVisible = false;
+            MyEventsContent.IsVisible = false;
+            FavoritesContent.IsVisible = false;
+
+            // Attiva il tab selezionato
+            switch (_activeTab)
+            {
+                case TabType.MyPosts:
+                    MyPostsTabButton.Style = (Style)Resources["ActiveTabButtonStyle"];
+                    MyPostsContent.IsVisible = true;
+                    Grid.SetColumn(TabIndicator, 0);
+                    break;
+
+                case TabType.MyEvents:
+                    MyEventsTabButton.Style = (Style)Resources["ActiveTabButtonStyle"];
+                    MyEventsContent.IsVisible = true;
+                    Grid.SetColumn(TabIndicator, 1);
+                    break;
+
+                case TabType.Favorites:
+                    FavoritesTabButton.Style = (Style)Resources["ActiveTabButtonStyle"];
+                    FavoritesContent.IsVisible = true;
+                    Grid.SetColumn(TabIndicator, 2);
+                    break;
+            }
+        }
+
+        // ========== CARICAMENTO DATI ==========
 
         private async void LoadProfile()
         {
@@ -51,7 +125,6 @@ namespace trovagiocatoriApp.Views
             {
                 var request = new HttpRequestMessage(HttpMethod.Get, $"{apiBaseUrl}/profile");
 
-                // Recupera il cookie di sessione salvato nelle Preferences
                 if (Preferences.ContainsKey("session_id"))
                 {
                     string sessionId = Preferences.Get("session_id", "");
@@ -77,7 +150,6 @@ namespace trovagiocatoriApp.Views
                         SurnameLabel.Text = userProfile.Cognome;
                         EmailLabel.Text = userProfile.Email;
 
-                        // Se il profilo contiene un'immagine, la carichiamo; altrimenti, usiamo un'immagine predefinita
                         ProfileImage.Source = !string.IsNullOrEmpty(userProfile.ProfilePic)
                             ? $"{apiBaseUrl}/images/{userProfile.ProfilePic}"
                             : "default_images.jpg";
@@ -101,7 +173,6 @@ namespace trovagiocatoriApp.Views
             }
         }
 
-        // NUOVO: Metodo per caricare i miei post
         private async void LoadMyPosts()
         {
             try
@@ -123,7 +194,6 @@ namespace trovagiocatoriApp.Views
                     var jsonResponse = await response.Content.ReadAsStringAsync();
                     Debug.WriteLine($"[MY_POSTS] Risposta API: {jsonResponse}");
 
-                    // Deserializza come lista di JsonElement per gestire le proprietà aggiuntive
                     var jsonElements = JsonSerializer.Deserialize<List<JsonElement>>(jsonResponse);
 
                     MyPosts.Clear();
@@ -164,6 +234,203 @@ namespace trovagiocatoriApp.Views
             {
                 Debug.WriteLine($"[MY_POSTS] Eccezione durante il caricamento post: {ex.Message}");
                 MyPosts.Clear();
+            }
+        }
+
+        private async void LoadCalendarEvents()
+        {
+            try
+            {
+                Debug.WriteLine("[CALENDAR] Inizio caricamento eventi calendario");
+
+                var request = new HttpRequestMessage(HttpMethod.Get, $"{apiBaseUrl}/user/participations");
+
+                if (Preferences.ContainsKey("session_id"))
+                {
+                    string sessionId = Preferences.Get("session_id", "");
+                    request.Headers.Add("Cookie", $"session_id={sessionId}");
+                }
+
+                var response = await _client.SendAsync(request);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var jsonResponse = await response.Content.ReadAsStringAsync();
+                    Debug.WriteLine($"[CALENDAR] Risposta partecipazioni: {jsonResponse}");
+
+                    var result = JsonSerializer.Deserialize<Dictionary<string, object>>(jsonResponse,
+                        new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+                    if (result.ContainsKey("participations") && result["participations"] is JsonElement participationsElement)
+                    {
+                        var participationIds = participationsElement.EnumerateArray()
+                            .Select(x => x.GetInt32())
+                            .ToList();
+
+                        Debug.WriteLine($"[CALENDAR] Trovate {participationIds.Count} partecipazioni");
+
+                        CalendarEvents.Clear();
+
+                        var loadTasks = participationIds.Select(LoadCalendarEventDetails);
+                        await Task.WhenAll(loadTasks);
+
+                        // Ordina gli eventi per data
+                        var futureEvents = CalendarEvents.Where(e =>
+                        {
+                            if (DateTime.TryParse(e.data_partita, out DateTime dataPartita))
+                            {
+                                return dataPartita >= DateTime.Today;
+                            }
+                            return false;
+                        })
+                        .OrderBy(e => DateTime.TryParse(e.data_partita, out DateTime d1) ? d1 : DateTime.MinValue)
+                        .ThenBy(e => TimeSpan.TryParse(e.ora_partita, out TimeSpan t1) ? t1 : TimeSpan.Zero)
+                        .ToList();
+
+                        var pastEvents = CalendarEvents.Where(e =>
+                        {
+                            if (DateTime.TryParse(e.data_partita, out DateTime dataPartita))
+                            {
+                                return dataPartita < DateTime.Today;
+                            }
+                            return true;
+                        })
+                        .OrderByDescending(e => DateTime.TryParse(e.data_partita, out DateTime d2) ? d2 : DateTime.MinValue)
+                        .ThenByDescending(e => TimeSpan.TryParse(e.ora_partita, out TimeSpan t2) ? t2 : TimeSpan.Zero)
+                        .ToList();
+
+                        CalendarEvents.Clear();
+
+                        foreach (var eventItem in futureEvents.Concat(pastEvents))
+                        {
+                            CalendarEvents.Add(eventItem);
+                        }
+
+                        Debug.WriteLine($"[CALENDAR] Caricati e ordinati {CalendarEvents.Count} eventi nel calendario");
+                    }
+                    else
+                    {
+                        Debug.WriteLine("[CALENDAR] Nessuna partecipazione trovata nel JSON");
+                        CalendarEvents.Clear();
+                    }
+                }
+                else
+                {
+                    Debug.WriteLine($"[CALENDAR] Errore nel caricamento partecipazioni: {response.StatusCode}");
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    Debug.WriteLine($"[CALENDAR] Contenuto errore: {errorContent}");
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[CALENDAR] Eccezione durante il caricamento eventi: {ex.Message}");
+                Debug.WriteLine($"[CALENDAR] Stack trace: {ex.StackTrace}");
+            }
+        }
+
+        private async void LoadFavorites()
+        {
+            try
+            {
+                var request = new HttpRequestMessage(HttpMethod.Get, $"{apiBaseUrl}/favorites");
+
+                if (Preferences.ContainsKey("session_id"))
+                {
+                    string sessionId = Preferences.Get("session_id", "");
+                    request.Headers.Add("Cookie", $"session_id={sessionId}");
+                }
+
+                var response = await _client.SendAsync(request);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var jsonResponse = await response.Content.ReadAsStringAsync();
+                    var result = JsonSerializer.Deserialize<Dictionary<string, object>>(jsonResponse,
+                        new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+                    if (result.ContainsKey("favorites") && result["favorites"] is JsonElement favoritesElement)
+                    {
+                        var favoriteIds = favoritesElement.EnumerateArray()
+                            .Select(x => x.GetInt32())
+                            .ToList();
+
+                        Debug.WriteLine($"Caricati {favoriteIds.Count} preferiti");
+
+                        FavoritePosts.Clear();
+                        foreach (var postId in favoriteIds)
+                        {
+                            await LoadFavoritePostDetails(postId);
+                        }
+                    }
+                }
+                else
+                {
+                    Debug.WriteLine($"Errore nel caricamento preferiti: {response.StatusCode}");
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Eccezione durante il caricamento dei preferiti: {ex.Message}");
+            }
+        }
+
+        // ========== METODI HELPER ==========
+
+        private async Task LoadCalendarEventDetails(int postId)
+        {
+            try
+            {
+                var response = await _client.GetAsync($"{pythonApiBaseUrl}/posts/{postId}");
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var jsonResponse = await response.Content.ReadAsStringAsync();
+                    var post = JsonSerializer.Deserialize<PostResponse>(jsonResponse,
+                        new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+                    if (post != null)
+                    {
+                        MainThread.BeginInvokeOnMainThread(() =>
+                        {
+                            CalendarEvents.Add(post);
+                        });
+
+                        Debug.WriteLine($"[CALENDAR] Aggiunto evento calendario: {post.titolo} - {post.data_partita} {post.ora_partita}");
+                    }
+                }
+                else
+                {
+                    Debug.WriteLine($"[CALENDAR] Errore nel caricamento post {postId}: {response.StatusCode}");
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[CALENDAR] Errore nel caricamento dettagli evento {postId}: {ex.Message}");
+            }
+        }
+
+        private async Task LoadFavoritePostDetails(int postId)
+        {
+            try
+            {
+                var response = await _client.GetAsync($"{pythonApiBaseUrl}/posts/{postId}");
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var jsonResponse = await response.Content.ReadAsStringAsync();
+                    var post = JsonSerializer.Deserialize<PostResponse>(jsonResponse,
+                        new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+                    if (post != null)
+                    {
+                        FavoritePosts.Add(post);
+                        Debug.WriteLine($"Aggiunto post preferito: {post.titolo}");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Errore nel caricamento dettagli post {postId}: {ex.Message}");
             }
         }
 
@@ -234,238 +501,36 @@ namespace trovagiocatoriApp.Views
             }
         }
 
-        private async void LoadFavorites()
-        {
-            try
-            {
-                var request = new HttpRequestMessage(HttpMethod.Get, $"{apiBaseUrl}/favorites");
+        // ========== GESTIONE SELEZIONI ==========
 
-                if (Preferences.ContainsKey("session_id"))
-                {
-                    string sessionId = Preferences.Get("session_id", "");
-                    request.Headers.Add("Cookie", $"session_id={sessionId}");
-                }
-
-                var response = await _client.SendAsync(request);
-
-                if (response.IsSuccessStatusCode)
-                {
-                    var jsonResponse = await response.Content.ReadAsStringAsync();
-                    var result = JsonSerializer.Deserialize<Dictionary<string, object>>(jsonResponse,
-                        new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-
-                    if (result.ContainsKey("favorites") && result["favorites"] is JsonElement favoritesElement)
-                    {
-                        var favoriteIds = favoritesElement.EnumerateArray()
-                            .Select(x => x.GetInt32())
-                            .ToList();
-
-                        Debug.WriteLine($"Caricati {favoriteIds.Count} preferiti");
-
-                        // Carica i dettagli di ogni post preferito
-                        FavoritePosts.Clear();
-                        foreach (var postId in favoriteIds)
-                        {
-                            await LoadFavoritePostDetails(postId);
-                        }
-                    }
-                }
-                else
-                {
-                    Debug.WriteLine($"Errore nel caricamento preferiti: {response.StatusCode}");
-                }
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine($"Eccezione durante il caricamento dei preferiti: {ex.Message}");
-            }
-        }
-
-        // Metodo per caricare gli eventi del calendario
-        private async void LoadCalendarEvents()
-        {
-            try
-            {
-                Debug.WriteLine("[CALENDAR] Inizio caricamento eventi calendario");
-
-                // Ottieni l'elenco degli eventi a cui l'utente partecipa dall'auth-service
-                var request = new HttpRequestMessage(HttpMethod.Get, $"{apiBaseUrl}/user/participations");
-
-                if (Preferences.ContainsKey("session_id"))
-                {
-                    string sessionId = Preferences.Get("session_id", "");
-                    request.Headers.Add("Cookie", $"session_id={sessionId}");
-                }
-
-                var response = await _client.SendAsync(request);
-
-                if (response.IsSuccessStatusCode)
-                {
-                    var jsonResponse = await response.Content.ReadAsStringAsync();
-                    Debug.WriteLine($"[CALENDAR] Risposta partecipazioni: {jsonResponse}");
-
-                    var result = JsonSerializer.Deserialize<Dictionary<string, object>>(jsonResponse,
-                        new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-
-                    if (result.ContainsKey("participations") && result["participations"] is JsonElement participationsElement)
-                    {
-                        var participationIds = participationsElement.EnumerateArray()
-                            .Select(x => x.GetInt32())
-                            .ToList();
-
-                        Debug.WriteLine($"[CALENDAR] Trovate {participationIds.Count} partecipazioni");
-
-                        // Carica i dettagli di ogni evento a cui l'utente partecipa
-                        CalendarEvents.Clear();
-
-                        var loadTasks = participationIds.Select(LoadCalendarEventDetails);
-                        await Task.WhenAll(loadTasks);
-
-                        // Ordina gli eventi per data
-                        var futureEvents = CalendarEvents.Where(e =>
-                        {
-                            if (DateTime.TryParse(e.data_partita, out DateTime dataPartita))
-                            {
-                                return dataPartita >= DateTime.Today;
-                            }
-                            return false;
-                        })
-                        .OrderBy(e => DateTime.TryParse(e.data_partita, out DateTime d1) ? d1 : DateTime.MinValue)
-                        .ThenBy(e => TimeSpan.TryParse(e.ora_partita, out TimeSpan t1) ? t1 : TimeSpan.Zero)
-                        .ToList();
-
-                        var pastEvents = CalendarEvents.Where(e =>
-                        {
-                            if (DateTime.TryParse(e.data_partita, out DateTime dataPartita))
-                            {
-                                return dataPartita < DateTime.Today;
-                            }
-                            return true;
-                        })
-                        .OrderByDescending(e => DateTime.TryParse(e.data_partita, out DateTime d2) ? d2 : DateTime.MinValue)
-                        .ThenByDescending(e => TimeSpan.TryParse(e.ora_partita, out TimeSpan t2) ? t2 : TimeSpan.Zero)
-                        .ToList();
-
-                        CalendarEvents.Clear();
-
-                        // Aggiungi prima gli eventi futuri, poi quelli passati
-                        foreach (var eventItem in futureEvents.Concat(pastEvents))
-                        {
-                            CalendarEvents.Add(eventItem);
-                        }
-
-                        Debug.WriteLine($"[CALENDAR] Caricati e ordinati {CalendarEvents.Count} eventi nel calendario");
-                    }
-                    else
-                    {
-                        Debug.WriteLine("[CALENDAR] Nessuna partecipazione trovata nel JSON");
-                        CalendarEvents.Clear();
-                    }
-                }
-                else
-                {
-                    Debug.WriteLine($"[CALENDAR] Errore nel caricamento partecipazioni: {response.StatusCode}");
-                    var errorContent = await response.Content.ReadAsStringAsync();
-                    Debug.WriteLine($"[CALENDAR] Contenuto errore: {errorContent}");
-                }
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine($"[CALENDAR] Eccezione durante il caricamento eventi: {ex.Message}");
-                Debug.WriteLine($"[CALENDAR] Stack trace: {ex.StackTrace}");
-            }
-        }
-
-        private async Task LoadFavoritePostDetails(int postId)
-        {
-            try
-            {
-                var response = await _client.GetAsync($"{pythonApiBaseUrl}/posts/{postId}");
-
-                if (response.IsSuccessStatusCode)
-                {
-                    var jsonResponse = await response.Content.ReadAsStringAsync();
-                    var post = JsonSerializer.Deserialize<PostResponse>(jsonResponse,
-                        new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-
-                    if (post != null)
-                    {
-                        FavoritePosts.Add(post);
-                        Debug.WriteLine($"Aggiunto post preferito: {post.titolo}");
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine($"Errore nel caricamento dettagli post {postId}: {ex.Message}");
-            }
-        }
-
-        private async Task LoadCalendarEventDetails(int postId)
-        {
-            try
-            {
-                var response = await _client.GetAsync($"{pythonApiBaseUrl}/posts/{postId}");
-
-                if (response.IsSuccessStatusCode)
-                {
-                    var jsonResponse = await response.Content.ReadAsStringAsync();
-                    var post = JsonSerializer.Deserialize<PostResponse>(jsonResponse,
-                        new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-
-                    if (post != null)
-                    {
-                        MainThread.BeginInvokeOnMainThread(() =>
-                        {
-                            CalendarEvents.Add(post);
-                        });
-
-                        Debug.WriteLine($"[CALENDAR] Aggiunto evento calendario: {post.titolo} - {post.data_partita} {post.ora_partita}");
-                    }
-                }
-                else
-                {
-                    Debug.WriteLine($"[CALENDAR] Errore nel caricamento post {postId}: {response.StatusCode}");
-                }
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine($"[CALENDAR] Errore nel caricamento dettagli evento {postId}: {ex.Message}");
-            }
-        }
-
-        // GESTIONE SELEZIONE PREFERITO
         private async void OnFavoriteSelected(object sender, SelectionChangedEventArgs e)
         {
             if (e.CurrentSelection.FirstOrDefault() is PostResponse selectedPost)
             {
                 ((CollectionView)sender).SelectedItem = null;
                 await Navigation.PushAsync(new PostDetailMainPage(selectedPost.id));
-
             }
         }
 
-        // Gestione selezione mio post
         private async void OnMyPostSelected(object sender, SelectionChangedEventArgs e)
         {
             if (e.CurrentSelection.FirstOrDefault() is PostResponse selectedPost)
             {
                 ((CollectionView)sender).SelectedItem = null;
                 await Navigation.PushAsync(new PostDetailMainPage(selectedPost.id));
-
             }
         }
 
-        // Gestione selezione evento calendario
         private async void OnCalendarEventSelected(object sender, SelectionChangedEventArgs e)
         {
             if (e.CurrentSelection.FirstOrDefault() is PostResponse selectedEvent)
             {
                 ((CollectionView)sender).SelectedItem = null;
                 await Navigation.PushAsync(new PostDetailMainPage(selectedEvent.id));
-
             }
         }
+
+        // ========== GESTIONE PULSANTI ==========
 
         private async void OnLogoutButtonClicked(object sender, EventArgs e)
         {
@@ -478,7 +543,6 @@ namespace trovagiocatoriApp.Views
                 }
 
                 Application.Current.MainPage = new NavigationPage(new LoginPage());
-
                 await DisplayAlert("Logout", "Sei stato disconnesso con successo.", "OK");
             }
         }
