@@ -28,6 +28,8 @@ namespace trovagiocatoriApp.Models
 
         // NUOVO: Proprietà per lo stato "completo/aperto"
         public bool is_full { get; set; } = false;
+        public bool IsInvite { get; set; } = false;
+        public long InviteID { get; set; }
 
         // Proprietà computed per gestire le date nel calendario
         public DateTime DataPartitaDateTime

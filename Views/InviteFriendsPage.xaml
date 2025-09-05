@@ -1,0 +1,279 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="trovagiocatoriApp.Views.InviteFriendsPage"
+             Title="Invita Amici"
+             BackgroundColor="#F8FAFC">
+
+	<ContentPage.Resources>
+		<ResourceDictionary>
+			<Color x:Key="PrimaryColor">#24292F</Color>
+			<Color x:Key="SecondaryColor">#6366F1</Color>
+			<Color x:Key="AccentColor">#F59E0B</Color>
+			<Color x:Key="SuccessColor">#10B981</Color>
+			<Color x:Key="ErrorColor">#EF4444</Color>
+			<Color x:Key="BackgroundColor">#F8FAFC</Color>
+			<Color x:Key="CardColor">#FFFFFF</Color>
+			<Color x:Key="InputColor">#F1F5F9</Color>
+			<Color x:Key="TextPrimary">#1E293B</Color>
+			<Color x:Key="TextSecondary">#64748B</Color>
+			<Color x:Key="BorderColor">#E2E8F0</Color>
+
+			<Style x:Key="CleanCardStyle" TargetType="Frame">
+				<Setter Property="BackgroundColor" Value="{StaticResource CardColor}"/>
+				<Setter Property="CornerRadius" Value="16"/>
+				<Setter Property="HasShadow" Value="True"/>
+				<Setter Property="BorderColor" Value="Transparent"/>
+				<Setter Property="Padding" Value="20"/>
+				<Setter Property="Margin" Value="16,8"/>
+				<Setter Property="Shadow">
+					<Shadow Brush="#E2E8F0" Offset="0,4" Radius="12" Opacity="0.15"/>
+				</Setter>
+			</Style>
+
+			<Style x:Key="FriendCardStyle" TargetType="Frame">
+				<Setter Property="BackgroundColor" Value="White"/>
+				<Setter Property="CornerRadius" Value="12"/>
+				<Setter Property="HasShadow" Value="True"/>
+				<Setter Property="BorderColor" Value="Transparent"/>
+				<Setter Property="Padding" Value="16"/>
+				<Setter Property="Margin" Value="0"/>
+				<Setter Property="Shadow">
+					<Shadow Brush="#E2E8F0" Offset="0,2" Radius="8" Opacity="0.1"/>
+				</Setter>
+			</Style>
+
+			<Style x:Key="InviteButtonStyle" TargetType="Button">
+				<Setter Property="FontFamily" Value="OpenSansBold"/>
+				<Setter Property="FontSize" Value="12"/>
+				<Setter Property="CornerRadius" Value="8"/>
+				<Setter Property="HeightRequest" Value="36"/>
+				<Setter Property="Padding" Value="16,0"/>
+				<Setter Property="TextColor" Value="White"/>
+				<Setter Property="BackgroundColor" Value="{StaticResource SuccessColor}"/>
+			</Style>
+
+			<Style x:Key="InvitedButtonStyle" TargetType="Button">
+				<Setter Property="FontFamily" Value="OpenSansRegular"/>
+				<Setter Property="FontSize" Value="12"/>
+				<Setter Property="CornerRadius" Value="8"/>
+				<Setter Property="HeightRequest" Value="36"/>
+				<Setter Property="Padding" Value="16,0"/>
+				<Setter Property="TextColor" Value="White"/>
+				<Setter Property="BackgroundColor" Value="#9E9E9E"/>
+				<Setter Property="IsEnabled" Value="False"/>
+			</Style>
+		</ResourceDictionary>
+	</ContentPage.Resources>
+
+	<Grid RowDefinitions="Auto,Auto,*,Auto" BackgroundColor="{StaticResource BackgroundColor}">
+
+		<!-- Header con informazioni evento -->
+		<Frame Grid.Row="0" Style="{StaticResource CleanCardStyle}">
+			<VerticalStackLayout Spacing="16">
+				<HorizontalStackLayout Spacing="12" HorizontalOptions="Center">
+					<Frame BackgroundColor="#E3F2FD"
+                           CornerRadius="20"
+                           Padding="12"
+                           HasShadow="False"
+                           VerticalOptions="Center">
+						<Label Text="👥" FontSize="20"/>
+					</Frame>
+					<VerticalStackLayout Spacing="4" VerticalOptions="Center">
+						<Label Text="Invita Amici"
+                               FontFamily="OpenSansBold"
+                               FontSize="24"
+                               TextColor="{StaticResource TextPrimary}"/>
+						<Label Text="Seleziona gli amici da invitare"
+                               FontSize="14"
+                               TextColor="{StaticResource TextSecondary}"/>
+					</VerticalStackLayout>
+				</HorizontalStackLayout>
+
+				<!-- Info evento -->
+				<Frame BackgroundColor="{StaticResource InputColor}"
+                       CornerRadius="12"
+                       Padding="16"
+                       HasShadow="False">
+					<VerticalStackLayout Spacing="8">
+						<Label x:Name="EventTitleLabel"
+                               Text="Titolo Evento"
+                               FontFamily="OpenSansBold"
+                               FontSize="16"
+                               TextColor="{StaticResource TextPrimary}"/>
+						<HorizontalStackLayout Spacing="16">
+							<HorizontalStackLayout Spacing="6">
+								<Label Text="📅" FontSize="14"/>
+								<Label x:Name="EventDateLabel"
+                                       Text="15/03/2024"
+                                       FontSize="14"
+                                       TextColor="{StaticResource TextSecondary}"/>
+							</HorizontalStackLayout>
+							<HorizontalStackLayout Spacing="6">
+								<Label Text="🕐" FontSize="14"/>
+								<Label x:Name="EventTimeLabel"
+                                       Text="18:30"
+                                       FontSize="14"
+                                       TextColor="{StaticResource TextSecondary}"/>
+							</HorizontalStackLayout>
+							<HorizontalStackLayout Spacing="6">
+								<Label Text="📍" FontSize="14"/>
+								<Label x:Name="EventLocationLabel"
+                                       Text="Milano"
+                                       FontSize="14"
+                                       TextColor="{StaticResource TextSecondary}"/>
+							</HorizontalStackLayout>
+						</HorizontalStackLayout>
+					</VerticalStackLayout>
+				</Frame>
+			</VerticalStackLayout>
+		</Frame>
+
+		<!-- Statistiche inviti -->
+		<Frame Grid.Row="1" Style="{StaticResource CleanCardStyle}" Margin="16,0">
+			<Grid ColumnDefinitions="*,*,*" ColumnSpacing="16">
+				<VerticalStackLayout Grid.Column="0" Spacing="4" HorizontalOptions="Center">
+					<Label x:Name="TotalFriendsLabel"
+                           Text="0"
+                           FontFamily="OpenSansBold"
+                           FontSize="20"
+                           TextColor="{StaticResource SecondaryColor}"
+                           HorizontalOptions="Center"/>
+					<Label Text="Amici Totali"
+                           FontSize="12"
+                           TextColor="{StaticResource TextSecondary}"
+                           HorizontalOptions="Center"/>
+				</VerticalStackLayout>
+
+				<VerticalStackLayout Grid.Column="1" Spacing="4" HorizontalOptions="Center">
+					<Label x:Name="InvitedCountLabel"
+                           Text="0"
+                           FontFamily="OpenSansBold"
+                           FontSize="20"
+                           TextColor="{StaticResource SuccessColor}"
+                           HorizontalOptions="Center"/>
+					<Label Text="Invitati"
+                           FontSize="12"
+                           TextColor="{StaticResource TextSecondary}"
+                           HorizontalOptions="Center"/>
+				</VerticalStackLayout>
+
+				<VerticalStackLayout Grid.Column="2" Spacing="4" HorizontalOptions="Center">
+					<Label x:Name="RemainingLabel"
+                           Text="0"
+                           FontFamily="OpenSansBold"
+                           FontSize="20"
+                           TextColor="{StaticResource AccentColor}"
+                           HorizontalOptions="Center"/>
+					<Label Text="Da Invitare"
+                           FontSize="12"
+                           TextColor="{StaticResource TextSecondary}"
+                           HorizontalOptions="Center"/>
+				</VerticalStackLayout>
+			</Grid>
+		</Frame>
+
+		<!-- Lista amici -->
+		<ScrollView Grid.Row="2" Padding="16,8">
+			<VerticalStackLayout Spacing="12">
+				<Label Text="🤝 I Tuoi Amici"
+                       FontFamily="OpenSansBold"
+                       FontSize="18"
+                       TextColor="{StaticResource TextPrimary}"/>
+
+				<CollectionView x:Name="FriendsCollectionView">
+					<CollectionView.ItemsLayout>
+						<LinearItemsLayout Orientation="Vertical" ItemSpacing="12"/>
+					</CollectionView.ItemsLayout>
+					<CollectionView.ItemTemplate>
+						<DataTemplate>
+							<Frame Style="{StaticResource FriendCardStyle}">
+								<Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12">
+									<!-- Avatar -->
+									<Frame Grid.Column="0"
+                                           WidthRequest="50"
+                                           HeightRequest="50"
+                                           CornerRadius="25"
+                                           Padding="0"
+                                           IsClippedToBounds="True"
+                                           BorderColor="{StaticResource BorderColor}"
+                                           HasShadow="False">
+										<Image Source="{Binding ProfilePicture}"
+                                               Aspect="AspectFill"/>
+									</Frame>
+
+									<!-- Info amico -->
+									<VerticalStackLayout Grid.Column="1"
+                                                         Spacing="4"
+                                                         VerticalOptions="Center">
+										<Label Text="{Binding Username}"
+                                               FontAttributes="Bold"
+                                               FontSize="16"
+                                               TextColor="{StaticResource TextPrimary}"/>
+										<Label Text="{Binding FullName}"
+                                               FontSize="14"
+                                               TextColor="{StaticResource TextSecondary}"/>
+										<Label Text="{Binding FriendsSince, StringFormat='Amici dal {0:dd/MM/yyyy}'}"
+                                               FontSize="12"
+                                               TextColor="{StaticResource TextSecondary}"/>
+									</VerticalStackLayout>
+
+									<!-- Pulsante invita -->
+									<Button Grid.Column="2"
+                                            x:Name="InviteButton"
+                                            Text="Invita"
+                                            Style="{StaticResource InviteButtonStyle}"
+                                            Clicked="OnInviteFriendClicked"
+                                            CommandParameter="{Binding .}"/>
+								</Grid>
+							</Frame>
+						</DataTemplate>
+					</CollectionView.ItemTemplate>
+					<CollectionView.EmptyView>
+						<VerticalStackLayout Spacing="16" HorizontalOptions="Center" Padding="32">
+							<Label Text="👥" FontSize="40" HorizontalOptions="Center" Opacity="0.5"/>
+							<Label Text="Nessun amico da invitare"
+                                   HorizontalOptions="Center"
+                                   FontSize="18"
+                                   FontAttributes="Bold"
+                                   TextColor="{StaticResource TextSecondary}"/>
+							<Label Text="Aggiungi amici per poterli invitare ai tuoi eventi!"
+                                   HorizontalOptions="Center"
+                                   FontSize="14"
+                                   TextColor="{StaticResource TextSecondary}"
+                                   HorizontalTextAlignment="Center"/>
+						</VerticalStackLayout>
+					</CollectionView.EmptyView>
+				</CollectionView>
+			</VerticalStackLayout>
+		</ScrollView>
+
+		<!-- Pulsanti azioni -->
+		<Grid Grid.Row="3" BackgroundColor="White" Padding="16" ColumnDefinitions="*,*" ColumnSpacing="12">
+			<Grid.Shadow>
+				<Shadow Brush="#000000" Offset="0,-3" Radius="8" Opacity="0.1"/>
+			</Grid.Shadow>
+
+			<Button Grid.Column="0"
+                    Text="❌ Annulla"
+                    FontFamily="OpenSansBold"
+                    FontSize="16"
+                    CornerRadius="12"
+                    HeightRequest="48"
+                    BackgroundColor="{StaticResource ErrorColor}"
+                    TextColor="White"
+                    Clicked="OnCancelClicked"/>
+
+			<Button Grid.Column="1"
+                    x:Name="FinishButton"
+                    Text="✅ Termina Inviti"
+                    FontFamily="OpenSansBold"
+                    FontSize="16"
+                    CornerRadius="12"
+                    HeightRequest="48"
+                    BackgroundColor="{StaticResource SuccessColor}"
+                    TextColor="White"
+                    Clicked="OnFinishInvitesClicked"/>
+		</Grid>
+	</Grid>
+</ContentPage>

@@ -223,21 +223,13 @@ namespace trovagiocatoriApp.Views
                 "Gestisci Amici per questo Evento",
                 "Annulla",
                 null,
-                "👥 Invita Amici all'Evento",
-                "🔍 Vedi Chi Ha Partecipato",
-                "📨 Condividi Evento"
+                "👥 Invita Amici all'Evento"
             );
 
             switch (action)
             {
                 case "👥 Invita Amici all'Evento":
                     await InviteFriendsToEvent();
-                    break;
-                case "🔍 Vedi Chi Ha Partecipato":
-                    await Navigation.PushAsync(new PostDetailParticipantsPage(_postId, _currentPost, _isPostAuthor));
-                    break;
-                case "📨 Condividi Evento":
-                    await ShareEvent();
                     break;
             }
         }
@@ -251,18 +243,14 @@ namespace trovagiocatoriApp.Views
                 null,
                 "💬 Chatta con l'Organizzatore",
                 "👤 Vedi Profilo",
-                "❌ Rimuovi dai Preferiti" // Opzione per unfriend se implementata
+                "❌ Rimuovi amicizia" // Opzione per unfriend se implementata
             );
 
             switch (action)
             {
-                case "💬 Chatta con l'Organizzatore":
-                    await StartChatWithAuthor();
-                    break;
-                case "👤 Vedi Profilo":
-                    await ViewAuthorProfile();
-                    break;
-                case "❌ Rimuovi dai Preferiti":
+               
+                   
+                case "❌ Rimuovi amicizia":
                     await RemoveFriend();
                     break;
             }
@@ -285,12 +273,7 @@ namespace trovagiocatoriApp.Views
                 case "👥 Aggiungi come Amico":
                     await SendFriendRequest();
                     break;
-                case "👤 Vedi Profilo":
-                    await ViewAuthorProfile();
-                    break;
-                case "💬 Chatta (se partecipante)":
-                    await StartChatWithAuthor();
-                    break;
+               
             }
         }
 
@@ -392,135 +375,121 @@ namespace trovagiocatoriApp.Views
             }
         }
 
-        // NUOVO: Invita amici all'evento DA IMPLEMENTARE
+        // NUOVO: Invita amici all'evento - IMPLEMENTAZIONE COMPLETA
         private async Task InviteFriendsToEvent()
         {
             try
             {
-                // TODO: Naviga a pagina per invitare amici
-                // await Navigation.PushAsync(new InviteFriendsPage(_postId, _currentPost));
+                // 1. Carica la lista degli amici
+                var friends = await LoadFriendsListAsync();
 
-                await DisplayAlert(
-                    "Invita Amici",
-                    "Funzione di invito amici in arrivo! Potrai selezionare i tuoi amici e invitarli direttamente a partecipare a questo evento.",
-                    "OK"
-                );
+                if (friends == null || friends.Count == 0)
+                {
+                    await DisplayAlert(
+                        "Nessun Amico",
+                        "Non hai ancora amici da invitare. Aggiungi amici dalla sezione Amici!",
+                        "OK"
+                    );
+                    return;
+                }
 
-                Debug.WriteLine($"[FRIENDS] Invito amici all'evento {_postId}");
+                // 2. Mostra la pagina di selezione amici
+                var inviteFriendsPage = new InviteFriendsPage(_postId, _currentPost, friends);
+                await Navigation.PushAsync(inviteFriendsPage);
+
+                Debug.WriteLine($"[INVITE] Apertura pagina inviti per evento {_postId}");
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"[FRIENDS] Errore invito amici: {ex.Message}");
+                Debug.WriteLine($"[INVITE] Errore invito amici: {ex.Message}");
                 await DisplayAlert("Errore", "Errore nell'apertura inviti", "OK");
             }
         }
 
-        // NUOVO: Visualizza profilo autore DA IMPLEMENTAREEEE
-        private async Task ViewAuthorProfile()
+        
+       
+        private async Task<List<FriendInfo>> LoadFriendsListAsync()
         {
             try
             {
-                // TODO: Naviga al profilo dell'utente
-                // await Navigation.PushAsync(new UserProfilePage(_postAuthorEmail));
+                var request = new HttpRequestMessage(HttpMethod.Get, $"{_apiBaseUrl}/friends/list");
 
-                await DisplayAlert(
-                    "Profilo Utente",
-                    $"Apertura profilo di {_postAuthorEmail} in arrivo! Potrai vedere le statistiche, gli eventi creati e altre informazioni pubbliche.",
-                    "OK"
-                );
-
-                Debug.WriteLine($"[FRIENDS] Visualizzazione profilo {_postAuthorEmail}");
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine($"[FRIENDS] Errore visualizzazione profilo: {ex.Message}");
-                await DisplayAlert("Errore", "Errore nell'apertura del profilo", "OK");
-            }
-        }
-
-        // NUOVO: Avvia chat con autore
-        private async Task StartChatWithAuthor()
-        {
-            try
-            {
-                if (_currentPost == null)
+                if (Preferences.ContainsKey("session_id"))
                 {
-                    await DisplayAlert("Errore", "Informazioni del post non disponibili", "OK");
-                    return;
+                    string sessionId = Preferences.Get("session_id", "");
+                    request.Headers.Add("Cookie", $"session_id={sessionId}");
                 }
 
-                if (_isPostAuthor)
-                {
-                    await DisplayAlert("Info", "Non puoi chattare con te stesso!", "OK");
-                    return;
-                }
+                var response = await _sharedClient.SendAsync(request);
 
-                // Se non è partecipante, chiedi se vuole iscriversi
-                if (!_isParticipant)
+                if (response.IsSuccessStatusCode)
                 {
-                    var shouldJoin = await DisplayAlert(
-                        "Iscriviti per chattare",
-                        "Per chattare con l'organizzatore devi essere iscritto all'evento. Vuoi iscriverti ora?",
-                        "Iscriviti",
-                        "Annulla"
-                    );
+                    var json = await response.Content.ReadAsStringAsync();
+                    var result = JsonSerializer.Deserialize<Dictionary<string, object>>(json);
 
-                    if (shouldJoin)
+                    if (result.ContainsKey("friends") && result["friends"] is JsonElement friendsElement)
                     {
-                        await JoinEventAutomatically();
-                        return;
-                    }
-                    else
-                    {
-                        return;
+                        var friends = new List<FriendInfo>();
+
+                        foreach (var friendElement in friendsElement.EnumerateArray())
+                        {
+                            var friend = new FriendInfo
+                            {
+                                UserId = GetIntProperty(friendElement, "user_id"),
+                                Username = GetStringProperty(friendElement, "username"),
+                                FullName = $"{GetStringProperty(friendElement, "nome")} {GetStringProperty(friendElement, "cognome")}",
+                                Email = GetStringProperty(friendElement, "email"),
+                                ProfilePicture = GetStringProperty(friendElement, "profile_picture", "default_avatar.png"),
+                                FriendsSince = DateTime.Parse(GetStringProperty(friendElement, "friends_since"))
+                            };
+                            friends.Add(friend);
+                        }
+
+                        return friends;
                     }
                 }
 
-                // Avvia chat
-                var chatPage = new ChatPage(_currentPost, _currentUserEmail, _postAuthorEmail, false);
-                await Navigation.PushAsync(chatPage);
-
-                Debug.WriteLine($"[FRIENDS] Chat avviata con autore {_postAuthorEmail}");
+                return new List<FriendInfo>();
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"[FRIENDS] Errore avvio chat: {ex.Message}");
-                await DisplayAlert("Errore", "Impossibile aprire la chat", "OK");
+                Debug.WriteLine($"[INVITE] Errore caricamento amici: {ex.Message}");
+                return new List<FriendInfo>();
             }
         }
 
-        // NUOVO: Condividi evento
-        private async Task ShareEvent()
+        private string GetStringProperty(JsonElement element, string propertyName, string defaultValue = "")
         {
             try
             {
-                if (_currentPost == null)
-                {
-                    await DisplayAlert("Errore", "Informazioni del post non disponibili", "OK");
-                    return;
-                }
-
-                var shareText = $"🏃‍♂️ {_currentPost.titolo}\n" +
-                               $"📅 {_currentPost.data_partita} alle {_currentPost.ora_partita}\n" +
-                               $"📍 {_currentPost.citta}, {_currentPost.provincia}\n" +
-                               $"⚽ {_currentPost.sport} - {_currentPost.livello}\n" +
-                               $"👥 Cerco {_currentPost.numero_giocatori} giocatori\n\n" +
-                               $"Partecipa anche tu! Scarica TrovaGiocatori";
-
-                await Share.RequestAsync(new ShareTextRequest
-                {
-                    Text = shareText,
-                    Title = "Condividi Evento Sportivo"
-                });
-
-                Debug.WriteLine($"[FRIENDS] Evento condiviso: {_currentPost.titolo}");
+                return element.TryGetProperty(propertyName, out var prop) && prop.ValueKind != JsonValueKind.Null
+                    ? prop.GetString() ?? defaultValue
+                    : defaultValue;
             }
-            catch (Exception ex)
+            catch
             {
-                Debug.WriteLine($"[FRIENDS] Errore condivisione: {ex.Message}");
-                await DisplayAlert("Errore", "Errore nella condivisione", "OK");
+                return defaultValue;
             }
         }
+
+        private int GetIntProperty(JsonElement element, string propertyName, int defaultValue = 0)
+        {
+            try
+            {
+                return element.TryGetProperty(propertyName, out var prop) && prop.ValueKind != JsonValueKind.Null
+                    ? prop.GetInt32()
+                    : defaultValue;
+            }
+            catch
+            {
+                return defaultValue;
+            }
+        }
+
+
+
+
+
 
         // Carica l'email dell'utente corrente
         private async Task LoadCurrentUserEmailAsync()
@@ -1127,6 +1096,8 @@ namespace trovagiocatoriApp.Views
                 await DisplayAlert("Errore", "Impossibile aprire la chat. Riprova più tardi.", "OK");
             }
         }
+
+
 
         // ========== ALTRE FUNZIONI ==========
 

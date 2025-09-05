@@ -10,6 +10,8 @@
         <ResourceDictionary>
             <converters:IsNotNullConverter x:Key="IsNotNullConverter"/>
             <converters:AvailabilityColorConverter x:Key="AvailabilityColorConverter"/>
+            <!-- NUOVO: Converter per invertire boolean -->
+            <converters:InvertBooleanConverter x:Key="InvertBooleanConverter"/>
 
             <!-- Colori del tema -->
             <Color x:Key="PrimaryColor">#24292F</Color>
@@ -279,7 +281,7 @@
                     </CollectionView>
                 </VerticalStackLayout>
 
-                <!-- I Miei Eventi Content -->
+                <!-- I Miei Eventi Content - AGGIORNATO PER SUPPORTARE INVITI -->
                 <VerticalStackLayout x:Name="MyEventsContent" IsVisible="False" Spacing="12" Padding="16">
                     <CollectionView x:Name="CalendarEventsCollectionView" SelectionMode="Single" SelectionChanged="OnCalendarEventSelected">
                         <CollectionView.ItemsLayout>
@@ -288,13 +290,44 @@
                         <CollectionView.ItemTemplate>
                             <DataTemplate>
                                 <Frame BackgroundColor="White" CornerRadius="12" Padding="16" HasShadow="True" Margin="0">
-                                    <Grid RowDefinitions="Auto,Auto,Auto,Auto" RowSpacing="6">
+                                    <!-- NUOVO: Frame speciale per gli inviti -->
+                                    <Frame.Triggers>
+                                        <DataTrigger TargetType="Frame" Binding="{Binding IsInvite}" Value="True">
+                                            <Setter Property="BackgroundColor" Value="#FFF3E0"/>
+                                            <Setter Property="BorderColor" Value="#FF9800"/>
+                                        </DataTrigger>
+                                    </Frame.Triggers>
+
+                                    <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto" RowSpacing="6">
                                         <!-- Header con data e sport -->
                                         <Grid Grid.Row="0" ColumnDefinitions="Auto,*,Auto">
-                                            <Frame Grid.Column="0" BackgroundColor="#2196F3" CornerRadius="8" Padding="8,4" HasShadow="False" VerticalOptions="Center">
+                                            <Frame Grid.Column="0" CornerRadius="8" Padding="8,4" HasShadow="False" VerticalOptions="Center">
+                                                <!-- Colore diverso per gli inviti -->
+                                                <Frame.Triggers>
+                                                    <DataTrigger TargetType="Frame" Binding="{Binding IsInvite}" Value="True">
+                                                        <Setter Property="BackgroundColor" Value="#FF9800"/>
+                                                    </DataTrigger>
+                                                    <DataTrigger TargetType="Frame" Binding="{Binding IsInvite}" Value="False">
+                                                        <Setter Property="BackgroundColor" Value="#2196F3"/>
+                                                    </DataTrigger>
+                                                </Frame.Triggers>
                                                 <Label Text="{Binding data_partita}" TextColor="White" FontSize="12" FontAttributes="Bold"/>
                                             </Frame>
-                                            <Label Grid.Column="1" Text="{Binding sport, StringFormat='Partita di {0}'}" FontAttributes="Bold" FontSize="16" TextColor="#2196F3" VerticalOptions="Center" Margin="12,0,0,0"/>
+
+                                            <Label Grid.Column="1" FontAttributes="Bold" FontSize="16" VerticalOptions="Center" Margin="12,0,0,0">
+                                                <!-- Testo diverso per inviti vs eventi normali -->
+                                                <Label.Triggers>
+                                                    <DataTrigger TargetType="Label" Binding="{Binding IsInvite}" Value="True">
+                                                        <Setter Property="Text" Value="{Binding sport, StringFormat='📩 INVITO: {0}'}"/>
+                                                        <Setter Property="TextColor" Value="#FF6B35"/>
+                                                    </DataTrigger>
+                                                    <DataTrigger TargetType="Label" Binding="{Binding IsInvite}" Value="False">
+                                                        <Setter Property="Text" Value="{Binding sport, StringFormat='Partita di {0}'}"/>
+                                                        <Setter Property="TextColor" Value="#2196F3"/>
+                                                    </DataTrigger>
+                                                </Label.Triggers>
+                                            </Label>
+
                                             <Label Grid.Column="2" Text="{Binding ora_partita}" FontSize="14" FontAttributes="Bold" TextColor="#666" VerticalOptions="Center"/>
                                         </Grid>
 
@@ -309,8 +342,22 @@
                                             <Label Text="{Binding provincia}" FontSize="13" TextColor="#666"/>
                                         </HorizontalStackLayout>
 
-                                        <!-- Dettagli aggiuntivi -->
-                                        <HorizontalStackLayout Grid.Row="3" Spacing="15" Margin="0,4,0,0">
+                                        <!-- NUOVO: Badge speciale per inviti -->
+                                        <Frame Grid.Row="3" CornerRadius="8" Padding="8,4" HasShadow="False" Margin="0,4,0,0" IsVisible="{Binding IsInvite}">
+                                            <Frame.Triggers>
+                                                <DataTrigger TargetType="Frame" Binding="{Binding IsInvite}" Value="True">
+                                                    <Setter Property="BackgroundColor" Value="#E3F2FD"/>
+                                                    <Setter Property="BorderColor" Value="#2196F3"/>
+                                                </DataTrigger>
+                                            </Frame.Triggers>
+                                            <HorizontalStackLayout Spacing="8">
+                                                <Label Text="👤" FontSize="14"/>
+                                                <Label Text="{Binding autore_email, StringFormat='Invito da: {0}'}" FontSize="13" TextColor="#1976D2" FontAttributes="Bold"/>
+                                            </HorizontalStackLayout>
+                                        </Frame>
+
+                                        <!-- Dettagli aggiuntivi (solo per eventi normali) -->
+                                        <HorizontalStackLayout Grid.Row="4" Spacing="15" Margin="0,4,0,0" IsVisible="{Binding IsInvite, Converter={StaticResource InvertBooleanConverter}}">
                                             <HorizontalStackLayout Spacing="4">
                                                 <Label Text="🏆" FontSize="12"/>
                                                 <Label Text="{Binding livello}" FontSize="12" TextColor="#888"/>
@@ -320,6 +367,30 @@
                                                 <Label Text="{Binding campo.nome}" FontSize="12" TextColor="#888" LineBreakMode="TailTruncation"/>
                                             </HorizontalStackLayout>
                                         </HorizontalStackLayout>
+
+                                        <!-- NUOVO: Pulsanti azione per inviti -->
+                                        <Grid Grid.Row="4" ColumnDefinitions="*,*" ColumnSpacing="8" Margin="0,8,0,0" IsVisible="{Binding IsInvite}">
+                                            <Button Grid.Column="0"
+                                                    Text="✅ Accetta"
+                                                    FontSize="12"
+                                                    HeightRequest="32"
+                                                    CornerRadius="6"
+                                                    BackgroundColor="#4CAF50"
+                                                    TextColor="White"
+                                                    FontAttributes="Bold"
+                                                    Clicked="OnAcceptInviteClicked"
+                                                    CommandParameter="{Binding .}"/>
+                                            <Button Grid.Column="1"
+                                                    Text="❌ Rifiuta"
+                                                    FontSize="12"
+                                                    HeightRequest="32"
+                                                    CornerRadius="6"
+                                                    BackgroundColor="#F44336"
+                                                    TextColor="White"
+                                                    FontAttributes="Bold"
+                                                    Clicked="OnRejectInviteClicked"
+                                                    CommandParameter="{Binding .}"/>
+                                        </Grid>
                                     </Grid>
                                 </Frame>
                             </DataTemplate>

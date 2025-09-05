@@ -25,6 +25,9 @@ namespace trovagiocatoriApp.Views
         public ObservableCollection<PostResponse> CalendarEvents { get; set; } = new ObservableCollection<PostResponse>();
         public ObservableCollection<PostResponse> MyPosts { get; set; } = new ObservableCollection<PostResponse>();
 
+        // NUOVO: Collection per gli inviti eventi
+        public ObservableCollection<EventInviteInfo> EventInvites { get; set; } = new ObservableCollection<EventInviteInfo>();
+
         // Enum per i tipi di tab
         private enum TabType
         {
@@ -237,12 +240,33 @@ namespace trovagiocatoriApp.Views
             }
         }
 
+        // MODIFICATO: Carica eventi calendario E inviti
         private async void LoadCalendarEvents()
         {
             try
             {
-                Debug.WriteLine("[CALENDAR] Inizio caricamento eventi calendario");
+                Debug.WriteLine("[CALENDAR] Inizio caricamento eventi calendario e inviti");
 
+                // Carica eventi normali (partecipazioni)
+                await LoadUserParticipations();
+
+                // NUOVO: Carica inviti ricevuti
+                await LoadEventInvites();
+
+                Debug.WriteLine($"[CALENDAR] Caricati {CalendarEvents.Count} eventi totali nel calendario");
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[CALENDAR] Eccezione durante il caricamento eventi: {ex.Message}");
+                Debug.WriteLine($"[CALENDAR] Stack trace: {ex.StackTrace}");
+            }
+        }
+
+        // NUOVO: Carica le partecipazioni esistenti
+        private async Task LoadUserParticipations()
+        {
+            try
+            {
                 var request = new HttpRequestMessage(HttpMethod.Get, $"{apiBaseUrl}/user/participations");
 
                 if (Preferences.ContainsKey("session_id"))
@@ -323,8 +347,117 @@ namespace trovagiocatoriApp.Views
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"[CALENDAR] Eccezione durante il caricamento eventi: {ex.Message}");
-                Debug.WriteLine($"[CALENDAR] Stack trace: {ex.StackTrace}");
+                Debug.WriteLine($"[CALENDAR] Errore caricamento partecipazioni: {ex.Message}");
+            }
+        }
+
+        // NUOVO: Carica gli inviti eventi ricevuti
+        private async Task LoadEventInvites()
+        {
+            try
+            {
+                var request = new HttpRequestMessage(HttpMethod.Get, $"{apiBaseUrl}/events/invites");
+
+                if (Preferences.ContainsKey("session_id"))
+                {
+                    string sessionId = Preferences.Get("session_id", "");
+                    request.Headers.Add("Cookie", $"session_id={sessionId}");
+                }
+
+                var response = await _client.SendAsync(request);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var jsonResponse = await response.Content.ReadAsStringAsync();
+                    Debug.WriteLine($"[INVITES] Risposta inviti: {jsonResponse}");
+
+                    var result = JsonSerializer.Deserialize<Dictionary<string, object>>(jsonResponse,
+                        new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+                    if (result.ContainsKey("invites") && result["invites"] is JsonElement invitesElement)
+                    {
+                        EventInvites.Clear();
+
+                        foreach (var inviteElement in invitesElement.EnumerateArray())
+                        {
+                            var invite = new EventInviteInfo
+                            {
+                                InviteID = GetLongProperty(inviteElement, "invite_id"),
+                                PostID = GetIntProperty(inviteElement, "post_id"),
+                                Message = GetStringProperty(inviteElement, "message"),
+                                CreatedAt = GetStringProperty(inviteElement, "created_at"),
+                                Status = GetStringProperty(inviteElement, "status"),
+                                SenderUsername = GetStringProperty(inviteElement, "sender_username"),
+                                SenderNome = GetStringProperty(inviteElement, "sender_nome"),
+                                SenderCognome = GetStringProperty(inviteElement, "sender_cognome"),
+                                SenderEmail = GetStringProperty(inviteElement, "sender_email"),
+                                SenderProfilePicture = GetStringProperty(inviteElement, "sender_profile_picture")
+                            };
+
+                            EventInvites.Add(invite);
+
+                            // Carica anche i dettagli del post per l'invito
+                            await LoadInviteEventDetails(invite);
+                        }
+
+                        Debug.WriteLine($"[INVITES] Caricati {EventInvites.Count} inviti eventi");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[INVITES] Errore caricamento inviti: {ex.Message}");
+            }
+        }
+
+        // NUOVO: Carica i dettagli dell'evento per un invito
+        private async Task LoadInviteEventDetails(EventInviteInfo invite)
+        {
+            try
+            {
+                var response = await _client.GetAsync($"{pythonApiBaseUrl}/posts/{invite.PostID}");
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var jsonResponse = await response.Content.ReadAsStringAsync();
+                    var post = JsonSerializer.Deserialize<PostResponse>(jsonResponse,
+                        new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+                    if (post != null)
+                    {
+                        // Crea un post "speciale" per gli inviti
+                        var invitePost = new PostResponse
+                        {
+                            id = post.id,
+                            titolo = $"📩 INVITO: {post.titolo}",
+                            provincia = post.provincia,
+                            citta = post.citta,
+                            sport = post.sport,
+                            data_partita = post.data_partita,
+                            ora_partita = post.ora_partita,
+                            commento = $"Invito da {invite.SenderUsername}: {invite.Message}",
+                            autore_email = post.autore_email,
+                            campo_id = post.campo_id,
+                            campo = post.campo,
+                            livello = post.livello,
+                            numero_giocatori = post.numero_giocatori,
+                            // Aggiungi proprietà per identificare che è un invito
+                            IsInvite = true,
+                            InviteID = invite.InviteID
+                        };
+
+                        MainThread.BeginInvokeOnMainThread(() =>
+                        {
+                            CalendarEvents.Insert(0, invitePost); // Metti gli inviti in cima
+                        });
+
+                        Debug.WriteLine($"[INVITES] Aggiunto invito evento: {post.titolo} da {invite.SenderUsername}");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[INVITES] Errore caricamento dettagli invito evento {invite.PostID}: {ex.Message}");
             }
         }
 
@@ -481,6 +614,21 @@ namespace trovagiocatoriApp.Views
             }
         }
 
+        // NUOVO: Helper per long
+        private long GetLongProperty(JsonElement element, string propertyName, long defaultValue = 0)
+        {
+            try
+            {
+                return element.TryGetProperty(propertyName, out var prop) && prop.ValueKind != JsonValueKind.Null
+                    ? prop.GetInt64()
+                    : defaultValue;
+            }
+            catch
+            {
+                return defaultValue;
+            }
+        }
+
         private CampoInfo GetCampoProperty(JsonElement element)
         {
             try
@@ -521,35 +669,225 @@ namespace trovagiocatoriApp.Views
             }
         }
 
+        // MODIFICATO: Gestisce la selezione di eventi normali e inviti
         private async void OnCalendarEventSelected(object sender, SelectionChangedEventArgs e)
         {
             if (e.CurrentSelection.FirstOrDefault() is PostResponse selectedEvent)
             {
                 ((CollectionView)sender).SelectedItem = null;
-                await Navigation.PushAsync(new PostDetailMainPage(selectedEvent.id));
+
+                // Se è un invito, mostra opzioni di accettazione/rifiuto
+                if (selectedEvent.IsInvite)
+                {
+                    await HandleEventInviteSelection(selectedEvent);
+                }
+                else
+                {
+                    // Evento normale, apri i dettagli
+                    await Navigation.PushAsync(new PostDetailMainPage(selectedEvent.id));
+                }
             }
         }
 
-        // ========== GESTIONE PULSANTI ==========
-
-        private async void OnLogoutButtonClicked(object sender, EventArgs e)
+        // NUOVO: Gestisce la selezione di un invito evento
+        private async Task HandleEventInviteSelection(PostResponse inviteEvent)
         {
-            bool confirm = await DisplayAlert("Logout", "Sei sicuro di voler effettuare il logout?", "Sì", "No");
-            if (confirm)
+            try
             {
+                var action = await DisplayActionSheet(
+                    $"Invito da {inviteEvent.autore_email}",
+                    "Annulla",
+                    null,
+                    "✅ Accetta Invito",
+                    "❌ Rifiuta Invito",
+                    "👀 Visualizza Dettagli Evento"
+                );
+
+                switch (action)
+                {
+                    case "✅ Accetta Invito":
+                        await AcceptEventInvite(inviteEvent);
+                        break;
+
+                    case "❌ Rifiuta Invito":
+                        await RejectEventInvite(inviteEvent);
+                        break;
+
+                    case "👀 Visualizza Dettagli Evento":
+                        await Navigation.PushAsync(new PostDetailMainPage(inviteEvent.id));
+                        break;
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[INVITES] Errore gestione selezione invito: {ex.Message}");
+                await DisplayAlert("Errore", "Errore nella gestione dell'invito", "OK");
+            }
+        }
+
+        // NUOVO: Accetta un invito evento
+        private async Task AcceptEventInvite(PostResponse inviteEvent)
+        {
+            try
+            {
+                var confirm = await DisplayAlert(
+                    "Accetta Invito",
+                    $"Vuoi accettare l'invito per '{inviteEvent.titolo.Replace("📩 INVITO: ", "")}'? Sarai automaticamente iscritto all'evento.",
+                    "Accetta",
+                    "Annulla"
+                );
+
+                if (!confirm) return;
+
+                var request = new HttpRequestMessage(HttpMethod.Post, $"{apiBaseUrl}/events/invite/accept?invite_id={inviteEvent.InviteID}");
+
                 if (Preferences.ContainsKey("session_id"))
                 {
-                    Preferences.Remove("session_id");
+                    string sessionId = Preferences.Get("session_id", "");
+                    request.Headers.Add("Cookie", $"session_id={sessionId}");
                 }
 
-                Application.Current.MainPage = new NavigationPage(new LoginPage());
-                await DisplayAlert("Logout", "Sei stato disconnesso con successo.", "OK");
+                var response = await _client.SendAsync(request);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    // Rimuovi l'invito dalla lista
+                    var inviteToRemove = CalendarEvents.FirstOrDefault(e => e.IsInvite && e.InviteID == inviteEvent.InviteID);
+                    if (inviteToRemove != null)
+                    {
+                        CalendarEvents.Remove(inviteToRemove);
+                    }
+
+                    await DisplayAlert("Invito Accettato", "Sei ora iscritto all'evento! Puoi vedere i dettagli nella sezione eventi.", "OK");
+
+                    // Ricarica gli eventi per mostrare il nuovo evento accettato
+                    LoadCalendarEvents();
+
+                    Debug.WriteLine($"[INVITES] ✅ Invito accettato per evento {inviteEvent.id}");
+                }
+                else
+                {
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    Debug.WriteLine($"[INVITES] Errore accettazione invito: {errorContent}");
+                    await DisplayAlert("Errore", "Impossibile accettare l'invito. Riprova più tardi.", "OK");
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[INVITES] Errore accettazione invito: {ex.Message}");
+                await DisplayAlert("Errore", "Errore nell'accettazione dell'invito", "OK");
+            }
+        }
+
+        // NUOVO: Rifiuta un invito evento
+        private async Task RejectEventInvite(PostResponse inviteEvent)
+        {
+            try
+            {
+                var confirm = await DisplayAlert(
+                    "Rifiuta Invito",
+                    $"Vuoi rifiutare l'invito per '{inviteEvent.titolo.Replace("📩 INVITO: ", "")}'?",
+                    "Rifiuta",
+                    "Annulla"
+                );
+
+                if (!confirm) return;
+
+                var request = new HttpRequestMessage(HttpMethod.Post, $"{apiBaseUrl}/events/invite/reject?invite_id={inviteEvent.InviteID}");
+
+                if (Preferences.ContainsKey("session_id"))
+                {
+                    string sessionId = Preferences.Get("session_id", "");
+                    request.Headers.Add("Cookie", $"session_id={sessionId}");
+                }
+
+                var response = await _client.SendAsync(request);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    // Rimuovi l'invito dalla lista
+                    var inviteToRemove = CalendarEvents.FirstOrDefault(e => e.IsInvite && e.InviteID == inviteEvent.InviteID);
+                    if (inviteToRemove != null)
+                    {
+                        CalendarEvents.Remove(inviteToRemove);
+                    }
+
+                    await DisplayAlert("Invito Rifiutato", "Invito rifiutato con successo.", "OK");
+
+                    Debug.WriteLine($"[INVITES] ❌ Invito rifiutato per evento {inviteEvent.id}");
+                }
+                else
+                {
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    Debug.WriteLine($"[INVITES] Errore rifiuto invito: {errorContent}");
+                    await DisplayAlert("Errore", "Impossibile rifiutare l'invito. Riprova più tardi.", "OK");
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[INVITES] Errore rifiuto invito: {ex.Message}");
+                await DisplayAlert("Errore", "Errore nel rifiuto dell'invito", "OK");
+            }
+        }
+        private async void OnAcceptInviteClicked(object sender, EventArgs e)
+        {
+            if (sender is Button button && button.CommandParameter is PostResponse inviteEvent)
+            {
+                await AcceptEventInvite(inviteEvent);
+            }
+        }
+
+        private async void OnRejectInviteClicked(object sender, EventArgs e)
+        {
+            if (sender is Button button && button.CommandParameter is PostResponse inviteEvent)
+            {
+                await RejectEventInvite(inviteEvent);
             }
         }
 
         private async void OnNavigateToChangePassword(object sender, EventArgs e)
         {
-            await Navigation.PushAsync(new ChangePasswordPage());
+            try
+            {
+                // Naviga alla pagina di cambio password
+                await Navigation.PushAsync(new ChangePasswordPage());
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Errore navigazione cambio password: {ex.Message}");
+                await DisplayAlert("Errore", "Impossibile aprire la pagina di cambio password", "OK");
+            }
         }
+        private async void OnLogoutButtonClicked(object sender, EventArgs e)
+        {
+            try
+            {
+                var confirm = await DisplayAlert(
+                    "Logout",
+                    "Sei sicuro di voler effettuare il logout?",
+                    "Sì",
+                    "No"
+                );
+
+                if (!confirm) return;
+
+                // Pulisci i dati di sessione
+                Preferences.Clear();
+
+                Debug.WriteLine($"[LOGOUT] Session cleared from ProfilePage");
+
+                // Naviga alla pagina di login
+                Application.Current.MainPage = new NavigationPage(new LoginPage());
+
+                await DisplayAlert("Logout", "Sei stato disconnesso con successo.", "OK");
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Errore durante il logout: {ex.Message}");
+                await DisplayAlert("Errore", "Errore durante il logout", "OK");
+            }
+        }
+
     }
 }
+    

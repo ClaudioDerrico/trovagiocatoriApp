@@ -36,5 +36,7 @@ namespace trovagiocatoriApp
                 await DisplayAlert("Logout", "Sei stato disconnesso con successo.", "OK");
             }
         }
+
+
     }
 }
