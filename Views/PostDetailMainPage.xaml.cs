@@ -118,18 +118,12 @@ namespace trovagiocatoriApp.Views
             }
         }
 
-        // NUOVO: Simula il controllo amicizia (sostituisci con chiamata API reale)
         private async Task<bool> CheckIfUserIsFriendAsync(string userEmail)
         {
             try
             {
-                // TODO: Sostituisci con la tua API degli amici quando sarà implementata
-                // Per ora restituisco false (nessuna amicizia)
-
-                // Esempio di come potrebbe essere la chiamata API:
-                /*
                 var request = new HttpRequestMessage(HttpMethod.Get, $"{_apiBaseUrl}/friends/check?email={Uri.EscapeDataString(userEmail)}");
-                
+
                 if (Preferences.ContainsKey("session_id"))
                 {
                     string sessionId = Preferences.Get("session_id", "");
@@ -142,17 +136,14 @@ namespace trovagiocatoriApp.Views
                 {
                     var json = await response.Content.ReadAsStringAsync();
                     var result = JsonSerializer.Deserialize<Dictionary<string, object>>(json);
-                    
+
                     if (result.ContainsKey("is_friend") && result["is_friend"] is JsonElement element)
                     {
                         return element.GetBoolean();
                     }
                 }
-                */
 
-                // Simulazione: restituisce true se l'email contiene "friend" (per testing)
-                await Task.Delay(100); // Simula chiamata API
-                return userEmail.ToLower().Contains("friend");
+                return false; // Se non è possibile verificare, assume che non siano amici
             }
             catch (Exception ex)
             {
@@ -317,10 +308,9 @@ namespace trovagiocatoriApp.Views
 
                 if (!confirm) return;
 
-                // TODO: Implementa chiamata API per inviare richiesta amicizia
-                /*
+                // USARE L'ENDPOINT REALE
                 var request = new HttpRequestMessage(HttpMethod.Post, $"{_apiBaseUrl}/friends/request");
-                
+
                 if (Preferences.ContainsKey("session_id"))
                 {
                     string sessionId = Preferences.Get("session_id", "");
@@ -336,17 +326,16 @@ namespace trovagiocatoriApp.Views
                 if (response.IsSuccessStatusCode)
                 {
                     await DisplayAlert("Successo", "Richiesta di amicizia inviata!", "OK");
+
+                    // AGGIORNA LO STATO LOCALE per riflettere che la richiesta è stata inviata
+                    // Anche se non sono ancora amici, ora c'è una richiesta pendente
+                    Debug.WriteLine($"[FRIENDS] ✅ Richiesta amicizia inviata a {_postAuthorEmail}");
                 }
                 else
                 {
-                    await DisplayAlert("Errore", "Impossibile inviare la richiesta", "OK");
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    await DisplayAlert("Errore", $"Impossibile inviare la richiesta: {errorContent}", "OK");
                 }
-                */
-
-                // Simulazione per ora
-                await DisplayAlert("Richiesta Inviata", "La richiesta di amicizia è stata inviata! Quando verrà accettata, potrai vedere l'utente nei tuoi amici.", "OK");
-
-                Debug.WriteLine($"[FRIENDS] Richiesta amicizia inviata a {_postAuthorEmail}");
             }
             catch (Exception ex)
             {
@@ -355,7 +344,6 @@ namespace trovagiocatoriApp.Views
             }
         }
 
-        // NUOVO: Rimuovi amico
         private async Task RemoveFriend()
         {
             try
@@ -369,17 +357,15 @@ namespace trovagiocatoriApp.Views
 
                 if (!confirm) return;
 
-                // TODO: Implementa chiamata API per rimuovere amicizia
-                /*
                 var request = new HttpRequestMessage(HttpMethod.Delete, $"{_apiBaseUrl}/friends/remove");
-                
+
                 if (Preferences.ContainsKey("session_id"))
                 {
                     string sessionId = Preferences.Get("session_id", "");
                     request.Headers.Add("Cookie", $"session_id={sessionId}");
                 }
 
-                var payload = new { friend_email = _postAuthorEmail };
+                var payload = new { target_email = _postAuthorEmail };
                 var json = JsonSerializer.Serialize(payload);
                 request.Content = new StringContent(json, Encoding.UTF8, "application/json");
 
@@ -389,18 +375,13 @@ namespace trovagiocatoriApp.Views
                 {
                     _isAuthorFriend = false;
                     UpdateFriendshipUI();
-                    await DisplayAlert("Amicizia Rimossa", "L'amicizia è stata rimossa", "OK");
+                    await DisplayAlert("Amicizia Rimossa", "L'amicizia è stata rimossa con successo", "OK");
                 }
                 else
                 {
-                    await DisplayAlert("Errore", "Impossibile rimuovere l'amicizia", "OK");
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    await DisplayAlert("Errore", $"Impossibile rimuovere l'amicizia: {errorContent}", "OK");
                 }
-                */
-
-                // Simulazione per ora
-                _isAuthorFriend = false;
-                UpdateFriendshipUI();
-                await DisplayAlert("Amicizia Rimossa", "L'amicizia è stata rimossa con successo", "OK");
 
                 Debug.WriteLine($"[FRIENDS] Amicizia rimossa con {_postAuthorEmail}");
             }
@@ -411,7 +392,7 @@ namespace trovagiocatoriApp.Views
             }
         }
 
-        // NUOVO: Invita amici all'evento
+        // NUOVO: Invita amici all'evento DA IMPLEMENTARE
         private async Task InviteFriendsToEvent()
         {
             try
@@ -434,7 +415,7 @@ namespace trovagiocatoriApp.Views
             }
         }
 
-        // NUOVO: Visualizza profilo autore
+        // NUOVO: Visualizza profilo autore DA IMPLEMENTAREEEE
         private async Task ViewAuthorProfile()
         {
             try

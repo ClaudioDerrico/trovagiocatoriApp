@@ -7,6 +7,7 @@ using System.Net.Http;
 using Microsoft.Maui.Controls;
 using Microsoft.Maui.Storage;
 using trovagiocatoriApp.Models;
+using System.Diagnostics;
 
 namespace trovagiocatoriApp.Views
 {
@@ -62,7 +63,10 @@ namespace trovagiocatoriApp.Views
             await LoadFriendsFromBackend();
             await LoadSentRequestsFromBackend();
             await LoadReceivedRequestsFromBackend();
+            Debug.WriteLine("[FRIENDS PAGE] Dati aggiornati - OnAppearing completato");
         }
+
+     
 
         // ========== CARICAMENTO DATI DAL BACKEND ==========
 
@@ -376,7 +380,6 @@ namespace trovagiocatoriApp.Views
                         button.IsEnabled = false;
                         button.Text = "Invio...";
 
-                        // IMPLEMENTATO: Chiamata API per inviare richiesta di amicizia
                         var request = new HttpRequestMessage(HttpMethod.Post, $"{_apiBaseUrl}/friends/request");
 
                         if (Preferences.ContainsKey("session_id"))
@@ -393,20 +396,39 @@ namespace trovagiocatoriApp.Views
 
                         if (response.IsSuccessStatusCode)
                         {
+                            // Rimuovi l'utente dai risultati di ricerca
                             SearchResults.Remove(user);
-                            await LoadSentRequestsFromBackend(); // Ricarica le richieste inviate
+
+                            // IMPORTANTE: Ricarica le richieste inviate per mostrare la nuova richiesta
+                            await LoadSentRequestsFromBackend();
+
                             await DisplayAlert("Successo", $"Richiesta di amicizia inviata a {user.Username}!", "OK");
+
+                            Debug.WriteLine($"[FRIENDS] ✅ Richiesta inviata a {user.Email}");
                         }
                         else
                         {
                             var errorContent = await response.Content.ReadAsStringAsync();
-                            await DisplayAlert("Errore", $"Errore nell'invio della richiesta: {errorContent}", "OK");
-                            button.IsEnabled = true;
-                            button.Text = "Aggiungi";
+                            Debug.WriteLine($"[FRIENDS] Errore invio richiesta: {errorContent}");
+
+                            // Controlla se l'errore è dovuto a una richiesta già esistente
+                            if (errorContent.Contains("già inviata") || errorContent.Contains("already sent"))
+                            {
+                                SearchResults.Remove(user);
+                                await LoadSentRequestsFromBackend(); // Ricarica per essere sicuri
+                                await DisplayAlert("Informazione", "Richiesta di amicizia già inviata precedentemente!", "OK");
+                            }
+                            else
+                            {
+                                await DisplayAlert("Errore", $"Errore nell'invio della richiesta: {errorContent}", "OK");
+                                button.IsEnabled = true;
+                                button.Text = "Aggiungi";
+                            }
                         }
                     }
                     catch (Exception ex)
                     {
+                        Debug.WriteLine($"[FRIENDS] Eccezione invio richiesta: {ex.Message}");
                         await DisplayAlert("Errore", $"Errore nell'invio della richiesta: {ex.Message}", "OK");
                         button.IsEnabled = true;
                         button.Text = "Aggiungi";
@@ -506,7 +528,6 @@ namespace trovagiocatoriApp.Views
                 {
                     try
                     {
-                        // IMPLEMENTATO: Chiamata API per annullare richiesta
                         var httpRequest = new HttpRequestMessage(HttpMethod.Post, $"{_apiBaseUrl}/friends/cancel?request_id={request.RequestId}");
 
                         if (Preferences.ContainsKey("session_id"))
@@ -519,17 +540,23 @@ namespace trovagiocatoriApp.Views
 
                         if (response.IsSuccessStatusCode)
                         {
+                            // Rimuovi dalle richieste inviate
                             SentRequests.Remove(request);
+
                             await DisplayAlert("Richiesta annullata", $"Richiesta a {request.Username} annullata.", "OK");
+
+                            Debug.WriteLine($"[FRIENDS] ✅ Richiesta annullata a {request.Email}");
                         }
                         else
                         {
                             var errorContent = await response.Content.ReadAsStringAsync();
+                            Debug.WriteLine($"[FRIENDS] Errore annullamento: {errorContent}");
                             await DisplayAlert("Errore", $"Errore nell'annullamento della richiesta: {errorContent}", "OK");
                         }
                     }
                     catch (Exception ex)
                     {
+                        Debug.WriteLine($"[FRIENDS] Eccezione annullamento: {ex.Message}");
                         await DisplayAlert("Errore", $"Errore nell'annullamento della richiesta: {ex.Message}", "OK");
                     }
                 }
@@ -545,7 +572,6 @@ namespace trovagiocatoriApp.Views
                     button.IsEnabled = false;
                     button.Text = "Accetto...";
 
-                    // IMPLEMENTATO: Chiamata API per accettare richiesta
                     var httpRequest = new HttpRequestMessage(HttpMethod.Post, $"{_apiBaseUrl}/friends/accept?request_id={request.RequestId}");
 
                     if (Preferences.ContainsKey("session_id"))
@@ -558,13 +584,21 @@ namespace trovagiocatoriApp.Views
 
                     if (response.IsSuccessStatusCode)
                     {
+                        // Rimuovi dalle richieste ricevute
                         ReceivedRequests.Remove(request);
-                        await LoadFriendsFromBackend(); // Ricarica la lista amici
+
+                        // IMPORTANTE: Ricarica sia gli amici che le richieste per aggiornare tutto
+                        await LoadFriendsFromBackend();
+                        await LoadReceivedRequestsFromBackend(); // Per sicurezza
+
                         await DisplayAlert("Amicizia accettata", $"Ora sei amico di {request.Username}!", "OK");
+
+                        Debug.WriteLine($"[FRIENDS] ✅ Richiesta accettata da {request.Email}");
                     }
                     else
                     {
                         var errorContent = await response.Content.ReadAsStringAsync();
+                        Debug.WriteLine($"[FRIENDS] Errore accettazione: {errorContent}");
                         await DisplayAlert("Errore", $"Errore nell'accettazione della richiesta: {errorContent}", "OK");
                         button.IsEnabled = true;
                         button.Text = "Accetta";
@@ -572,6 +606,7 @@ namespace trovagiocatoriApp.Views
                 }
                 catch (Exception ex)
                 {
+                    Debug.WriteLine($"[FRIENDS] Eccezione accettazione: {ex.Message}");
                     await DisplayAlert("Errore", $"Errore nell'accettazione della richiesta: {ex.Message}", "OK");
                     button.IsEnabled = true;
                     button.Text = "Accetta";
