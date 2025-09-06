@@ -1,0 +1,115 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="trovagiocatoriApp.Views.NotificationsPage"
+             Title="Notifiche"
+             BackgroundColor="#F8FAFC">
+
+    <ContentPage.Resources>
+        <ResourceDictionary>
+            <!-- Colori del tema -->
+            <Color x:Key="PrimaryColor">#24292F</Color>
+            <Color x:Key="SecondaryColor">#6366F1</Color>
+            <Color x:Key="AccentColor">#F59E0B</Color>
+            <Color x:Key="SuccessColor">#10B981</Color>
+            <Color x:Key="ErrorColor">#EF4444</Color>
+            <Color x:Key="BackgroundColor">#F8FAFC</Color>
+            <Color x:Key="CardColor">#FFFFFF</Color>
+            <Color x:Key="TextPrimary">#1E293B</Color>
+            <Color x:Key="TextSecondary">#64748B</Color>
+
+            <!-- Stili per le notifiche -->
+            <Style x:Key="NotificationCardStyle" TargetType="Frame">
+                <Setter Property="BackgroundColor" Value="{StaticResource CardColor}"/>
+                <Setter Property="CornerRadius" Value="12"/>
+                <Setter Property="HasShadow" Value="True"/>
+                <Setter Property="BorderColor" Value="Transparent"/>
+                <Setter Property="Padding" Value="16"/>
+                <Setter Property="Margin" Value="0"/>
+                <Setter Property="Shadow">
+                    <Shadow Brush="#E2E8F0" Offset="0,2" Radius="8" Opacity="0.1"/>
+                </Setter>
+            </Style>
+
+            <Style x:Key="UnreadNotificationStyle" TargetType="Frame" BasedOn="{StaticResource NotificationCardStyle}">
+                <Setter Property="BorderColor" Value="{StaticResource SecondaryColor}"/>
+                <Setter Property="BackgroundColor" Value="#F0F9FF"/>
+            </Style>
+        </ResourceDictionary>
+    </ContentPage.Resources>
+
+    <Grid RowDefinitions="Auto,*,Auto" BackgroundColor="{StaticResource BackgroundColor}">
+
+        <!-- Header -->
+        <Frame Grid.Row="0" BackgroundColor="White" CornerRadius="0" HasShadow="True" Padding="16">
+            <Grid ColumnDefinitions="Auto,*,Auto" VerticalOptions="Center">
+
+                <VerticalStackLayout Grid.Column="1" HorizontalOptions="Center">
+                    <Label Text="Notifiche"
+                           FontFamily="OpenSansBold"
+                           FontSize="20"
+                           TextColor="{StaticResource TextPrimary}"
+                           HorizontalOptions="Center"/>
+                    <Label x:Name="NotificationsSummaryLabel"
+                           Text="Caricamento..."
+                           FontSize="12"
+                           TextColor="{StaticResource TextSecondary}"
+                           HorizontalOptions="Center"/>
+                </VerticalStackLayout>
+
+                <Button Grid.Column="2"
+                        Text="Segna tutte lette"
+                        FontSize="10"
+                        BackgroundColor="{StaticResource SecondaryColor}"
+                        TextColor="White"
+                        CornerRadius="6"
+                        HeightRequest="32"
+                        Padding="8,0"
+                        Clicked="OnMarkAllReadClicked"/>
+            </Grid>
+        </Frame>
+
+        <!-- Lista Notifiche -->
+        <RefreshView Grid.Row="1" 
+                     x:Name="NotificationsRefreshView"
+                     Refreshing="OnRefreshing">
+            <ScrollView>
+                <VerticalStackLayout x:Name="NotificationsContainer" 
+                                   Spacing="8" 
+                                   Padding="16">
+                    <!-- Le notifiche verranno caricate dinamicamente qui -->
+                </VerticalStackLayout>
+            </ScrollView>
+        </RefreshView>
+
+        <!-- Empty State -->
+        <VerticalStackLayout Grid.Row="1" 
+                           x:Name="EmptyStateLayout"
+                           IsVisible="False"
+                           Spacing="16" 
+                           HorizontalOptions="Center" 
+                           VerticalOptions="Center"
+                           Padding="32">
+            <Label Text="🔔" FontSize="60" HorizontalOptions="Center" Opacity="0.5"/>
+            <Label Text="Nessuna notifica"
+                   HorizontalOptions="Center"
+                   FontSize="18"
+                   FontAttributes="Bold"
+                   TextColor="{StaticResource TextSecondary}"/>
+            <Label Text="Le tue notifiche appariranno qui"
+                   HorizontalOptions="Center"
+                   FontSize="14"
+                   TextColor="{StaticResource TextSecondary}"
+                   HorizontalTextAlignment="Center"/>
+        </VerticalStackLayout>
+
+        <!-- Loading Indicator -->
+        <ActivityIndicator Grid.Row="1"
+                          x:Name="LoadingIndicator"
+                          IsRunning="True"
+                          IsVisible="True"
+                          Color="{StaticResource SecondaryColor}"
+                          VerticalOptions="Center"
+                          HorizontalOptions="Center"/>
+    </Grid>
+</ContentPage>

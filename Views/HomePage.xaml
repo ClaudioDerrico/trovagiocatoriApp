@@ -73,7 +73,7 @@
             </VerticalStackLayout>
         </ScrollView>
 
-        <!-- AGGIORNATO: Footer con tre icone -->
+        <!-- Footer con quattro icone: Cos'è, Notifiche, Amici, Profilo -->
         <Grid Grid.Row="2" BackgroundColor="#F8F9FA" HeightRequest="70">
             <Grid.Shadow>
                 <Shadow Brush="#000000" Offset="0,-3" Radius="5" Opacity="0.08"/>
@@ -82,8 +82,10 @@
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
 
+            <!-- Cos'è? -->
             <Frame Grid.Column="0" Style="{StaticResource FooterIconFrameStyle}">
                 <Frame.GestureRecognizers>
                     <TapGestureRecognizer Tapped="OnAboutAppTapped"/>
@@ -94,8 +96,39 @@
                 </VerticalStackLayout>
             </Frame>
 
-            <!-- NUOVO: Sezione Amici -->
+            <!-- Notifiche -->
             <Frame Grid.Column="1" Style="{StaticResource FooterIconFrameStyle}">
+                <Frame.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnNotificationsPageTapped"/>
+                </Frame.GestureRecognizers>
+                <VerticalStackLayout Spacing="4" HorizontalOptions="Center" VerticalOptions="Center">
+                    <Grid>
+                        <Image Source="notifications_icon.png" Style="{StaticResource FooterIconImageStyle}"/>
+                        <!-- Badge notifiche non lette -->
+                        <Frame x:Name="NotificationBadge" 
+                               IsVisible="False"
+                               BackgroundColor="Red" 
+                               CornerRadius="10" 
+                               Padding="4,2" 
+                               HasShadow="False"
+                               HorizontalOptions="End"
+                               VerticalOptions="Start"
+                               Margin="0,-5,-5,0">
+                            <Label x:Name="NotificationCountLabel" 
+                                   Text="0" 
+                                   TextColor="White" 
+                                   FontSize="10" 
+                                   FontAttributes="Bold"
+                                   HorizontalOptions="Center"
+                                   VerticalOptions="Center"/>
+                        </Frame>
+                    </Grid>
+                    <Label Text="Notifiche" Style="{StaticResource FooterIconLabelStyle}"/>
+                </VerticalStackLayout>
+            </Frame>
+
+            <!-- Amici -->
+            <Frame Grid.Column="2" Style="{StaticResource FooterIconFrameStyle}">
                 <Frame.GestureRecognizers>
                     <TapGestureRecognizer Tapped="OnFriendsPageTapped"/>
                 </Frame.GestureRecognizers>
@@ -105,7 +138,8 @@
                 </VerticalStackLayout>
             </Frame>
 
-            <Frame Grid.Column="2" Style="{StaticResource FooterIconFrameStyle}">
+            <!-- Profilo -->
+            <Frame Grid.Column="3" Style="{StaticResource FooterIconFrameStyle}">
                 <Frame.GestureRecognizers>
                     <TapGestureRecognizer Tapped="ProfilePageTapped"/>
                 </Frame.GestureRecognizers>
