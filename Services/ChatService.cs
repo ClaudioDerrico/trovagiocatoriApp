@@ -64,9 +64,9 @@ namespace trovagiocatoriApp.Services
                 }
 
                 // Configura Socket.IO
-                _socket = new SocketIOClient.SocketIO($"{_serverUrl}/ws", new SocketIOOptions
+                _socket = new SocketIOClient.SocketIO(_serverUrl, new SocketIOOptions  
                 {
-                    Path = "/ws/socket.io/",
+                    Path = "/ws/socket.io",
                     Transport = SocketIOClient.Transport.TransportProtocol.WebSocket,
                     Auth = new Dictionary<string, string>
                     {
