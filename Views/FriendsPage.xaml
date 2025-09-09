@@ -5,132 +5,144 @@
              Title="Amici"
              BackgroundColor="#F8FAFC">
 
-	<ContentPage.Resources>
-		<ResourceDictionary>
-			<!-- Colori del tema -->
-			<Color x:Key="PrimaryColor">#24292F</Color>
-			<Color x:Key="SecondaryColor">#6366F1</Color>
-			<Color x:Key="AccentColor">#F59E0B</Color>
-			<Color x:Key="SuccessColor">#10B981</Color>
-			<Color x:Key="ErrorColor">#EF4444</Color>
-			<Color x:Key="BackgroundColor">#F8FAFC</Color>
-			<Color x:Key="CardColor">#FFFFFF</Color>
-			<Color x:Key="InputColor">#F1F5F9</Color>
-			<Color x:Key="TextPrimary">#1E293B</Color>
-			<Color x:Key="TextSecondary">#64748B</Color>
-			<Color x:Key="BorderColor">#E2E8F0</Color>
+    <ContentPage.Resources>
+        <ResourceDictionary>
+            <!-- Colori del tema -->
+            <Color x:Key="PrimaryColor">#24292F</Color>
+            <Color x:Key="SecondaryColor">#6366F1</Color>
+            <Color x:Key="AccentColor">#F59E0B</Color>
+            <Color x:Key="SuccessColor">#10B981</Color>
+            <Color x:Key="ErrorColor">#EF4444</Color>
+            <Color x:Key="BackgroundColor">#F8FAFC</Color>
+            <Color x:Key="CardColor">#FFFFFF</Color>
+            <Color x:Key="InputColor">#F1F5F9</Color>
+            <Color x:Key="TextPrimary">#1E293B</Color>
+            <Color x:Key="TextSecondary">#64748B</Color>
+            <Color x:Key="BorderColor">#E2E8F0</Color>
 
-			<!-- Stili per i tab -->
-			<Style x:Key="TabButtonStyle" TargetType="Button">
-				<Setter Property="BackgroundColor" Value="Transparent"/>
-				<Setter Property="TextColor" Value="{StaticResource TextSecondary}"/>
-				<Setter Property="FontFamily" Value="OpenSansSemiBold"/>
-				<Setter Property="FontSize" Value="13"/>
-				<Setter Property="BorderWidth" Value="0"/>
-				<Setter Property="CornerRadius" Value="0"/>
-				<Setter Property="HeightRequest" Value="48"/>
-				<Setter Property="Padding" Value="8,0"/>
-			</Style>
+            <!-- Stili per i tab -->
+            <Style x:Key="TabButtonStyle" TargetType="Button">
+                <Setter Property="BackgroundColor" Value="Transparent"/>
+                <Setter Property="TextColor" Value="{StaticResource TextSecondary}"/>
+                <Setter Property="FontFamily" Value="OpenSansSemiBold"/>
+                <Setter Property="FontSize" Value="13"/>
+                <Setter Property="BorderWidth" Value="0"/>
+                <Setter Property="CornerRadius" Value="0"/>
+                <Setter Property="HeightRequest" Value="48"/>
+                <Setter Property="Padding" Value="8,0"/>
+            </Style>
 
-			<Style x:Key="ActiveTabButtonStyle" TargetType="Button" BasedOn="{StaticResource TabButtonStyle}">
-				<Setter Property="TextColor" Value="{StaticResource PrimaryColor}"/>
-				<Setter Property="FontAttributes" Value="Bold"/>
-			</Style>
+            <Style x:Key="ActiveTabButtonStyle" TargetType="Button" BasedOn="{StaticResource TabButtonStyle}">
+                <Setter Property="TextColor" Value="{StaticResource PrimaryColor}"/>
+                <Setter Property="FontAttributes" Value="Bold"/>
+            </Style>
 
-			<!-- Stili per le card -->
-			<Style x:Key="CleanCardStyle" TargetType="Frame">
-				<Setter Property="BackgroundColor" Value="{StaticResource CardColor}"/>
-				<Setter Property="CornerRadius" Value="16"/>
-				<Setter Property="HasShadow" Value="True"/>
-				<Setter Property="BorderColor" Value="Transparent"/>
-				<Setter Property="Padding" Value="20"/>
-				<Setter Property="Margin" Value="16,8"/>
-				<Setter Property="Shadow">
-					<Shadow Brush="#E2E8F0" Offset="0,4" Radius="12" Opacity="0.15"/>
-				</Setter>
-			</Style>
+            <!-- Stili per le card -->
+            <Style x:Key="CleanCardStyle" TargetType="Frame">
+                <Setter Property="BackgroundColor" Value="{StaticResource CardColor}"/>
+                <Setter Property="CornerRadius" Value="16"/>
+                <Setter Property="HasShadow" Value="True"/>
+                <Setter Property="BorderColor" Value="Transparent"/>
+                <Setter Property="Padding" Value="20"/>
+                <Setter Property="Margin" Value="16,8"/>
+                <Setter Property="Shadow">
+                    <Shadow Brush="#E2E8F0" Offset="0,4" Radius="12" Opacity="0.15"/>
+                </Setter>
+            </Style>
 
-			<!-- Stile per le card degli amici -->
-			<Style x:Key="FriendCardStyle" TargetType="Frame">
-				<Setter Property="BackgroundColor" Value="White"/>
-				<Setter Property="CornerRadius" Value="12"/>
-				<Setter Property="HasShadow" Value="True"/>
-				<Setter Property="BorderColor" Value="Transparent"/>
-				<Setter Property="Padding" Value="16"/>
-				<Setter Property="Margin" Value="0"/>
-				<Setter Property="Shadow">
-					<Shadow Brush="#E2E8F0" Offset="0,2" Radius="8" Opacity="0.1"/>
-				</Setter>
-			</Style>
+            <!-- Stile per le card degli amici -->
+            <Style x:Key="FriendCardStyle" TargetType="Frame">
+                <Setter Property="BackgroundColor" Value="White"/>
+                <Setter Property="CornerRadius" Value="12"/>
+                <Setter Property="HasShadow" Value="True"/>
+                <Setter Property="BorderColor" Value="Transparent"/>
+                <Setter Property="Padding" Value="16"/>
+                <Setter Property="Margin" Value="0"/>
+                <Setter Property="Shadow">
+                    <Shadow Brush="#E2E8F0" Offset="0,2" Radius="8" Opacity="0.1"/>
+                </Setter>
+            </Style>
 
-			<!-- Stile per i pulsanti delle azioni -->
-			<Style x:Key="ActionButtonStyle" TargetType="Button">
-				<Setter Property="FontFamily" Value="OpenSansBold"/>
-				<Setter Property="FontSize" Value="12"/>
-				<Setter Property="CornerRadius" Value="8"/>
-				<Setter Property="HeightRequest" Value="32"/>
-				<Setter Property="Padding" Value="12,0"/>
-				<Setter Property="TextColor" Value="White"/>
-			</Style>
-		</ResourceDictionary>
-	</ContentPage.Resources>
+            <!-- MODIFICA: Stili per i pulsanti delle azioni (più grandi) -->
+            <Style x:Key="ActionButtonStyle" TargetType="Button">
+                <Setter Property="FontFamily" Value="OpenSansBold"/>
+                <Setter Property="FontSize" Value="12"/>
+                <Setter Property="CornerRadius" Value="8"/>
+                <Setter Property="HeightRequest" Value="36"/>
+                <Setter Property="Padding" Value="14,0"/>
+                <Setter Property="TextColor" Value="White"/>
+                <Setter Property="MinimumWidthRequest" Value="70"/>
+            </Style>
 
-	<Grid RowDefinitions="Auto,Auto,Auto,*" BackgroundColor="{StaticResource BackgroundColor}">
+            <!-- NUOVO: Stile specifico per pulsanti amici (ancora più grandi) -->
+            <Style x:Key="FriendActionButtonStyle" TargetType="Button">
+                <Setter Property="FontFamily" Value="OpenSansBold"/>
+                <Setter Property="FontSize" Value="11"/>
+                <Setter Property="CornerRadius" Value="8"/>
+                <Setter Property="HeightRequest" Value="40"/>
+                <Setter Property="Padding" Value="16,0"/>
+                <Setter Property="TextColor" Value="White"/>
+                <Setter Property="MinimumWidthRequest" Value="75"/>
+            </Style>
+        </ResourceDictionary>
+    </ContentPage.Resources>
 
-		<!-- Header con titolo -->
-		<Frame Grid.Row="0" Style="{StaticResource CleanCardStyle}" Margin="16,16,16,8">
-			<VerticalStackLayout Spacing="16" HorizontalOptions="Center">
-				<!-- Icona e titolo -->
-				<HorizontalStackLayout Spacing="12" HorizontalOptions="Center">
-					<Frame BackgroundColor="#E3F2FD"
+    <Grid RowDefinitions="Auto,Auto,Auto,*" BackgroundColor="{StaticResource BackgroundColor}">
+
+        <!-- Header con titolo -->
+        <Frame Grid.Row="0" Style="{StaticResource CleanCardStyle}" Margin="16,16,16,8">
+            <VerticalStackLayout Spacing="16" HorizontalOptions="Center">
+                <!-- Icona e titolo -->
+                <HorizontalStackLayout Spacing="12" HorizontalOptions="Center">
+                    <Frame BackgroundColor="#E3F2FD"
                            CornerRadius="20"
                            Padding="12"
                            HasShadow="False"
                            VerticalOptions="Center">
-						<Label Text="AMICI" FontSize="16" FontAttributes="Bold" TextColor="#1976D2"/>
-					</Frame>
-					<VerticalStackLayout Spacing="4" VerticalOptions="Center">
-						<Label Text="Amici"
+                        <Label Text="AMICI" FontSize="16" FontAttributes="Bold" TextColor="#1976D2"/>
+                    </Frame>
+                    <VerticalStackLayout Spacing="4" VerticalOptions="Center">
+                        <Label Text="Amici"
                                FontFamily="OpenSansBold"
                                FontSize="24"
                                TextColor="{StaticResource TextPrimary}"/>
-						<Label Text="Gestisci le tue amicizie"
+                        <Label Text="Gestisci le tue amicizie"
                                FontSize="14"
                                TextColor="{StaticResource TextSecondary}"/>
-					</VerticalStackLayout>
-				</HorizontalStackLayout>
-			</VerticalStackLayout>
-		</Frame>
+                    </VerticalStackLayout>
+                </HorizontalStackLayout>
+            </VerticalStackLayout>
+        </Frame>
 
-		<!-- Barra di ricerca -->
-		<Frame Grid.Row="1"
+        <!-- Barra di ricerca -->
+        <Frame Grid.Row="1"
                BackgroundColor="White"
                CornerRadius="12"
                HasShadow="True"
                Margin="16,0,16,0"
                Padding="16">
-			<VerticalStackLayout Spacing="12">
-				<Label Text="Cerca e aggiungi amici"
+            <VerticalStackLayout Spacing="12">
+                <Label Text="Cerca e aggiungi amici"
                        FontFamily="OpenSansBold"
                        FontSize="16"
                        TextColor="{StaticResource TextPrimary}"/>
 
-				<Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
-					<Frame Grid.Column="0"
+                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                    <Frame Grid.Column="0"
                            BackgroundColor="{StaticResource InputColor}"
                            CornerRadius="10"
                            Padding="0"
                            HasShadow="False">
-						<Entry x:Name="SearchFriendsEntry"
+                        <Entry x:Name="SearchFriendsEntry"
                                Placeholder="Cerca per username o email..."
                                PlaceholderColor="{StaticResource TextSecondary}"
                                TextColor="{StaticResource TextPrimary}"
                                BackgroundColor="Transparent"
                                FontSize="14"
                                Margin="16,0"/>
-					</Frame>
+                    </Frame>
 
-					<Button Grid.Column="1"
+                    <Button Grid.Column="1"
                             Text="Cerca"
                             FontSize="14"
                             WidthRequest="70"
@@ -140,22 +152,22 @@
                             TextColor="White"
                             x:Name="SearchButton"
                             Clicked="OnSearchFriendsClicked"/>
-				</Grid>
+                </Grid>
 
-				<!-- Risultati ricerca (inizialmente nascosti) -->
-				<CollectionView x:Name="SearchResultsCollectionView"
+                <!-- Risultati ricerca (inizialmente nascosti) -->
+                <CollectionView x:Name="SearchResultsCollectionView"
                                 ItemsSource="{Binding SearchResults}"
                                 IsVisible="False"
                                 HeightRequest="150">
-					<CollectionView.ItemsLayout>
-						<LinearItemsLayout Orientation="Vertical" ItemSpacing="8"/>
-					</CollectionView.ItemsLayout>
-					<CollectionView.ItemTemplate>
-						<DataTemplate>
-							<Frame Style="{StaticResource FriendCardStyle}" BackgroundColor="#F8F9FA">
-								<Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12">
-									<!-- Avatar -->
-									<Frame Grid.Column="0"
+                    <CollectionView.ItemsLayout>
+                        <LinearItemsLayout Orientation="Vertical" ItemSpacing="8"/>
+                    </CollectionView.ItemsLayout>
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate>
+                            <Frame Style="{StaticResource FriendCardStyle}" BackgroundColor="#F8F9FA">
+                                <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12">
+                                    <!-- Avatar -->
+                                    <Frame Grid.Column="0"
                                            WidthRequest="40"
                                            HeightRequest="40"
                                            CornerRadius="20"
@@ -163,25 +175,25 @@
                                            IsClippedToBounds="True"
                                            BorderColor="{StaticResource BorderColor}"
                                            HasShadow="False">
-										<Image Source="{Binding ProfilePicture}"
+                                        <Image Source="{Binding ProfilePicture}"
                                                Aspect="AspectFill"/>
-									</Frame>
+                                    </Frame>
 
-									<!-- Info utente -->
-									<VerticalStackLayout Grid.Column="1"
+                                    <!-- Info utente -->
+                                    <VerticalStackLayout Grid.Column="1"
                                                          Spacing="2"
                                                          VerticalOptions="Center">
-										<Label Text="{Binding Username}"
+                                        <Label Text="{Binding Username}"
                                                FontAttributes="Bold"
                                                FontSize="14"
                                                TextColor="{StaticResource TextPrimary}"/>
-										<Label Text="{Binding FullName}"
+                                        <Label Text="{Binding FullName}"
                                                FontSize="12"
                                                TextColor="{StaticResource TextSecondary}"/>
-									</VerticalStackLayout>
+                                    </VerticalStackLayout>
 
-									<!-- Pulsante aggiungi -->
-									<Button Grid.Column="2"
+                                    <!-- Pulsante aggiungi -->
+                                    <Button Grid.Column="2"
                                             Text="Aggiungi"
                                             Style="{StaticResource ActionButtonStyle}"
                                             BackgroundColor="{StaticResource SuccessColor}"
@@ -189,70 +201,71 @@
                                             WidthRequest="80"
                                             Clicked="OnAddFriendClicked"
                                             CommandParameter="{Binding .}"/>
-								</Grid>
-							</Frame>
-						</DataTemplate>
-					</CollectionView.ItemTemplate>
-					<CollectionView.EmptyView>
-						<Label Text="Nessun utente trovato"
+                                </Grid>
+                            </Frame>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                    <CollectionView.EmptyView>
+                        <Label Text="Nessun utente trovato"
                                HorizontalOptions="Center"
                                FontSize="14"
                                TextColor="{StaticResource TextSecondary}"
                                Margin="0,20"/>
-					</CollectionView.EmptyView>
-				</CollectionView>
-			</VerticalStackLayout>
-		</Frame>
+                    </CollectionView.EmptyView>
+                </CollectionView>
+            </VerticalStackLayout>
+        </Frame>
 
-		<!-- Tab Navigation -->
-		<Frame Grid.Row="2"
+        <!-- Tab Navigation -->
+        <Frame Grid.Row="2"
                BackgroundColor="White"
                CornerRadius="12"
                HasShadow="True"
                Margin="16,8,16,0"
                Padding="0">
-			<Grid ColumnDefinitions="*,*,*">
-				<Button Grid.Column="0"
+            <Grid ColumnDefinitions="*,*,*">
+                <Button Grid.Column="0"
                         x:Name="FriendsTabButton"
                         Text="Amici"
                         Style="{StaticResource ActiveTabButtonStyle}"
                         Clicked="OnFriendsTabClicked"/>
-				<Button Grid.Column="1"
+                <Button Grid.Column="1"
                         x:Name="SentRequestsTabButton"
                         Text="Inviate"
                         Style="{StaticResource TabButtonStyle}"
                         Clicked="OnSentRequestsTabClicked"/>
-				<Button Grid.Column="2"
+                <Button Grid.Column="2"
                         x:Name="ReceivedRequestsTabButton"
                         Text="Ricevute"
                         Style="{StaticResource TabButtonStyle}"
                         Clicked="OnReceivedRequestsTabClicked"/>
 
-				<!-- Indicator line -->
-				<BoxView Grid.Column="0"
+                <!-- Indicator line -->
+                <BoxView Grid.Column="0"
                          x:Name="TabIndicator"
                          HeightRequest="3"
                          BackgroundColor="{StaticResource PrimaryColor}"
                          VerticalOptions="End"
                          HorizontalOptions="FillAndExpand"/>
-			</Grid>
-		</Frame>
+            </Grid>
+        </Frame>
 
-		<!-- Content Area -->
-		<ScrollView Grid.Row="3" Padding="0,8,0,0">
-			<Grid>
-				<!-- Amici Content -->
-				<VerticalStackLayout x:Name="FriendsContent" IsVisible="True" Spacing="12" Padding="16">
-					<CollectionView x:Name="FriendsCollectionView" ItemsSource="{Binding Friends}">
-						<CollectionView.ItemsLayout>
-							<LinearItemsLayout Orientation="Vertical" ItemSpacing="12"/>
-						</CollectionView.ItemsLayout>
-						<CollectionView.ItemTemplate>
-							<DataTemplate>
-								<Frame Style="{StaticResource FriendCardStyle}">
-									<Grid ColumnDefinitions="Auto,*,Auto,Auto" ColumnSpacing="12">
-										<!-- Avatar -->
-										<Frame Grid.Column="0"
+        <!-- Content Area -->
+        <ScrollView Grid.Row="3" Padding="0,8,0,0">
+            <Grid>
+                <!-- Amici Content -->
+                <VerticalStackLayout x:Name="FriendsContent" IsVisible="True" Spacing="12" Padding="16">
+                    <CollectionView x:Name="FriendsCollectionView" ItemsSource="{Binding Friends}">
+                        <CollectionView.ItemsLayout>
+                            <LinearItemsLayout Orientation="Vertical" ItemSpacing="12"/>
+                        </CollectionView.ItemsLayout>
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate>
+                                <Frame Style="{StaticResource FriendCardStyle}">
+                                    <!-- MODIFICA: Cambiato Grid per dare più spazio ai pulsanti -->
+                                    <Grid ColumnDefinitions="Auto,*,Auto,Auto" ColumnSpacing="10">
+                                        <!-- Avatar -->
+                                        <Frame Grid.Column="0"
                                                WidthRequest="50"
                                                HeightRequest="50"
                                                CornerRadius="25"
@@ -260,83 +273,76 @@
                                                IsClippedToBounds="True"
                                                BorderColor="{StaticResource BorderColor}"
                                                HasShadow="False">
-											<Image Source="{Binding ProfilePicture}"
+                                            <Image Source="{Binding ProfilePicture}"
                                                    Aspect="AspectFill"/>
-										</Frame>
+                                        </Frame>
 
-										<!-- Info amico -->
-										<VerticalStackLayout Grid.Column="1"
+                                        <!-- Info amico -->
+                                        <VerticalStackLayout Grid.Column="1"
                                                              Spacing="4"
                                                              VerticalOptions="Center">
-											<Label Text="{Binding Username}"
+                                            <Label Text="{Binding Username}"
                                                    FontAttributes="Bold"
                                                    FontSize="16"
                                                    TextColor="{StaticResource TextPrimary}"/>
-											<Label Text="{Binding FullName}"
+                                            <Label Text="{Binding FullName}"
                                                    FontSize="14"
                                                    TextColor="{StaticResource TextSecondary}"/>
-											<Label Text="{Binding FriendsSince, StringFormat='Amici dal {0:dd/MM/yyyy}'}"
+                                            <Label Text="{Binding FriendsSince, StringFormat='Amici dal {0:dd/MM/yyyy}'}"
                                                    FontSize="12"
                                                    TextColor="{StaticResource TextSecondary}"/>
-										</VerticalStackLayout>
+                                        </VerticalStackLayout>
 
-										<!-- Pulsante messaggio -->
-										<Button Grid.Column="2"
-                                                Text="Chat"
-                                                FontSize="12"
-                                                WidthRequest="50"
-                                                HeightRequest="40"
-                                                CornerRadius="20"
+                                        <!-- MODIFICA: Pulsante messaggio più grande -->
+                                        <Button Grid.Column="2"
+                                                Text="💬 Chat"
+                                                Style="{StaticResource FriendActionButtonStyle}"
                                                 BackgroundColor="{StaticResource SecondaryColor}"
-                                                TextColor="White"
                                                 Clicked="OnMessageFriendClicked"
                                                 CommandParameter="{Binding .}"/>
 
-										<!-- Menu opzioni -->
-										<Button Grid.Column="3"
-                                                Text="Menu"
-                                                FontSize="12"
-                                                WidthRequest="50"
-                                                HeightRequest="40"
-                                                CornerRadius="20"
+                                        <!-- MODIFICA: Menu opzioni più grande -->
+                                        <Button Grid.Column="3"
+                                                Text="⚙️ Opzioni"
+                                                Style="{StaticResource FriendActionButtonStyle}"
                                                 BackgroundColor="{StaticResource InputColor}"
                                                 TextColor="{StaticResource TextPrimary}"
                                                 Clicked="OnFriendOptionsClicked"
                                                 CommandParameter="{Binding .}"/>
-									</Grid>
-								</Frame>
-							</DataTemplate>
-						</CollectionView.ItemTemplate>
-						<CollectionView.EmptyView>
-							<VerticalStackLayout Spacing="16" HorizontalOptions="Center" Padding="32">
-								<Label Text="AMICI" FontSize="36" HorizontalOptions="Center" Opacity="0.5"/>
-								<Label Text="Nessun amico ancora"
+                                    </Grid>
+                                </Frame>
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                        <CollectionView.EmptyView>
+                            <VerticalStackLayout Spacing="16" HorizontalOptions="Center" Padding="32">
+                                <Label Text="AMICI" FontSize="36" HorizontalOptions="Center" Opacity="0.5"/>
+                                <Label Text="Nessun amico ancora"
                                        HorizontalOptions="Center"
                                        FontSize="18"
                                        FontAttributes="Bold"
                                        TextColor="{StaticResource TextSecondary}"/>
-								<Label Text="Usa la barra di ricerca sopra per trovare e aggiungere amici!"
+                                <Label Text="Usa la barra di ricerca sopra per trovare e aggiungere amici!"
                                        HorizontalOptions="Center"
                                        FontSize="14"
                                        TextColor="{StaticResource TextSecondary}"
                                        HorizontalTextAlignment="Center"/>
-							</VerticalStackLayout>
-						</CollectionView.EmptyView>
-					</CollectionView>
-				</VerticalStackLayout>
+                            </VerticalStackLayout>
+                        </CollectionView.EmptyView>
+                    </CollectionView>
+                </VerticalStackLayout>
 
-				<!-- Richieste Inviate Content -->
-				<VerticalStackLayout x:Name="SentRequestsContent" IsVisible="False" Spacing="12" Padding="16">
-					<CollectionView x:Name="SentRequestsCollectionView" ItemsSource="{Binding SentRequests}">
-						<CollectionView.ItemsLayout>
-							<LinearItemsLayout Orientation="Vertical" ItemSpacing="12"/>
-						</CollectionView.ItemsLayout>
-						<CollectionView.ItemTemplate>
-							<DataTemplate>
-								<Frame Style="{StaticResource FriendCardStyle}" BackgroundColor="#FFF8E1">
-									<Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12">
-										<!-- Avatar -->
-										<Frame Grid.Column="0"
+                <!-- Richieste Inviate Content (resto del codice rimane uguale) -->
+                <VerticalStackLayout x:Name="SentRequestsContent" IsVisible="False" Spacing="12" Padding="16">
+                    <CollectionView x:Name="SentRequestsCollectionView" ItemsSource="{Binding SentRequests}">
+                        <CollectionView.ItemsLayout>
+                            <LinearItemsLayout Orientation="Vertical" ItemSpacing="12"/>
+                        </CollectionView.ItemsLayout>
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate>
+                                <Frame Style="{StaticResource FriendCardStyle}" BackgroundColor="#FFF8E1">
+                                    <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12">
+                                        <!-- Avatar -->
+                                        <Frame Grid.Column="0"
                                                WidthRequest="50"
                                                HeightRequest="50"
                                                CornerRadius="25"
@@ -344,67 +350,67 @@
                                                IsClippedToBounds="True"
                                                BorderColor="{StaticResource BorderColor}"
                                                HasShadow="False">
-											<Image Source="{Binding ProfilePicture}"
+                                            <Image Source="{Binding ProfilePicture}"
                                                    Aspect="AspectFill"/>
-										</Frame>
+                                        </Frame>
 
-										<!-- Info richiesta -->
-										<VerticalStackLayout Grid.Column="1"
+                                        <!-- Info richiesta -->
+                                        <VerticalStackLayout Grid.Column="1"
                                                              Spacing="4"
                                                              VerticalOptions="Center">
-											<Label Text="{Binding Username}"
+                                            <Label Text="{Binding Username}"
                                                    FontAttributes="Bold"
                                                    FontSize="16"
                                                    TextColor="{StaticResource TextPrimary}"/>
-											<Label Text="{Binding FullName}"
+                                            <Label Text="{Binding FullName}"
                                                    FontSize="14"
                                                    TextColor="{StaticResource TextSecondary}"/>
-											<Label Text="{Binding RequestSent, StringFormat='Richiesta inviata il {0:dd/MM/yyyy}'}"
+                                            <Label Text="{Binding RequestSent, StringFormat='Richiesta inviata il {0:dd/MM/yyyy}'}"
                                                    FontSize="12"
                                                    TextColor="#F57C00"/>
-										</VerticalStackLayout>
+                                        </VerticalStackLayout>
 
-										<!-- Pulsante annulla -->
-										<Button Grid.Column="2"
+                                        <!-- Pulsante annulla -->
+                                        <Button Grid.Column="2"
                                                 Text="Annulla"
-                                                Style="{StaticResource ActionButtonStyle}"
+                                                Style="{StaticResource FriendActionButtonStyle}"
                                                 BackgroundColor="{StaticResource ErrorColor}"
                                                 Clicked="OnCancelRequestClicked"
                                                 CommandParameter="{Binding .}"/>
-									</Grid>
-								</Frame>
-							</DataTemplate>
-						</CollectionView.ItemTemplate>
-						<CollectionView.EmptyView>
-							<VerticalStackLayout Spacing="16" HorizontalOptions="Center" Padding="32">
-								<Label Text="INVIATE" FontSize="36" HorizontalOptions="Center" Opacity="0.5"/>
-								<Label Text="Nessuna richiesta inviata"
+                                    </Grid>
+                                </Frame>
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                        <CollectionView.EmptyView>
+                            <VerticalStackLayout Spacing="16" HorizontalOptions="Center" Padding="32">
+                                <Label Text="INVIATE" FontSize="36" HorizontalOptions="Center" Opacity="0.5"/>
+                                <Label Text="Nessuna richiesta inviata"
                                        HorizontalOptions="Center"
                                        FontSize="18"
                                        FontAttributes="Bold"
                                        TextColor="{StaticResource TextSecondary}"/>
-								<Label Text="Le richieste di amicizia che invii appariranno qui"
+                                <Label Text="Le richieste di amicizia che invii appariranno qui"
                                        HorizontalOptions="Center"
                                        FontSize="14"
                                        TextColor="{StaticResource TextSecondary}"
                                        HorizontalTextAlignment="Center"/>
-							</VerticalStackLayout>
-						</CollectionView.EmptyView>
-					</CollectionView>
-				</VerticalStackLayout>
+                            </VerticalStackLayout>
+                        </CollectionView.EmptyView>
+                    </CollectionView>
+                </VerticalStackLayout>
 
-				<!-- Richieste Ricevute Content -->
-				<VerticalStackLayout x:Name="ReceivedRequestsContent" IsVisible="False" Spacing="12" Padding="16">
-					<CollectionView x:Name="ReceivedRequestsCollectionView" ItemsSource="{Binding ReceivedRequests}">
-						<CollectionView.ItemsLayout>
-							<LinearItemsLayout Orientation="Vertical" ItemSpacing="12"/>
-						</CollectionView.ItemsLayout>
-						<CollectionView.ItemTemplate>
-							<DataTemplate>
-								<Frame Style="{StaticResource FriendCardStyle}" BackgroundColor="#E8F5E8">
-									<Grid ColumnDefinitions="Auto,*,Auto,Auto" ColumnSpacing="12">
-										<!-- Avatar -->
-										<Frame Grid.Column="0"
+                <!-- Richieste Ricevute Content -->
+                <VerticalStackLayout x:Name="ReceivedRequestsContent" IsVisible="False" Spacing="12" Padding="16">
+                    <CollectionView x:Name="ReceivedRequestsCollectionView" ItemsSource="{Binding ReceivedRequests}">
+                        <CollectionView.ItemsLayout>
+                            <LinearItemsLayout Orientation="Vertical" ItemSpacing="12"/>
+                        </CollectionView.ItemsLayout>
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate>
+                                <Frame Style="{StaticResource FriendCardStyle}" BackgroundColor="#E8F5E8">
+                                    <Grid ColumnDefinitions="Auto,*,Auto,Auto" ColumnSpacing="12">
+                                        <!-- Avatar -->
+                                        <Frame Grid.Column="0"
                                                WidthRequest="50"
                                                HeightRequest="50"
                                                CornerRadius="25"
@@ -412,63 +418,63 @@
                                                IsClippedToBounds="True"
                                                BorderColor="{StaticResource BorderColor}"
                                                HasShadow="False">
-											<Image Source="{Binding ProfilePicture}"
+                                            <Image Source="{Binding ProfilePicture}"
                                                    Aspect="AspectFill"/>
-										</Frame>
+                                        </Frame>
 
-										<!-- Info richiesta -->
-										<VerticalStackLayout Grid.Column="1"
+                                        <!-- Info richiesta -->
+                                        <VerticalStackLayout Grid.Column="1"
                                                              Spacing="4"
                                                              VerticalOptions="Center">
-											<Label Text="{Binding Username}"
+                                            <Label Text="{Binding Username}"
                                                    FontAttributes="Bold"
                                                    FontSize="16"
                                                    TextColor="{StaticResource TextPrimary}"/>
-											<Label Text="{Binding FullName}"
+                                            <Label Text="{Binding FullName}"
                                                    FontSize="14"
                                                    TextColor="{StaticResource TextSecondary}"/>
-											<Label Text="{Binding RequestReceived, StringFormat='Richiesta ricevuta il {0:dd/MM/yyyy}'}"
+                                            <Label Text="{Binding RequestReceived, StringFormat='Richiesta ricevuta il {0:dd/MM/yyyy}'}"
                                                    FontSize="12"
                                                    TextColor="#2E7D32"/>
-										</VerticalStackLayout>
+                                        </VerticalStackLayout>
 
-										<!-- Pulsante accetta -->
-										<Button Grid.Column="2"
+                                        <!-- Pulsante accetta -->
+                                        <Button Grid.Column="2"
                                                 Text="Accetta"
-                                                Style="{StaticResource ActionButtonStyle}"
+                                                Style="{StaticResource FriendActionButtonStyle}"
                                                 BackgroundColor="{StaticResource SuccessColor}"
                                                 Clicked="OnAcceptRequestClicked"
                                                 CommandParameter="{Binding .}"/>
 
-										<!-- Pulsante rifiuta -->
-										<Button Grid.Column="3"
+                                        <!-- Pulsante rifiuta -->
+                                        <Button Grid.Column="3"
                                                 Text="Rifiuta"
-                                                Style="{StaticResource ActionButtonStyle}"
+                                                Style="{StaticResource FriendActionButtonStyle}"
                                                 BackgroundColor="{StaticResource ErrorColor}"
                                                 Clicked="OnRejectRequestClicked"
                                                 CommandParameter="{Binding .}"/>
-									</Grid>
-								</Frame>
-							</DataTemplate>
-						</CollectionView.ItemTemplate>
-						<CollectionView.EmptyView>
-							<VerticalStackLayout Spacing="16" HorizontalOptions="Center" Padding="32">
-								<Label Text="RICEVUTE" FontSize="36" HorizontalOptions="Center" Opacity="0.5"/>
-								<Label Text="Nessuna richiesta ricevuta"
+                                    </Grid>
+                                </Frame>
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                        <CollectionView.EmptyView>
+                            <VerticalStackLayout Spacing="16" HorizontalOptions="Center" Padding="32">
+                                <Label Text="RICEVUTE" FontSize="36" HorizontalOptions="Center" Opacity="0.5"/>
+                                <Label Text="Nessuna richiesta ricevuta"
                                        HorizontalOptions="Center"
                                        FontSize="18"
                                        FontAttributes="Bold"
                                        TextColor="{StaticResource TextSecondary}"/>
-								<Label Text="Le richieste di amicizia che ricevi appariranno qui"
+                                <Label Text="Le richieste di amicizia che ricevi appariranno qui"
                                        HorizontalOptions="Center"
                                        FontSize="14"
                                        TextColor="{StaticResource TextSecondary}"
                                        HorizontalTextAlignment="Center"/>
-							</VerticalStackLayout>
-						</CollectionView.EmptyView>
-					</CollectionView>
-				</VerticalStackLayout>
-			</Grid>
-		</ScrollView>
-	</Grid>
+                            </VerticalStackLayout>
+                        </CollectionView.EmptyView>
+                    </CollectionView>
+                </VerticalStackLayout>
+            </Grid>
+        </ScrollView>
+    </Grid>
 </ContentPage>

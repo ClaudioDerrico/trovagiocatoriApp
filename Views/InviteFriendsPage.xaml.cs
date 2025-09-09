@@ -1,4 +1,4 @@
-﻿// Views/InviteFriendsPage.xaml.cs
+﻿// Views/InviteFriendsPage.xaml.cs - VERSIONE MODIFICATA
 using System.Collections.ObjectModel;
 using System.Text.Json;
 using System.Text;
@@ -18,9 +18,9 @@ namespace trovagiocatoriApp.Views
         private static readonly HttpClient _sharedClient = CreateHttpClient();
         private readonly string _apiBaseUrl = ApiConfig.BaseUrl;
 
-        // Traccia gli amici invitati
-        private readonly HashSet<string> _invitedFriendEmails = new HashSet<string>();
-        private int _invitedCount = 0;
+        // MODIFICATO: Traccia gli amici SELEZIONATI per l'invito (non ancora inviati)
+        private readonly HashSet<string> _selectedFriendEmails = new HashSet<string>();
+        private int _selectedCount = 0;
 
         public ObservableCollection<FriendInfo> Friends { get; set; } = new ObservableCollection<FriendInfo>();
 
@@ -65,61 +65,104 @@ namespace trovagiocatoriApp.Views
         private void UpdateStatistics()
         {
             TotalFriendsLabel.Text = _allFriends.Count.ToString();
-            InvitedCountLabel.Text = _invitedCount.ToString();
-            RemainingLabel.Text = (_allFriends.Count - _invitedCount).ToString();
+            InvitedCountLabel.Text = _selectedCount.ToString();
+            RemainingLabel.Text = (_allFriends.Count - _selectedCount).ToString();
 
             // Aggiorna il pulsante di fine
-            FinishButton.Text = _invitedCount > 0
-                ? $"✅ Termina ({_invitedCount} inviti)"
+            FinishButton.Text = _selectedCount > 0
+                ? $"✅ Invia {_selectedCount} Inviti"
                 : "✅ Termina Inviti";
         }
 
+        // MODIFICATO: Ora il pulsante "Invita" seleziona/deseleziona l'amico
         private async void OnInviteFriendClicked(object sender, EventArgs e)
         {
             if (sender is Button button && button.CommandParameter is FriendInfo friend)
             {
                 try
                 {
-                    button.IsEnabled = false;
-                    button.Text = "Invio...";
-
-                    // Invia l'invito tramite API
-                    bool success = await SendEventInvite(friend.Email);
-
-                    if (success)
+                    // Controlla se l'amico è già selezionato
+                    if (_selectedFriendEmails.Contains(friend.Email))
                     {
-                        // Aggiungi all'elenco degli invitati
-                        _invitedFriendEmails.Add(friend.Email);
-                        _invitedCount++;
+                        // DESELEZIONA l'amico
+                        _selectedFriendEmails.Remove(friend.Email);
+                        _selectedCount--;
 
-                        // Aggiorna UI del pulsante
-                        button.Text = "✅ Invitato";
-                        button.Style = (Style)Resources["InvitedButtonStyle"];
-                        button.BackgroundColor = Color.FromArgb("#9E9E9E");
+                        // Aggiorna UI del pulsante per tornare a "Invita"
+                        button.Text = "Invita";
+                        button.Style = (Style)Resources["InviteButtonStyle"];
+                        button.BackgroundColor = Color.FromArgb("#10B981");
+                        button.IsEnabled = true;
 
-                        // Aggiorna statistiche
-                        UpdateStatistics();
-
-                        // Mostra notifica di successo
-                        await DisplayAlert("Invito Inviato", $"Invito inviato a {friend.Username}!", "OK");
-
-                        Debug.WriteLine($"[INVITE] ✅ Invito inviato a {friend.Email} per evento {_postId}");
+                        Debug.WriteLine($"[INVITE] ❌ Deselezionato {friend.Email}");
                     }
                     else
                     {
-                        button.IsEnabled = true;
-                        button.Text = "Invita";
-                        await DisplayAlert("Errore", "Impossibile inviare l'invito. Riprova.", "OK");
+                        // SELEZIONA l'amico
+                        _selectedFriendEmails.Add(friend.Email);
+                        _selectedCount++;
+
+                        // Aggiorna UI del pulsante per mostrare "Selezionato"
+                        button.Text = "✅ Selezionato";
+                        button.Style = (Style)Resources["InvitedButtonStyle"];
+                        button.BackgroundColor = Color.FromArgb("#FF9800");
+                        button.IsEnabled = true; // Mantieni cliccabile per deselezionare
+
+                        Debug.WriteLine($"[INVITE] ✅ Selezionato {friend.Email}");
                     }
+
+                    // Aggiorna statistiche
+                    UpdateStatistics();
                 }
                 catch (Exception ex)
                 {
-                    Debug.WriteLine($"[INVITE] Errore invio invito: {ex.Message}");
-                    button.IsEnabled = true;
-                    button.Text = "Invita";
-                    await DisplayAlert("Errore", "Errore nell'invio dell'invito", "OK");
+                    Debug.WriteLine($"[INVITE] Errore selezione amico: {ex.Message}");
+                    await DisplayAlert("Errore", "Errore nella selezione dell'amico", "OK");
                 }
             }
+        }
+
+        // NUOVO: Invia tutti gli inviti selezionati
+        private async Task SendAllSelectedInvites()
+        {
+            var successCount = 0;
+            var failCount = 0;
+
+            foreach (var friendEmail in _selectedFriendEmails.ToList())
+            {
+                try
+                {
+                    bool success = await SendEventInvite(friendEmail);
+
+                    if (success)
+                    {
+                        successCount++;
+                        Debug.WriteLine($"[INVITE] ✅ Invito inviato a {friendEmail}");
+                    }
+                    else
+                    {
+                        failCount++;
+                        Debug.WriteLine($"[INVITE] ❌ Invito fallito a {friendEmail}");
+                    }
+
+                    // Piccola pausa tra gli inviti per evitare sovraccarico
+                    await Task.Delay(200);
+                }
+                catch (Exception ex)
+                {
+                    failCount++;
+                    Debug.WriteLine($"[INVITE] Errore invio a {friendEmail}: {ex.Message}");
+                }
+            }
+
+            // Mostra risultato finale
+            var message = $"Inviti completati!\n✅ Inviati: {successCount}";
+            if (failCount > 0)
+            {
+                message += $"\n❌ Falliti: {failCount}";
+            }
+
+            await DisplayAlert("Inviti Inviati", message, "OK");
         }
 
         private async Task<bool> SendEventInvite(string friendEmail)
@@ -157,11 +200,11 @@ namespace trovagiocatoriApp.Views
 
         private async void OnCancelClicked(object sender, EventArgs e)
         {
-            if (_invitedCount > 0)
+            if (_selectedCount > 0)
             {
                 bool confirm = await DisplayAlert(
                     "Conferma Annullamento",
-                    $"Hai già inviato {_invitedCount} inviti. Vuoi davvero annullare?",
+                    $"Hai selezionato {_selectedCount} amici ma non hai ancora inviato gli inviti. Vuoi davvero annullare?",
                     "Sì, Annulla",
                     "No, Continua"
                 );
@@ -173,25 +216,56 @@ namespace trovagiocatoriApp.Views
             await Navigation.PopAsync();
         }
 
+        // MODIFICATO: Ora invia effettivamente tutti gli inviti selezionati
         private async void OnFinishInvitesClicked(object sender, EventArgs e)
         {
-            if (_invitedCount == 0)
+            if (_selectedCount == 0)
             {
                 await DisplayAlert(
-                    "Nessun Invito",
-                    "Non hai ancora inviato nessun invito. Vuoi tornare indietro?",
+                    "Nessun Amico Selezionato",
+                    "Non hai ancora selezionato nessun amico da invitare. Seleziona almeno un amico per continuare.",
                     "OK"
                 );
                 return;
             }
 
-            await DisplayAlert(
-                "Inviti Completati",
-                $"Hai inviato {_invitedCount} inviti con successo! I tuoi amici riceveranno una notifica e potranno accettare l'invito dalla sezione 'I Miei Eventi' del loro profilo.",
-                "Perfetto"
+            // Conferma invio
+            var confirmMessage = _selectedCount == 1
+                ? "Vuoi inviare l'invito all'amico selezionato?"
+                : $"Vuoi inviare gli inviti ai {_selectedCount} amici selezionati?";
+
+            bool confirm = await DisplayAlert(
+                "Conferma Invio",
+                confirmMessage,
+                "Invia Inviti",
+                "Annulla"
             );
 
-            await Navigation.PopAsync();
+            if (!confirm)
+                return;
+
+            // Disabilita il pulsante durante l'invio
+            FinishButton.IsEnabled = false;
+            FinishButton.Text = "Invio in corso...";
+
+            try
+            {
+                // Invia tutti gli inviti
+                await SendAllSelectedInvites();
+
+                // Torna alla pagina precedente
+                await Navigation.PopAsync();
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[INVITE] Errore durante invio massivo: {ex.Message}");
+                await DisplayAlert("Errore", "Errore durante l'invio degli inviti", "OK");
+            }
+            finally
+            {
+                FinishButton.IsEnabled = true;
+                FinishButton.Text = "✅ Termina Inviti";
+            }
         }
     }
 }

@@ -437,13 +437,86 @@ namespace trovagiocatoriApp.Views
             }
         }
 
+        private async Task<string> GetCurrentUserEmailAsync()
+        {
+            try
+            {
+                var request = new HttpRequestMessage(HttpMethod.Get, $"{_apiBaseUrl}/api/user");
+
+                if (Preferences.ContainsKey("session_id"))
+                {
+                    string sessionId = Preferences.Get("session_id", "");
+                    request.Headers.Add("Cookie", $"session_id={sessionId}");
+                }
+
+                var response = await _sharedClient.SendAsync(request);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var json = await response.Content.ReadAsStringAsync();
+                    var userData = JsonSerializer.Deserialize<Dictionary<string, object>>(json);
+
+                    if (userData.ContainsKey("email"))
+                    {
+                        return userData["email"].ToString();
+                    }
+                }
+
+                return "";
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[FRIENDS] Errore nel caricamento email utente: {ex.Message}");
+                return "";
+            }
+        }
+
         private async void OnMessageFriendClicked(object sender, EventArgs e)
         {
             if (sender is Button button && button.CommandParameter is FriendInfo friend)
             {
-                await DisplayAlert("Messaggio", $"Aprendo chat con {friend.Username}...", "OK");
-                // TODO: Implementare navigazione alla chat
-                // await Navigation.PushAsync(new ChatPage(friend));
+                try
+                {
+                    // Ottieni l'email dell'utente corrente
+                    string currentUserEmail = await GetCurrentUserEmailAsync();
+
+                    if (string.IsNullOrEmpty(currentUserEmail))
+                    {
+                        await DisplayAlert("Errore", "Impossibile identificare l'utente corrente", "OK");
+                        return;
+                    }
+
+                    // Crea un post fittizio per la chat diretta tra amici
+                    var directChatPost = new PostResponse
+                    {
+                        id = -1, // ID speciale per chat diretta
+                        titolo = $"Chat Diretta con {friend.Username}",
+                        autore_email = friend.Email,
+                        sport = "Chat",
+                        citta = "Chat Diretta",
+                        provincia = "",
+                        data_partita = DateTime.Now.ToString("dd/MM/yyyy"),
+                        ora_partita = DateTime.Now.ToString("HH:mm"),
+                        commento = "Chat privata tra amici"
+                    };
+
+                    // Apri la pagina di chat
+                    var chatPage = new ChatPage(
+                        directChatPost,
+                        currentUserEmail,
+                        friend.Email,
+                        false // Non è l'autore del post (è una chat diretta)
+                    );
+
+                    await Navigation.PushAsync(chatPage);
+
+                    Debug.WriteLine($"[FRIENDS CHAT] Apertura chat tra {currentUserEmail} e {friend.Email}");
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine($"[FRIENDS CHAT] Errore: {ex.Message}");
+                    await DisplayAlert("Errore", "Impossibile aprire la chat. Riprova più tardi.", "OK");
+                }
             }
         }
 
@@ -455,16 +528,10 @@ namespace trovagiocatoriApp.Views
                     $"Opzioni per {friend.Username}",
                     "Annulla",
                     null,
-                    "Visualizza profilo",
-                    "Rimuovi amicizia");
+                    "Rimuovi amicizia"); // RIMOSSO "Visualizza profilo"
 
                 switch (action)
                 {
-                    case "Visualizza profilo":
-                        await DisplayAlert("Profilo", $"Visualizzando profilo di {friend.Username}...", "OK");
-                        // TODO: Implementare navigazione al profilo
-                        break;
-
                     case "Rimuovi amicizia":
                         var confirm = await DisplayAlert(
                             "Rimuovi amicizia",
@@ -476,7 +543,6 @@ namespace trovagiocatoriApp.Views
                         {
                             try
                             {
-                                // IMPLEMENTATO: Chiamata API per rimuovere amicizia
                                 var request = new HttpRequestMessage(HttpMethod.Delete, $"{_apiBaseUrl}/friends/remove");
 
                                 if (Preferences.ContainsKey("session_id"))
@@ -511,6 +577,7 @@ namespace trovagiocatoriApp.Views
                 }
             }
         }
+
 
         // ========== GESTIONE RICHIESTE ==========
 

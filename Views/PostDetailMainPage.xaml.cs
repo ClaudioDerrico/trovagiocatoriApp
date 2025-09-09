@@ -241,15 +241,11 @@ namespace trovagiocatoriApp.Views
                 $"Opzioni Amico",
                 "Annulla",
                 null,
-                "💬 Chatta con l'Organizzatore",
-                "👤 Vedi Profilo",
-                "❌ Rimuovi amicizia" // Opzione per unfriend se implementata
+                "❌ Rimuovi amicizia"
             );
 
             switch (action)
             {
-               
-                   
                 case "❌ Rimuovi amicizia":
                     await RemoveFriend();
                     break;
@@ -263,9 +259,8 @@ namespace trovagiocatoriApp.Views
                 "Opzioni Utente",
                 "Annulla",
                 null,
-                "👥 Aggiungi come Amico",
-                "👤 Vedi Profilo",
-                "💬 Chatta (se partecipante)"
+                "👥 Aggiungi come Amico"
+            // Rimosse le opzioni "👤 Vedi Profilo" e "💬 Chatta (se partecipante)"
             );
 
             switch (action)
@@ -273,7 +268,6 @@ namespace trovagiocatoriApp.Views
                 case "👥 Aggiungi come Amico":
                     await SendFriendRequest();
                     break;
-               
             }
         }
 
@@ -631,10 +625,48 @@ namespace trovagiocatoriApp.Views
             return null;
         }
 
+        private string GetUserDisplayName(User user)
+        {
+            // Priorità: Nome Cognome > Nome > Username > Email
+            if (!string.IsNullOrWhiteSpace(user.Nome) && !string.IsNullOrWhiteSpace(user.Cognome))
+                return $"{user.Nome} {user.Cognome}";
+
+            if (!string.IsNullOrWhiteSpace(user.Nome))
+                return user.Nome;
+
+            if (!string.IsNullOrWhiteSpace(user.Username))
+                return user.Username;
+
+            if (!string.IsNullOrWhiteSpace(user.Email))
+                return user.Email.Split('@')[0]; // Prende la parte prima della @
+
+            return "Utente sconosciuto";
+        }
+
+        private string GetUsernameDisplay(User user)
+        {
+            // Priorità: @username > @parte_email > fallback
+            if (!string.IsNullOrWhiteSpace(user.Username))
+                return $"@{user.Username}";
+
+            // Se non ha username ma ha email, mostra @parte_email
+            if (!string.IsNullOrWhiteSpace(user.Email))
+                return $"@{user.Email.Split('@')[0]}";
+
+            // Fallback
+            return "@organizzatore";
+        }
+
+
+
         private void UpdateUI(PostResponse post, User user)
         {
-            // Dati utente
-            AutoreLabel.Text = $"{user.Username}";
+            // Dati utente - MIGLIORATO: Gestione nome utente
+            string displayName = GetUserDisplayName(user);
+            string usernameDisplay = GetUsernameDisplay(user);
+
+            AutoreLabel.Text = displayName;
+            AutoreUsernameLabel.Text = usernameDisplay;
 
             ProfileImage.Source = !string.IsNullOrEmpty(user.ProfilePic)
                 ? $"{_apiBaseUrl}/images/{user.ProfilePic}"
