@@ -1,4 +1,4 @@
-﻿// Views/InviteFriendsPage.xaml.cs - VERSIONE MODIFICATA
+﻿// Views/InviteFriendsPage.xaml.cs - VERSIONE AGGIORNATA CON FILTRAGGIO AUTOMATICO
 using System.Collections.ObjectModel;
 using System.Text.Json;
 using System.Text;
@@ -14,11 +14,11 @@ namespace trovagiocatoriApp.Views
     {
         private readonly int _postId;
         private readonly PostResponse _currentPost;
-        private readonly List<FriendInfo> _allFriends;
+        private readonly List<FriendInfo> _allFriends; // Mantenuto per fallback
         private static readonly HttpClient _sharedClient = CreateHttpClient();
         private readonly string _apiBaseUrl = ApiConfig.BaseUrl;
 
-        // MODIFICATO: Traccia gli amici SELEZIONATI per l'invito (non ancora inviati)
+        // Traccia gli amici SELEZIONATI per l'invito (non ancora inviati)
         private readonly HashSet<string> _selectedFriendEmails = new HashSet<string>();
         private int _selectedCount = 0;
 
@@ -32,17 +32,13 @@ namespace trovagiocatoriApp.Views
             _currentPost = currentPost;
             _allFriends = friends;
 
-            // Popola la collection
-            foreach (var friend in friends)
-            {
-                Friends.Add(friend);
-            }
-
             FriendsCollectionView.ItemsSource = Friends;
 
             // Inizializza UI
             UpdateEventInfo();
-            UpdateStatistics();
+
+            // NUOVO: Carica solo gli amici disponibili per l'invito
+            _ = LoadAvailableFriendsAsync();
         }
 
         private static HttpClient CreateHttpClient()
@@ -64,14 +60,122 @@ namespace trovagiocatoriApp.Views
 
         private void UpdateStatistics()
         {
-            TotalFriendsLabel.Text = _allFriends.Count.ToString();
+            var availableCount = Friends.Count; // Ora Friends contiene solo quelli disponibili
+            TotalFriendsLabel.Text = availableCount.ToString();
             InvitedCountLabel.Text = _selectedCount.ToString();
-            RemainingLabel.Text = (_allFriends.Count - _selectedCount).ToString();
+            RemainingLabel.Text = (availableCount - _selectedCount).ToString();
 
             // Aggiorna il pulsante di fine
             FinishButton.Text = _selectedCount > 0
                 ? $"✅ Invia {_selectedCount} Inviti"
                 : "✅ Termina Inviti";
+        }
+
+        // NUOVO: Carica solo gli amici disponibili per essere invitati
+        private async Task LoadAvailableFriendsAsync()
+        {
+            try
+            {
+                Debug.WriteLine($"[INVITE] Caricamento amici disponibili per post {_postId}...");
+
+                var request = new HttpRequestMessage(HttpMethod.Get, $"{_apiBaseUrl}/friends/available-for-invite?post_id={_postId}");
+
+                if (Preferences.ContainsKey("session_id"))
+                {
+                    string sessionId = Preferences.Get("session_id", "");
+                    request.Headers.Add("Cookie", $"session_id={sessionId}");
+                }
+
+                var response = await _sharedClient.SendAsync(request);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var json = await response.Content.ReadAsStringAsync();
+                    var result = JsonSerializer.Deserialize<Dictionary<string, object>>(json);
+
+                    if (result.ContainsKey("available_friends") && result["available_friends"] is JsonElement friendsElement)
+                    {
+                        Friends.Clear();
+
+                        foreach (var friendElement in friendsElement.EnumerateArray())
+                        {
+                            var friend = new FriendInfo
+                            {
+                                UserId = GetIntProperty(friendElement, "user_id"),
+                                Username = GetStringProperty(friendElement, "username"),
+                                FullName = $"{GetStringProperty(friendElement, "nome")} {GetStringProperty(friendElement, "cognome")}",
+                                Email = GetStringProperty(friendElement, "email"),
+                                ProfilePicture = GetStringProperty(friendElement, "profile_picture", "default_avatar.png"),
+                                FriendsSince = DateTime.Parse(GetStringProperty(friendElement, "friends_since"))
+                            };
+                            Friends.Add(friend);
+                        }
+
+                        Debug.WriteLine($"[INVITE] ✅ Caricati {Friends.Count} amici disponibili per l'invito");
+                    }
+                }
+                else
+                {
+                    Debug.WriteLine($"[INVITE] ⚠️ Errore nel caricamento amici disponibili: {response.StatusCode}");
+                    await UseFallbackFriendsList();
+                }
+
+                // Aggiorna le statistiche dopo aver caricato i dati
+                MainThread.BeginInvokeOnMainThread(() => UpdateStatistics());
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[INVITE] ❌ Eccezione durante caricamento amici disponibili: {ex.Message}");
+                await UseFallbackFriendsList();
+
+                MainThread.BeginInvokeOnMainThread(() => UpdateStatistics());
+            }
+        }
+
+        // Fallback: usa la lista originale se l'API fallisce
+        private async Task UseFallbackFriendsList()
+        {
+            await Task.Run(() =>
+            {
+                MainThread.BeginInvokeOnMainThread(() =>
+                {
+                    Friends.Clear();
+                    foreach (var friend in _allFriends)
+                    {
+                        Friends.Add(friend);
+                    }
+                    Debug.WriteLine($"[INVITE] 🔄 Usato fallback: {Friends.Count} amici dalla lista originale");
+                });
+            });
+        }
+
+        // Helper methods per parsing JSON
+        private string GetStringProperty(JsonElement element, string propertyName, string defaultValue = "")
+        {
+            try
+            {
+                return element.TryGetProperty(propertyName, out var prop) && prop.ValueKind != JsonValueKind.Null
+                    ? prop.GetString() ?? defaultValue
+                    : defaultValue;
+            }
+            catch
+            {
+                return defaultValue;
+            }
+        }
+
+        private int GetIntProperty(JsonElement element, string propertyName, int defaultValue = 0)
+        {
+            try
+            {
+                return element.TryGetProperty(propertyName, out var prop) && prop.ValueKind != JsonValueKind.Null
+                    ? prop.GetInt32()
+                    : defaultValue;
+            }
+            catch
+            {
+                return defaultValue;
+            }
         }
 
         // MODIFICATO: Ora il pulsante "Invita" seleziona/deseleziona l'amico

@@ -370,25 +370,16 @@ namespace trovagiocatoriApp.Views
         }
 
         // NUOVO: Invita amici all'evento - IMPLEMENTAZIONE COMPLETA
+        // NUOVO: Invita amici all'evento - IMPLEMENTAZIONE SEMPLIFICATA
         private async Task InviteFriendsToEvent()
         {
             try
             {
-                // 1. Carica la lista degli amici
-                var friends = await LoadFriendsListAsync();
+                // Non serve più caricare la lista degli amici qui, 
+                // la pagina InviteFriendsPage si occuperà di caricare solo quelli disponibili
 
-                if (friends == null || friends.Count == 0)
-                {
-                    await DisplayAlert(
-                        "Nessun Amico",
-                        "Non hai ancora amici da invitare. Aggiungi amici dalla sezione Amici!",
-                        "OK"
-                    );
-                    return;
-                }
-
-                // 2. Mostra la pagina di selezione amici
-                var inviteFriendsPage = new InviteFriendsPage(_postId, _currentPost, friends);
+                // Mostra direttamente la pagina di selezione amici
+                var inviteFriendsPage = new InviteFriendsPage(_postId, _currentPost, new List<FriendInfo>());
                 await Navigation.PushAsync(inviteFriendsPage);
 
                 Debug.WriteLine($"[INVITE] Apertura pagina inviti per evento {_postId}");
@@ -400,8 +391,8 @@ namespace trovagiocatoriApp.Views
             }
         }
 
-        
-       
+
+
         private async Task<List<FriendInfo>> LoadFriendsListAsync()
         {
             try

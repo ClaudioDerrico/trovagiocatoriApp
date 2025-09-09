@@ -244,22 +244,22 @@
 							</Frame>
 						</DataTemplate>
 					</CollectionView.ItemTemplate>
-					<CollectionView.EmptyView>
-						<VerticalStackLayout Spacing="16" HorizontalOptions="Center" Padding="32">
-							<Label Text="👥" FontSize="40" HorizontalOptions="Center" Opacity="0.5"/>
-							<Label Text="Nessun amico da invitare"
-                                   HorizontalOptions="Center"
-                                   FontSize="18"
-                                   FontAttributes="Bold"
-                                   TextColor="{StaticResource TextSecondary}"/>
-							<Label Text="Aggiungi amici per poterli invitare ai tuoi eventi!"
-                                   HorizontalOptions="Center"
-                                   FontSize="14"
-                                   TextColor="{StaticResource TextSecondary}"
-                                   HorizontalTextAlignment="Center"/>
-						</VerticalStackLayout>
-					</CollectionView.EmptyView>
-				</CollectionView>
+                    <CollectionView.EmptyView>
+                        <VerticalStackLayout Spacing="16" HorizontalOptions="Center" Padding="32">
+                            <Label Text="✅" FontSize="40" HorizontalOptions="Center" Opacity="0.5"/>
+                            <Label Text="Tutti gli amici sono già coinvolti!"
+                                       HorizontalOptions="Center"
+                                       FontSize="18"
+                                       FontAttributes="Bold"
+                                       TextColor="{StaticResource TextSecondary}"/>
+                            <Label Text="I tuoi amici sono già stati invitati o stanno già partecipando a questo evento."
+                                       HorizontalOptions="Center"
+                                       FontSize="14"
+                                       TextColor="{StaticResource TextSecondary}"
+                                       HorizontalTextAlignment="Center"/>
+                        </VerticalStackLayout>
+                    </CollectionView.EmptyView>
+                </CollectionView>
 			</VerticalStackLayout>
 		</ScrollView>
 
