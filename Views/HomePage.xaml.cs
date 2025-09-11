@@ -10,6 +10,7 @@ namespace trovagiocatoriApp.Views;
 public partial class HomePage : ContentPage
 {
     private readonly HttpClient _client = new HttpClient();
+    private bool _hasShownAdminWelcome = false; // NUOVO: Flag per evitare alert ripetuti
 
     public HomePage()
     {
@@ -32,8 +33,12 @@ public partial class HomePage : ContentPage
     {
         base.OnAppearing();
         await LoadNotificationsSummary();
-        await CheckAdminAccess(); 
 
+        // MODIFICATO: Controlla admin solo una volta per sessione
+        if (!_hasShownAdminWelcome)
+        {
+            await CheckAdminAccess();
+        }
     }
 
     // NUOVO: Carica il riassunto delle notifiche
@@ -146,7 +151,6 @@ public partial class HomePage : ContentPage
 
         try
         {
-            // USA NAVIGATION TRADIZIONALE
             await Navigation.PushAsync(new PostPage(province, sport));
             Debug.WriteLine($"[NAVIGATION] Navigazione a PostPage: {province}, {sport}");
         }
@@ -161,7 +165,6 @@ public partial class HomePage : ContentPage
     {
         try
         {
-            // USA NAVIGATION TRADIZIONALE
             await Navigation.PushAsync(new CreatePostPage());
             Debug.WriteLine("[NAVIGATION] Navigazione a CreatePostPage");
         }
@@ -221,7 +224,7 @@ public partial class HomePage : ContentPage
         await LoadNotificationsSummary();
     }
 
-
+    // MODIFICATO: Controllo admin con flag per evitare alert ripetuti
     private async Task CheckAdminAccess()
     {
         try
@@ -241,10 +244,14 @@ public partial class HomePage : ContentPage
                 var user = JsonSerializer.Deserialize<Models.User>(json,
                     new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
 
-                // Se è admin, mostra notifica o aggiungi pulsante admin
-                if (user.IsAdmin)
+                // MODIFICATO: Controlla se è admin E se non abbiamo già mostrato il welcome
+                if (user.IsAdmin && !_hasShownAdminWelcome)
                 {
-                    await ShowAdminButton();
+                    await ShowAdminWelcome();
+                    _hasShownAdminWelcome = true; // Imposta il flag per non mostrarlo più
+
+                    // NUOVO: Salva in Preferences per ricordare tra sessioni app
+                    Preferences.Set("admin_welcome_shown", true);
                 }
             }
         }
@@ -254,13 +261,31 @@ public partial class HomePage : ContentPage
         }
     }
 
-    // NUOVO METODO
-    private async Task ShowAdminButton()
+    // MODIFICATO: Nome più appropriato e messaggio migliorato
+    private async Task ShowAdminWelcome()
     {
         // Mostra una notifica che l'utente ha privilegi admin
-        await DisplayAlert("👑 Amministratore",
-            "Hai privilegi amministratore! Vai al tuo profilo per accedere al pannello admin.",
-            "OK");
+        await DisplayAlert("👑 Benvenuto Amministratore",
+            "Hai effettuato l'accesso come amministratore.\n\nPuoi accedere al pannello di gestione dal tuo profilo.",
+            "Capito");
+
+        Debug.WriteLine("[ADMIN] Welcome message mostrato");
+    }
+
+    // NUOVO: Metodo per resettare il flag (da chiamare al logout)
+    public static void ResetAdminWelcome()
+    {
+        Preferences.Remove("admin_welcome_shown");
+        Debug.WriteLine("[ADMIN] Flag welcome resettato");
+    }
+
+    // NUOVO: Override per controllare al costruttore se abbiamo già mostrato il welcome
+    protected override void OnNavigatedTo(NavigatedToEventArgs args)
+    {
+        base.OnNavigatedTo(args);
+
+        // Controlla se abbiamo già mostrato il welcome in una sessione precedente
+        _hasShownAdminWelcome = Preferences.Get("admin_welcome_shown", false);
     }
 
     //  Metodo per gestire il cleanup quando la pagina viene nascosta
@@ -269,7 +294,4 @@ public partial class HomePage : ContentPage
         base.OnDisappearing();
         // Eventuale cleanup se necessario
     }
-
-
-
 }

@@ -1,8 +1,8 @@
 ﻿using System.Text.Json;
 using System.Text;
-using Microsoft.Maui.Storage; // Per Preferences
-using System.Diagnostics;     // Per Debug
-using Microsoft.Maui.Devices;  // Per DeviceInfo
+using Microsoft.Maui.Storage;
+using System.Diagnostics;
+using Microsoft.Maui.Devices;
 
 namespace trovagiocatoriApp.Views
 {
@@ -13,8 +13,26 @@ namespace trovagiocatoriApp.Views
         public LoginPage()
         {
             InitializeComponent();
+
+            // NUOVO: Pulisci sessioni residue al caricamento della pagina di login
+            ClearPreviousSessions();
         }
 
+        // NUOVO: Pulisce sessioni precedenti e flag
+        private void ClearPreviousSessions()
+        {
+            try
+            {
+                // Pulisci tutte le preferences
+                Preferences.Clear();
+
+                Debug.WriteLine("[LOGIN] Sessioni precedenti pulite");
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[LOGIN] Errore pulizia sessioni: {ex.Message}");
+            }
+        }
 
         private void OnTogglePasswordVisibility(object sender, EventArgs e)
         {
@@ -26,25 +44,47 @@ namespace trovagiocatoriApp.Views
 
         private async void OnLoginClicked(object sender, EventArgs e)
         {
-            // Raccogli i dati del login
-            var loginData = new
+            // NUOVO: Disabilita il pulsante durante il login per evitare doppi click
+            var loginButton = sender as Button;
+            if (loginButton != null)
             {
-                email_or_username = EmailEntry.Text,
-                password = PasswordEntry.Text
-            };
-
-            string json = JsonSerializer.Serialize(loginData);
-            var content = new StringContent(json, Encoding.UTF8, "application/json");
-
-            var baseUrl = ApiConfig.BaseUrl;
+                loginButton.IsEnabled = false;
+                loginButton.Text = "Accesso in corso...";
+            }
 
             try
             {
-                using var client = new HttpClient(); //il postino che invia tramite la rete i dati al server    
+                // Raccogli i dati del login
+                var loginData = new
+                {
+                    email_or_username = EmailEntry.Text?.Trim(),
+                    password = PasswordEntry.Text
+                };
+
+                // Validazione input
+                if (string.IsNullOrEmpty(loginData.email_or_username) || string.IsNullOrEmpty(loginData.password))
+                {
+                    await DisplayAlert("Errore", "Inserisci email/username e password", "OK");
+                    return;
+                }
+
+                string json = JsonSerializer.Serialize(loginData);
+                var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+                var baseUrl = ApiConfig.BaseUrl;
+
+                using var client = new HttpClient();
+
+                //  Timeout più breve per evitare hang
+                client.Timeout = TimeSpan.FromSeconds(30);
+
                 var response = await client.PostAsync($"{baseUrl}/login", content);
 
                 if (response.IsSuccessStatusCode)
                 {
+                    //Pulisci sessioni precedenti prima di salvare la nuova
+                    Preferences.Clear();
+
                     // Salva il cookie di sessione
                     if (response.Headers.TryGetValues("Set-Cookie", out var cookies))
                     {
@@ -53,24 +93,55 @@ namespace trovagiocatoriApp.Views
                         {
                             var sessionId = sessionCookie.Split(';')[0].Split('=')[1];
                             Preferences.Set("session_id", sessionId);
-                            Debug.WriteLine($"Session id salvata: {sessionId}");
+
+                            // NUOVO: Salva timestamp login per debug
+                            Preferences.Set("login_timestamp", DateTime.Now.ToString());
+
+                            Debug.WriteLine($"[LOGIN] ✅ Session salvata: {sessionId}");
                         }
                     }
 
                     await DisplayAlert("Login", "Login eseguito con successo!", "OK");
-                    Application.Current.MainPage = new AppShell();
+
+                    // NUOVO: Naviga con MainThread per evitare problemi
+                    MainThread.BeginInvokeOnMainThread(() =>
+                    {
+                        Application.Current.MainPage = new AppShell();
+                    });
                 }
                 else
                 {
                     var errorMsg = await response.Content.ReadAsStringAsync();
+                    Debug.WriteLine($"[LOGIN] Errore login: {response.StatusCode} - {errorMsg}");
                     await DisplayAlert("Errore Login", errorMsg, "OK");
                 }
             }
+            catch (HttpRequestException httpEx)
+            {
+                Debug.WriteLine($"[LOGIN] Errore HTTP: {httpEx}");
+                await DisplayAlert("Errore di connessione",
+                    "Impossibile raggiungere il server. Controlla la connessione di rete.", "OK");
+            }
+            catch (TaskCanceledException timeoutEx)
+            {
+                Debug.WriteLine($"[LOGIN] Timeout: {timeoutEx}");
+                await DisplayAlert("Timeout",
+                    "Il server non risponde. Riprova tra qualche momento.", "OK");
+            }
             catch (Exception ex)
             {
-                Debug.WriteLine($"Errore HTTP: {ex}");
-                await DisplayAlert("Errore di connessione",
-                    "Impossibile raggiungere il server. Controlla le impostazioni di rete.", "OK");
+                Debug.WriteLine($"[LOGIN] Errore generico: {ex}");
+                await DisplayAlert("Errore",
+                    "Si è verificato un errore imprevisto. Riprova.", "OK");
+            }
+            finally
+            {
+                // NUOVO: Riabilita sempre il pulsante
+                if (loginButton != null)
+                {
+                    loginButton.IsEnabled = true;
+                    loginButton.Text = "ACCEDI";
+                }
             }
         }
 
