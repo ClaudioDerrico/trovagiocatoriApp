@@ -5,85 +5,446 @@
              Title="Pannello Amministratore"
              BackgroundColor="#F8FAFC">
 
-	<Grid RowDefinitions="Auto,*">
-		<!-- Header -->
-		<Frame Grid.Row="0" BackgroundColor="#DC2626" Padding="20">
-			<Label Text="🔧 PANNELLO AMMINISTRATORE"
-                   FontSize="20"
-                   FontAttributes="Bold"
-                   TextColor="White"
-                   HorizontalOptions="Center"/>
-		</Frame>
+    <ContentPage.Resources>
+        <ResourceDictionary>
+            <!-- Colori -->
+            <Color x:Key="PrimaryColor">#DC2626</Color>
+            <Color x:Key="SecondaryColor">#6366F1</Color>
+            <Color x:Key="SuccessColor">#10B981</Color>
+            <Color x:Key="WarningColor">#F59E0B</Color>
+            <Color x:Key="ErrorColor">#EF4444</Color>
+            <Color x:Key="BackgroundColor">#F8FAFC</Color>
+            <Color x:Key="CardColor">#FFFFFF</Color>
+            <Color x:Key="TextPrimary">#1E293B</Color>
+            <Color x:Key="TextSecondary">#64748B</Color>
+            <Color x:Key="BorderColor">#E2E8F0</Color>
 
-		<!-- Content -->
-		<ScrollView Grid.Row="1" Padding="16">
-			<VerticalStackLayout Spacing="20">
+            <!-- Stili Tab -->
+            <Style x:Key="TabButtonStyle" TargetType="Button">
+                <Setter Property="BackgroundColor" Value="Transparent"/>
+                <Setter Property="TextColor" Value="{StaticResource TextSecondary}"/>
+                <Setter Property="FontFamily" Value="OpenSansSemiBold"/>
+                <Setter Property="FontSize" Value="13"/>
+                <Setter Property="BorderWidth" Value="0"/>
+                <Setter Property="CornerRadius" Value="0"/>
+                <Setter Property="HeightRequest" Value="48"/>
+                <Setter Property="Padding" Value="12,0"/>
+            </Style>
 
-				<!-- Statistiche -->
-				<Frame BackgroundColor="White" CornerRadius="12" Padding="20" HasShadow="True">
-					<VerticalStackLayout Spacing="15">
-						<Label Text="📊 Statistiche Sistema" FontSize="18" FontAttributes="Bold"/>
-						<Grid ColumnDefinitions="*,*,*" ColumnSpacing="10">
-							<VerticalStackLayout Grid.Column="0" HorizontalOptions="Center">
-								<Label x:Name="TotalPostsLabel" Text="0" FontSize="24" FontAttributes="Bold" TextColor="#2196F3"/>
-								<Label Text="Post Totali" FontSize="12"/>
-							</VerticalStackLayout>
-							<VerticalStackLayout Grid.Column="1" HorizontalOptions="Center">
-								<Label x:Name="TotalCommentsLabel" Text="0" FontSize="24" FontAttributes="Bold" TextColor="#4CAF50"/>
-								<Label Text="Commenti" FontSize="12"/>
-							</VerticalStackLayout>
-							<VerticalStackLayout Grid.Column="2" HorizontalOptions="Center">
-								<Label x:Name="TotalFieldsLabel" Text="0" FontSize="24" FontAttributes="Bold" TextColor="#FF9800"/>
-								<Label Text="Campi" FontSize="12"/>
-							</VerticalStackLayout>
-						</Grid>
-						<Button Text="🔄 Aggiorna Statistiche"
-                                BackgroundColor="#6366F1"
-                                TextColor="White"
-                                Clicked="OnRefreshStatsClicked"/>
-					</VerticalStackLayout>
-				</Frame>
+            <Style x:Key="ActiveTabButtonStyle" TargetType="Button" BasedOn="{StaticResource TabButtonStyle}">
+                <Setter Property="TextColor" Value="{StaticResource PrimaryColor}"/>
+                <Setter Property="FontAttributes" Value="Bold"/>
+            </Style>
 
-				<!-- Test Funzioni Admin -->
-				<Frame BackgroundColor="White" CornerRadius="12" Padding="20" HasShadow="True">
-					<VerticalStackLayout Spacing="15">
-						<Label Text="🧪 Test Funzioni Admin" FontSize="18" FontAttributes="Bold"/>
+            <!-- Stili Card -->
+            <Style x:Key="AdminCardStyle" TargetType="Frame">
+                <Setter Property="BackgroundColor" Value="{StaticResource CardColor}"/>
+                <Setter Property="CornerRadius" Value="12"/>
+                <Setter Property="HasShadow" Value="True"/>
+                <Setter Property="BorderColor" Value="Transparent"/>
+                <Setter Property="Padding" Value="16"/>
+                <Setter Property="Margin" Value="8"/>
+            </Style>
 
-						<!-- Elimina Post -->
-						<VerticalStackLayout Spacing="10">
-							<Label Text="Elimina Post per ID:" FontSize="14" FontAttributes="Bold"/>
-							<Entry x:Name="PostIdEntry" Placeholder="Inserisci ID post" Keyboard="Numeric"/>
-							<Button Text="🗑️ Elimina Post"
-                                    BackgroundColor="#DC2626"
-                                    TextColor="White"
-                                    Clicked="OnDeletePostClicked"/>
-						</VerticalStackLayout>
+            <!-- Stili Pulsanti -->
+            <Style x:Key="DeleteButtonStyle" TargetType="Button">
+                <Setter Property="BackgroundColor" Value="{StaticResource ErrorColor}"/>
+                <Setter Property="TextColor" Value="White"/>
+                <Setter Property="FontSize" Value="12"/>
+                <Setter Property="CornerRadius" Value="6"/>
+                <Setter Property="HeightRequest" Value="32"/>
+                <Setter Property="Padding" Value="12,4"/>
+            </Style>
 
-						<!-- Elimina Commento -->
-						<VerticalStackLayout Spacing="10">
-							<Label Text="Elimina Commento per ID:" FontSize="14" FontAttributes="Bold"/>
-							<Entry x:Name="CommentIdEntry" Placeholder="Inserisci ID commento" Keyboard="Numeric"/>
-							<Button Text="🗑️ Elimina Commento"
-                                    BackgroundColor="#DC2626"
-                                    TextColor="White"
-                                    Clicked="OnDeleteCommentClicked"/>
-						</VerticalStackLayout>
-					</VerticalStackLayout>
-				</Frame>
+            <Style x:Key="ActionButtonStyle" TargetType="Button">
+                <Setter Property="BackgroundColor" Value="{StaticResource SecondaryColor}"/>
+                <Setter Property="TextColor" Value="White"/>
+                <Setter Property="FontSize" Value="12"/>
+                <Setter Property="CornerRadius" Value="6"/>
+                <Setter Property="HeightRequest" Value="32"/>
+                <Setter Property="Padding" Value="12,4"/>
+            </Style>
+        </ResourceDictionary>
+    </ContentPage.Resources>
 
-				<!-- Informazioni Account -->
-				<Frame BackgroundColor="White" CornerRadius="12" Padding="20" HasShadow="True">
-					<VerticalStackLayout Spacing="10">
-						<Label Text="👤 Informazioni Account" FontSize="18" FontAttributes="Bold"/>
-						<Label x:Name="AdminInfoLabel" Text="Loading..." FontSize="14"/>
-						<Label Text="⚠️ Usa i privilegi amministratore responsabilmente"
-                               FontSize="12"
-                               TextColor="#DC2626"
-                               FontAttributes="Italic"/>
-					</VerticalStackLayout>
-				</Frame>
+    <Grid RowDefinitions="Auto,Auto,Auto,*" BackgroundColor="{StaticResource BackgroundColor}">
 
-			</VerticalStackLayout>
-		</ScrollView>
-	</Grid>
+        <!-- Header -->
+        <Frame Grid.Row="0" BackgroundColor="{StaticResource PrimaryColor}" CornerRadius="0" Padding="20" HasShadow="True">
+            <VerticalStackLayout Spacing="8">
+                <Label Text="🔧 PANNELLO AMMINISTRATORE"
+                       FontSize="20"
+                       FontAttributes="Bold"
+                       TextColor="White"
+                       HorizontalOptions="Center"/>
+                <Label x:Name="AdminInfoLabel" 
+                       Text="Caricamento..."
+                       FontSize="14"
+                       TextColor="White"
+                       Opacity="0.9"
+                       HorizontalOptions="Center"/>
+            </VerticalStackLayout>
+        </Frame>
+
+        <!-- Statistiche Dashboard -->
+        <Frame Grid.Row="1" Style="{StaticResource AdminCardStyle}" Margin="16,8">
+            <Grid ColumnDefinitions="*,*,*,*" ColumnSpacing="8">
+                <VerticalStackLayout Grid.Column="0" Spacing="4" HorizontalOptions="Center">
+                    <Label x:Name="TotalPostsLabel" Text="0" FontSize="20" FontAttributes="Bold" TextColor="{StaticResource SecondaryColor}" HorizontalOptions="Center"/>
+                    <Label Text="Post" FontSize="12" TextColor="{StaticResource TextSecondary}" HorizontalOptions="Center"/>
+                </VerticalStackLayout>
+                <VerticalStackLayout Grid.Column="1" Spacing="4" HorizontalOptions="Center">
+                    <Label x:Name="TotalCommentsLabel" Text="0" FontSize="20" FontAttributes="Bold" TextColor="{StaticResource SuccessColor}" HorizontalOptions="Center"/>
+                    <Label Text="Commenti" FontSize="12" TextColor="{StaticResource TextSecondary}" HorizontalOptions="Center"/>
+                </VerticalStackLayout>
+                <VerticalStackLayout Grid.Column="2" Spacing="4" HorizontalOptions="Center">
+                    <Label x:Name="TotalUsersLabel" Text="0" FontSize="20" FontAttributes="Bold" TextColor="{StaticResource WarningColor}" HorizontalOptions="Center"/>
+                    <Label Text="Utenti" FontSize="12" TextColor="{StaticResource TextSecondary}" HorizontalOptions="Center"/>
+                </VerticalStackLayout>
+                <VerticalStackLayout Grid.Column="3" Spacing="4" HorizontalOptions="Center">
+                    <Label x:Name="TotalFieldsLabel" Text="0" FontSize="20" FontAttributes="Bold" TextColor="{StaticResource PrimaryColor}" HorizontalOptions="Center"/>
+                    <Label Text="Campi" FontSize="12" TextColor="{StaticResource TextSecondary}" HorizontalOptions="Center"/>
+                </VerticalStackLayout>
+            </Grid>
+        </Frame>
+
+        <!-- Tab Navigation -->
+        <Frame Grid.Row="2" BackgroundColor="White" CornerRadius="0" HasShadow="True" Padding="0" Margin="0">
+            <Grid ColumnDefinitions="*,*,*,*">
+                <Button Grid.Column="0"
+                        x:Name="DashboardTabButton"
+                        Text="📊 Dashboard"
+                        Style="{StaticResource ActiveTabButtonStyle}"
+                        Clicked="OnDashboardTabClicked"/>
+                <Button Grid.Column="1"
+                        x:Name="PostsTabButton"
+                        Text="📝 Post"
+                        Style="{StaticResource TabButtonStyle}"
+                        Clicked="OnPostsTabClicked"/>
+                <Button Grid.Column="2"
+                        x:Name="CommentsTabButton"
+                        Text="💬 Commenti"
+                        Style="{StaticResource TabButtonStyle}"
+                        Clicked="OnCommentsTabClicked"/>
+                <Button Grid.Column="3"
+                        x:Name="UsersTabButton"
+                        Text="👥 Utenti"
+                        Style="{StaticResource TabButtonStyle}"
+                        Clicked="OnUsersTabClicked"/>
+
+                <!-- Indicator line -->
+                <BoxView Grid.Column="0"
+                         x:Name="TabIndicator"
+                         HeightRequest="3"
+                         BackgroundColor="{StaticResource PrimaryColor}"
+                         VerticalOptions="End"
+                         HorizontalOptions="FillAndExpand"/>
+            </Grid>
+        </Frame>
+
+        <!-- Content Area -->
+        <ScrollView Grid.Row="3">
+            <Grid>
+                <!-- Dashboard Content -->
+                <VerticalStackLayout x:Name="DashboardContent" IsVisible="True" Spacing="16" Padding="16">
+                    <Frame Style="{StaticResource AdminCardStyle}">
+                        <VerticalStackLayout Spacing="16">
+                            <HorizontalStackLayout Spacing="12" HorizontalOptions="Center">
+                                <Label Text="🎯 Centro di Controllo" FontSize="18" FontAttributes="Bold" TextColor="{StaticResource TextPrimary}" VerticalOptions="Center"/>
+                                <Button Text="🔄 Aggiorna"
+                                        Style="{StaticResource ActionButtonStyle}"
+                                        Clicked="OnRefreshStatsClicked"/>
+                            </HorizontalStackLayout>
+
+                            <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto" ColumnSpacing="12" RowSpacing="12">
+                                <Button Grid.Row="0" Grid.Column="0"
+                                        Text="📝 Gestisci Post"
+                                        BackgroundColor="{StaticResource SecondaryColor}"
+                                        TextColor="White"
+                                        CornerRadius="8"
+                                        HeightRequest="50"
+                                        Clicked="OnPostsTabClicked"/>
+                                <Button Grid.Row="0" Grid.Column="1"
+                                        Text="💬 Gestisci Commenti"
+                                        BackgroundColor="{StaticResource SuccessColor}"
+                                        TextColor="White"
+                                        CornerRadius="8"
+                                        HeightRequest="50"
+                                        Clicked="OnCommentsTabClicked"/>
+                                <Button Grid.Row="1" Grid.Column="0"
+                                        Text="👥 Gestisci Utenti"
+                                        BackgroundColor="{StaticResource WarningColor}"
+                                        TextColor="White"
+                                        CornerRadius="8"
+                                        HeightRequest="50"
+                                        Clicked="OnUsersTabClicked"/>
+                                <Button Grid.Row="1" Grid.Column="1"
+                                        Text="📊 Statistiche"
+                                        BackgroundColor="{StaticResource PrimaryColor}"
+                                        TextColor="White"
+                                        CornerRadius="8"
+                                        HeightRequest="50"
+                                        Clicked="OnRefreshStatsClicked"/>
+                            </Grid>
+
+                            <Frame BackgroundColor="#FEF3C7" BorderColor="{StaticResource WarningColor}" CornerRadius="8" Padding="12" HasShadow="False">
+                                <HorizontalStackLayout Spacing="8">
+                                    <Label Text="⚠️" FontSize="16" VerticalOptions="Center"/>
+                                    <Label Text="Utilizza le schede sopra per gestire i contenuti della piattaforma. Tutte le azioni sono registrate e reversibili tramite backup."
+                                           FontSize="13"
+                                           TextColor="#92400E"
+                                           LineBreakMode="WordWrap"
+                                           VerticalOptions="Center"
+                                           HorizontalOptions="StartAndExpand"/>
+                                </HorizontalStackLayout>
+                            </Frame>
+                        </VerticalStackLayout>
+                    </Frame>
+                </VerticalStackLayout>
+
+                <!-- Posts Content -->
+                <VerticalStackLayout x:Name="PostsContent" IsVisible="False" Spacing="12" Padding="16">
+                    <!-- Search Bar -->
+                    <Frame Style="{StaticResource AdminCardStyle}">
+                        <VerticalStackLayout Spacing="12">
+                            <Label Text="🔍 Cerca Post" FontAttributes="Bold" FontSize="16" TextColor="{StaticResource TextPrimary}"/>
+                            <Entry x:Name="PostSearchEntry"
+                                   Placeholder="Cerca per titolo, autore, sport, città..."
+                                   BackgroundColor="#F1F5F9"
+                                   TextChanged="OnPostSearchTextChanged"/>
+                        </VerticalStackLayout>
+                    </Frame>
+
+                    <!-- Posts List -->
+                    <CollectionView x:Name="PostsCollectionView">
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate>
+                                <Frame Style="{StaticResource AdminCardStyle}" Margin="0,4">
+                                    <Grid RowDefinitions="Auto,Auto,Auto,Auto" RowSpacing="8">
+                                        <!-- Header -->
+                                        <Grid Grid.Row="0" ColumnDefinitions="*,Auto,Auto">
+                                            <Label Grid.Column="0" Text="{Binding Titolo}" FontAttributes="Bold" FontSize="16" TextColor="{StaticResource TextPrimary}" LineBreakMode="TailTruncation"/>
+                                            <Frame Grid.Column="1" BackgroundColor="{Binding StatusColor}" CornerRadius="6" Padding="6,2" HasShadow="False" VerticalOptions="Center">
+                                                <Label Text="{Binding Status}" TextColor="White" FontSize="10" FontAttributes="Bold"/>
+                                            </Frame>
+                                            <Label Grid.Column="2" Text="{Binding Id, StringFormat='ID: {0}'}" FontSize="12" TextColor="{StaticResource TextSecondary}" VerticalOptions="Center"/>
+                                        </Grid>
+
+                                        <!-- Info -->
+                                        <Grid Grid.Row="1" ColumnDefinitions="*,*,*" ColumnSpacing="12">
+                                            <HorizontalStackLayout Grid.Column="0" Spacing="4">
+                                                <Label Text="👤" FontSize="12"/>
+                                                <Label Text="{Binding AutoreEmail}" FontSize="12" TextColor="{StaticResource TextSecondary}" LineBreakMode="TailTruncation"/>
+                                            </HorizontalStackLayout>
+                                            <HorizontalStackLayout Grid.Column="1" Spacing="4">
+                                                <Label Text="⚽" FontSize="12"/>
+                                                <Label Text="{Binding Sport}" FontSize="12" TextColor="{StaticResource TextSecondary}"/>
+                                            </HorizontalStackLayout>
+                                            <HorizontalStackLayout Grid.Column="2" Spacing="4">
+                                                <Label Text="📍" FontSize="12"/>
+                                                <Label Text="{Binding Citta}" FontSize="12" TextColor="{StaticResource TextSecondary}"/>
+                                            </HorizontalStackLayout>
+                                        </Grid>
+
+                                        <!-- Dates & Stats -->
+                                        <Grid Grid.Row="2" ColumnDefinitions="*,*,*" ColumnSpacing="12">
+                                            <HorizontalStackLayout Grid.Column="0" Spacing="4">
+                                                <Label Text="📅" FontSize="11"/>
+                                                <Label Text="{Binding DataCreazioneFormatted}" FontSize="11" TextColor="{StaticResource TextSecondary}"/>
+                                            </HorizontalStackLayout>
+                                            <HorizontalStackLayout Grid.Column="1" Spacing="4">
+                                                <Label Text="🎯" FontSize="11"/>
+                                                <Label Text="{Binding DataPartitaFormatted}" FontSize="11" TextColor="{StaticResource TextSecondary}"/>
+                                            </HorizontalStackLayout>
+                                            <HorizontalStackLayout Grid.Column="2" Spacing="4">
+                                                <Label Text="👥" FontSize="11"/>
+                                                <Label Text="{Binding PartecipantiIscritti, StringFormat='{0} iscritti'}" FontSize="11" TextColor="{StaticResource TextSecondary}"/>
+                                                <Label Text="{Binding PostiLiberi, StringFormat='({0} liberi)'}" FontSize="11" TextColor="{StaticResource SuccessColor}"/>
+                                            </HorizontalStackLayout>
+                                        </Grid>
+
+                                        <!-- Actions -->
+                                        <Grid Grid.Row="3" ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8">
+                                            <Label Grid.Column="0" Text="⚠️ Le eliminazioni sono permanenti" FontSize="10" TextColor="{StaticResource ErrorColor}" VerticalOptions="Center"/>
+                                            <Button Grid.Column="1"
+                                                    Text="👀 Dettagli"
+                                                    Style="{StaticResource ActionButtonStyle}"
+                                                    CommandParameter="{Binding .}"
+                                                    Clicked="OnViewPostDetailsClicked"/>
+                                            <Button Grid.Column="2"
+                                                    Text="🗑️ Elimina"
+                                                    Style="{StaticResource DeleteButtonStyle}"
+                                                    CommandParameter="{Binding .}"
+                                                    Clicked="OnDeletePostClicked"/>
+                                        </Grid>
+                                    </Grid>
+                                </Frame>
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                        <CollectionView.EmptyView>
+                            <VerticalStackLayout Spacing="12" HorizontalOptions="Center" Padding="32">
+                                <Label Text="📝" FontSize="48" HorizontalOptions="Center" Opacity="0.5"/>
+                                <Label Text="Nessun post trovato" HorizontalOptions="Center" FontSize="16" TextColor="{StaticResource TextSecondary}"/>
+                                <Label Text="Prova a modificare i filtri di ricerca" HorizontalOptions="Center" FontSize="14" TextColor="{StaticResource TextSecondary}"/>
+                            </VerticalStackLayout>
+                        </CollectionView.EmptyView>
+                    </CollectionView>
+                </VerticalStackLayout>
+
+                <!-- Comments Content -->
+                <VerticalStackLayout x:Name="CommentsContent" IsVisible="False" Spacing="12" Padding="16">
+                    <!-- Search Bar -->
+                    <Frame Style="{StaticResource AdminCardStyle}">
+                        <VerticalStackLayout Spacing="12">
+                            <Label Text="🔍 Cerca Commenti" FontAttributes="Bold" FontSize="16" TextColor="{StaticResource TextPrimary}"/>
+                            <Entry x:Name="CommentSearchEntry"
+                                   Placeholder="Cerca per contenuto, autore, post..."
+                                   BackgroundColor="#F1F5F9"
+                                   TextChanged="OnCommentSearchTextChanged"/>
+                        </VerticalStackLayout>
+                    </Frame>
+
+                    <!-- Comments List -->
+                    <CollectionView x:Name="CommentsCollectionView">
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate>
+                                <Frame Style="{StaticResource AdminCardStyle}" Margin="0,4">
+                                    <Grid RowDefinitions="Auto,Auto,Auto,Auto" RowSpacing="8">
+                                        <!-- Header -->
+                                        <Grid Grid.Row="0" ColumnDefinitions="*,Auto">
+                                            <Label Grid.Column="0" Text="{Binding AutoreEmail}" FontAttributes="Bold" FontSize="14" TextColor="{StaticResource TextPrimary}"/>
+                                            <Label Grid.Column="1" Text="{Binding Id, StringFormat='ID: {0}'}" FontSize="12" TextColor="{StaticResource TextSecondary}"/>
+                                        </Grid>
+
+                                        <!-- Content -->
+                                        <Frame Grid.Row="1" BackgroundColor="#F8FAFC" CornerRadius="8" Padding="12" HasShadow="False">
+                                            <Label Text="{Binding ContenutoPreview}" FontSize="13" TextColor="{StaticResource TextPrimary}" LineBreakMode="WordWrap"/>
+                                        </Frame>
+
+                                        <!-- Post Info -->
+                                        <Grid Grid.Row="2" ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                                            <HorizontalStackLayout Grid.Column="0" Spacing="6">
+                                                <Label Text="📝" FontSize="12"/>
+                                                <Label Text="Post:" FontSize="12" TextColor="{StaticResource TextSecondary}"/>
+                                                <Label Text="{Binding PostTitolo}" FontSize="12" TextColor="{StaticResource SecondaryColor}" FontAttributes="Bold" LineBreakMode="TailTruncation"/>
+                                            </HorizontalStackLayout>
+                                            <Label Grid.Column="1" Text="{Binding DataCreazioneFormatted}" FontSize="11" TextColor="{StaticResource TextSecondary}"/>
+                                        </Grid>
+
+                                        <!-- Actions -->
+                                        <Grid Grid.Row="3" ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                                            <Label Grid.Column="0" Text="⚠️ Le eliminazioni sono permanenti" FontSize="10" TextColor="{StaticResource ErrorColor}" VerticalOptions="Center"/>
+                                            <Button Grid.Column="1"
+                                                    Text="🗑️ Elimina Commento"
+                                                    Style="{StaticResource DeleteButtonStyle}"
+                                                    CommandParameter="{Binding .}"
+                                                    Clicked="OnDeleteCommentClicked"/>
+                                        </Grid>
+                                    </Grid>
+                                </Frame>
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                        <CollectionView.EmptyView>
+                            <VerticalStackLayout Spacing="12" HorizontalOptions="Center" Padding="32">
+                                <Label Text="💬" FontSize="48" HorizontalOptions="Center" Opacity="0.5"/>
+                                <Label Text="Nessun commento trovato" HorizontalOptions="Center" FontSize="16" TextColor="{StaticResource TextSecondary}"/>
+                                <Label Text="Prova a modificare i filtri di ricerca" HorizontalOptions="Center" FontSize="14" TextColor="{StaticResource TextSecondary}"/>
+                            </VerticalStackLayout>
+                        </CollectionView.EmptyView>
+                    </CollectionView>
+                </VerticalStackLayout>
+
+                <!-- Users Content -->
+                <VerticalStackLayout x:Name="UsersContent" IsVisible="False" Spacing="12" Padding="16">
+                    <!-- Search Bar -->
+                    <Frame Style="{StaticResource AdminCardStyle}">
+                        <VerticalStackLayout Spacing="12">
+                            <Label Text="🔍 Cerca Utenti" FontAttributes="Bold" FontSize="16" TextColor="{StaticResource TextPrimary}"/>
+                            <Entry x:Name="UserSearchEntry"
+                                   Placeholder="Cerca per username, email, nome..."
+                                   BackgroundColor="#F1F5F9"
+                                   TextChanged="OnUserSearchTextChanged"/>
+                        </VerticalStackLayout>
+                    </Frame>
+
+                    <!-- Users List -->
+                    <CollectionView x:Name="UsersCollectionView">
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate>
+                                <Frame Style="{StaticResource AdminCardStyle}" Margin="0,4">
+                                    <Grid RowDefinitions="Auto,Auto,Auto,Auto" RowSpacing="8">
+                                        <!-- Header -->
+                                        <Grid Grid.Row="0" ColumnDefinitions="*,Auto,Auto,Auto">
+                                            <Label Grid.Column="0" Text="{Binding Username}" FontAttributes="Bold" FontSize="16" TextColor="{StaticResource TextPrimary}"/>
+                                            <Label Grid.Column="1" Text="{Binding AdminBadge}" FontSize="10" FontAttributes="Bold" TextColor="{StaticResource WarningColor}" VerticalOptions="Center"/>
+                                            <Frame Grid.Column="2" BackgroundColor="{Binding StatusColor}" CornerRadius="6" Padding="6,2" HasShadow="False" VerticalOptions="Center">
+                                                <Label Text="{Binding StatusText}" TextColor="White" FontSize="10" FontAttributes="Bold"/>
+                                            </Frame>
+                                            <Label Grid.Column="3" Text="{Binding Id, StringFormat='ID: {0}'}" FontSize="12" TextColor="{StaticResource TextSecondary}" VerticalOptions="Center"/>
+                                        </Grid>
+
+                                        <!-- User Info -->
+                                        <Grid Grid.Row="1" ColumnDefinitions="*,*" ColumnSpacing="12">
+                                            <HorizontalStackLayout Grid.Column="0" Spacing="4">
+                                                <Label Text="👤" FontSize="12"/>
+                                                <Label Text="{Binding NomeCompleto}" FontSize="12" TextColor="{StaticResource TextSecondary}"/>
+                                            </HorizontalStackLayout>
+                                            <HorizontalStackLayout Grid.Column="1" Spacing="4">
+                                                <Label Text="📧" FontSize="12"/>
+                                                <Label Text="{Binding Email}" FontSize="12" TextColor="{StaticResource TextSecondary}" LineBreakMode="TailTruncation"/>
+                                            </HorizontalStackLayout>
+                                        </Grid>
+
+                                        <!-- Activity -->
+                                        <Grid Grid.Row="2" ColumnDefinitions="*,*" ColumnSpacing="12">
+                                            <HorizontalStackLayout Grid.Column="0" Spacing="4">
+                                                <Label Text="📅" FontSize="11"/>
+                                                <Label Text="{Binding DataRegistrazioneFormatted}" FontSize="11" TextColor="{StaticResource TextSecondary}"/>
+                                            </HorizontalStackLayout>
+                                            <HorizontalStackLayout Grid.Column="1" Spacing="4">
+                                                <Label Text="📊" FontSize="11"/>
+                                                <Label Text="{Binding AttivitaText}" FontSize="11" TextColor="{StaticResource TextSecondary}"/>
+                                            </HorizontalStackLayout>
+                                        </Grid>
+
+                                        <!-- Actions -->
+                                        <Grid Grid.Row="3" ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8">
+                                            <Label Grid.Column="0" Text="⚠️ Disattivare un utente impedirà l'accesso" FontSize="10" TextColor="{StaticResource WarningColor}" VerticalOptions="Center"/>
+                                            <Button Grid.Column="1"
+                                                    Text="📝 Vedi Post"
+                                                    Style="{StaticResource ActionButtonStyle}"
+                                                    CommandParameter="{Binding .}"
+                                                    Clicked="OnViewUserPostsClicked"/>
+                                            <Button Grid.Column="2"
+                                                    Style="{StaticResource DeleteButtonStyle}"
+                                                    CommandParameter="{Binding .}"
+                                                    Clicked="OnToggleUserStatusClicked">
+                                                <Button.Triggers>
+                                                    <DataTrigger TargetType="Button" Binding="{Binding IsActive}" Value="True">
+                                                        <Setter Property="Text" Value="🚫 Disattiva"/>
+                                                        <Setter Property="BackgroundColor" Value="{StaticResource WarningColor}"/>
+                                                    </DataTrigger>
+                                                    <DataTrigger TargetType="Button" Binding="{Binding IsActive}" Value="False">
+                                                        <Setter Property="Text" Value="✅ Riattiva"/>
+                                                        <Setter Property="BackgroundColor" Value="{StaticResource SuccessColor}"/>
+                                                    </DataTrigger>
+                                                </Button.Triggers>
+                                            </Button>
+                                        </Grid>
+                                    </Grid>
+                                </Frame>
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                        <CollectionView.EmptyView>
+                            <VerticalStackLayout Spacing="12" HorizontalOptions="Center" Padding="32">
+                                <Label Text="👥" FontSize="48" HorizontalOptions="Center" Opacity="0.5"/>
+                                <Label Text="Nessun utente trovato" HorizontalOptions="Center" FontSize="16" TextColor="{StaticResource TextSecondary}"/>
+                                <Label Text="Prova a modificare i filtri di ricerca" HorizontalOptions="Center" FontSize="14" TextColor="{StaticResource TextSecondary}"/>
+                            </VerticalStackLayout>
+                        </CollectionView.EmptyView>
+                    </CollectionView>
+                </VerticalStackLayout>
+            </Grid>
+        </ScrollView>
+    </Grid>
 </ContentPage>
