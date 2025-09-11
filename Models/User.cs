@@ -11,5 +11,6 @@ public class User
     public string Email { get; set; }
     [JsonPropertyName("profile_picture")]
     public string ProfilePic { get; set; }
-   
+    [JsonPropertyName("is_admin")]
+    public bool IsAdmin { get; set; }
 }

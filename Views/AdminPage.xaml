@@ -1,0 +1,89 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="trovagiocatoriApp.Views.AdminPage"
+             Title="Pannello Amministratore"
+             BackgroundColor="#F8FAFC">
+
+	<Grid RowDefinitions="Auto,*">
+		<!-- Header -->
+		<Frame Grid.Row="0" BackgroundColor="#DC2626" Padding="20">
+			<Label Text="🔧 PANNELLO AMMINISTRATORE"
+                   FontSize="20"
+                   FontAttributes="Bold"
+                   TextColor="White"
+                   HorizontalOptions="Center"/>
+		</Frame>
+
+		<!-- Content -->
+		<ScrollView Grid.Row="1" Padding="16">
+			<VerticalStackLayout Spacing="20">
+
+				<!-- Statistiche -->
+				<Frame BackgroundColor="White" CornerRadius="12" Padding="20" HasShadow="True">
+					<VerticalStackLayout Spacing="15">
+						<Label Text="📊 Statistiche Sistema" FontSize="18" FontAttributes="Bold"/>
+						<Grid ColumnDefinitions="*,*,*" ColumnSpacing="10">
+							<VerticalStackLayout Grid.Column="0" HorizontalOptions="Center">
+								<Label x:Name="TotalPostsLabel" Text="0" FontSize="24" FontAttributes="Bold" TextColor="#2196F3"/>
+								<Label Text="Post Totali" FontSize="12"/>
+							</VerticalStackLayout>
+							<VerticalStackLayout Grid.Column="1" HorizontalOptions="Center">
+								<Label x:Name="TotalCommentsLabel" Text="0" FontSize="24" FontAttributes="Bold" TextColor="#4CAF50"/>
+								<Label Text="Commenti" FontSize="12"/>
+							</VerticalStackLayout>
+							<VerticalStackLayout Grid.Column="2" HorizontalOptions="Center">
+								<Label x:Name="TotalFieldsLabel" Text="0" FontSize="24" FontAttributes="Bold" TextColor="#FF9800"/>
+								<Label Text="Campi" FontSize="12"/>
+							</VerticalStackLayout>
+						</Grid>
+						<Button Text="🔄 Aggiorna Statistiche"
+                                BackgroundColor="#6366F1"
+                                TextColor="White"
+                                Clicked="OnRefreshStatsClicked"/>
+					</VerticalStackLayout>
+				</Frame>
+
+				<!-- Test Funzioni Admin -->
+				<Frame BackgroundColor="White" CornerRadius="12" Padding="20" HasShadow="True">
+					<VerticalStackLayout Spacing="15">
+						<Label Text="🧪 Test Funzioni Admin" FontSize="18" FontAttributes="Bold"/>
+
+						<!-- Elimina Post -->
+						<VerticalStackLayout Spacing="10">
+							<Label Text="Elimina Post per ID:" FontSize="14" FontAttributes="Bold"/>
+							<Entry x:Name="PostIdEntry" Placeholder="Inserisci ID post" Keyboard="Numeric"/>
+							<Button Text="🗑️ Elimina Post"
+                                    BackgroundColor="#DC2626"
+                                    TextColor="White"
+                                    Clicked="OnDeletePostClicked"/>
+						</VerticalStackLayout>
+
+						<!-- Elimina Commento -->
+						<VerticalStackLayout Spacing="10">
+							<Label Text="Elimina Commento per ID:" FontSize="14" FontAttributes="Bold"/>
+							<Entry x:Name="CommentIdEntry" Placeholder="Inserisci ID commento" Keyboard="Numeric"/>
+							<Button Text="🗑️ Elimina Commento"
+                                    BackgroundColor="#DC2626"
+                                    TextColor="White"
+                                    Clicked="OnDeleteCommentClicked"/>
+						</VerticalStackLayout>
+					</VerticalStackLayout>
+				</Frame>
+
+				<!-- Informazioni Account -->
+				<Frame BackgroundColor="White" CornerRadius="12" Padding="20" HasShadow="True">
+					<VerticalStackLayout Spacing="10">
+						<Label Text="👤 Informazioni Account" FontSize="18" FontAttributes="Bold"/>
+						<Label x:Name="AdminInfoLabel" Text="Loading..." FontSize="14"/>
+						<Label Text="⚠️ Usa i privilegi amministratore responsabilmente"
+                               FontSize="12"
+                               TextColor="#DC2626"
+                               FontAttributes="Italic"/>
+					</VerticalStackLayout>
+				</Frame>
+
+			</VerticalStackLayout>
+		</ScrollView>
+	</Grid>
+</ContentPage>

@@ -32,6 +32,8 @@ public partial class HomePage : ContentPage
     {
         base.OnAppearing();
         await LoadNotificationsSummary();
+        await CheckAdminAccess(); 
+
     }
 
     // NUOVO: Carica il riassunto delle notifiche
@@ -219,10 +221,55 @@ public partial class HomePage : ContentPage
         await LoadNotificationsSummary();
     }
 
+
+    private async Task CheckAdminAccess()
+    {
+        try
+        {
+            var request = new HttpRequestMessage(HttpMethod.Get, $"{ApiConfig.BaseUrl}/profile");
+
+            if (Preferences.ContainsKey("session_id"))
+            {
+                string sessionId = Preferences.Get("session_id", "");
+                request.Headers.Add("Cookie", $"session_id={sessionId}");
+            }
+
+            var response = await _client.SendAsync(request);
+            if (response.IsSuccessStatusCode)
+            {
+                var json = await response.Content.ReadAsStringAsync();
+                var user = JsonSerializer.Deserialize<Models.User>(json,
+                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+                // Se è admin, mostra notifica o aggiungi pulsante admin
+                if (user.IsAdmin)
+                {
+                    await ShowAdminButton();
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"Errore controllo admin: {ex.Message}");
+        }
+    }
+
+    // NUOVO METODO
+    private async Task ShowAdminButton()
+    {
+        // Mostra una notifica che l'utente ha privilegi admin
+        await DisplayAlert("👑 Amministratore",
+            "Hai privilegi amministratore! Vai al tuo profilo per accedere al pannello admin.",
+            "OK");
+    }
+
     //  Metodo per gestire il cleanup quando la pagina viene nascosta
     protected override void OnDisappearing()
     {
         base.OnDisappearing();
         // Eventuale cleanup se necessario
     }
+
+
+
 }

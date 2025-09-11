@@ -53,6 +53,7 @@ namespace trovagiocatoriApp.Views
             LoadMyPosts();
             LoadCalendarEvents();
             LoadFavorites();
+            CheckAdminAccess();
         }
 
         // ========== GESTIONE TAB ==========
@@ -886,6 +887,66 @@ namespace trovagiocatoriApp.Views
                 Debug.WriteLine($"Errore durante il logout: {ex.Message}");
                 await DisplayAlert("Errore", "Errore durante il logout", "OK");
             }
+        }
+
+        private async Task CheckAdminAccess()
+        {
+            try
+            {
+                var request = new HttpRequestMessage(HttpMethod.Get, $"{ApiConfig.BaseUrl}/profile");
+
+                if (Preferences.ContainsKey("session_id"))
+                {
+                    string sessionId = Preferences.Get("session_id", "");
+                    request.Headers.Add("Cookie", $"session_id={sessionId}");
+                }
+
+                var response = await _client.SendAsync(request);
+                if (response.IsSuccessStatusCode)
+                {
+                    var json = await response.Content.ReadAsStringAsync();
+                    var user = JsonSerializer.Deserialize<Models.User>(json,
+                        new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+                    // Se è admin, mostra il pulsante
+                    if (user.IsAdmin)
+                    {
+                        ShowAdminButton();
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Errore controllo admin: {ex.Message}");
+            }
+        }
+
+        // NUOVO METODO
+        private void ShowAdminButton()
+        {
+            MainThread.BeginInvokeOnMainThread(() =>
+            {
+                // Crea e aggiungi un pulsante per il pannello admin
+                var adminButton = new Button
+                {
+                    Text = "🔧 PANNELLO AMMINISTRATORE",
+                    BackgroundColor = Color.FromArgb("#DC2626"),
+                    TextColor = Colors.White,
+                    FontAttributes = FontAttributes.Bold,
+                    Margin = new Thickness(20, 10),
+                    CornerRadius = 10
+                };
+
+                adminButton.Clicked += async (s, e) => await Navigation.PushAsync(new AdminPage());
+
+                // Trova il contenitore principale del ProfilePage e aggiungi il pulsante
+                // Dovrai adattare questo in base alla struttura del tuo ProfilePage.xaml
+                if (Content is ScrollView scrollView &&
+                    scrollView.Content is VerticalStackLayout mainLayout)
+                {
+                    mainLayout.Insert(0, adminButton); // Aggiunge in cima
+                }
+            });
         }
 
     }
