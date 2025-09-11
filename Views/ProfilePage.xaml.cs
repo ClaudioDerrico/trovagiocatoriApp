@@ -921,30 +921,113 @@ namespace trovagiocatoriApp.Views
             }
         }
 
-        // NUOVO METODO
         private void ShowAdminButton()
         {
             MainThread.BeginInvokeOnMainThread(() =>
             {
-                // Crea e aggiungi un pulsante per il pannello admin
-                var adminButton = new Button
+                try
                 {
-                    Text = "🔧 PANNELLO AMMINISTRATORE",
-                    BackgroundColor = Color.FromArgb("#DC2626"),
-                    TextColor = Colors.White,
-                    FontAttributes = FontAttributes.Bold,
-                    Margin = new Thickness(20, 10),
-                    CornerRadius = 10
-                };
+                    // Crea il pulsante admin
+                    var adminButton = new Button
+                    {
+                        Text = "🔧 PANNELLO AMMINISTRATORE",
+                        BackgroundColor = Color.FromArgb("#DC2626"),
+                        TextColor = Colors.White,
+                        FontAttributes = FontAttributes.Bold,
+                        FontSize = 16,
+                        Margin = new Thickness(16, 10),
+                        CornerRadius = 12,
+                        HeightRequest = 50
+                    };
 
-                adminButton.Clicked += async (s, e) => await Navigation.PushAsync(new AdminPage());
+                    adminButton.Clicked += async (s, e) =>
+                    {
+                        try
+                        {
+                            await Navigation.PushAsync(new AdminPage());
+                        }
+                        catch (Exception ex)
+                        {
+                            Debug.WriteLine($"Errore apertura AdminPage: {ex.Message}");
+                            await DisplayAlert("Errore", "Impossibile aprire il pannello amministratore", "OK");
+                        }
+                    };
 
-                // Trova il contenitore principale del ProfilePage e aggiungi il pulsante
-                // Dovrai adattare questo in base alla struttura del tuo ProfilePage.xaml
-                if (Content is ScrollView scrollView &&
-                    scrollView.Content is VerticalStackLayout mainLayout)
+                    // Trova il Grid principale e aggiungi il pulsante
+                    if (Content is Grid mainGrid)
+                    {
+                        // Il pulsante va nella riga 3 (Bottom Buttons), modificando la struttura esistente
+                        var bottomGrid = mainGrid.Children.OfType<Grid>().LastOrDefault();
+                        if (bottomGrid != null)
+                        {
+                            // Crea un nuovo StackLayout per contenere sia i pulsanti esistenti che quello admin
+                            var buttonStack = new VerticalStackLayout
+                            {
+                                Spacing = 8,
+                                Padding = new Thickness(16)
+                            };
+
+                            // Aggiungi prima il pulsante admin
+                            buttonStack.Children.Add(adminButton);
+
+                            // Crea un container per i pulsanti esistenti
+                            var existingButtonsGrid = new Grid
+                            {
+                                ColumnDefinitions =
+                        {
+                            new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) },
+                            new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) }
+                        },
+                                ColumnSpacing = 12
+                            };
+
+                            // Crea i pulsanti esistenti
+                            var changePasswordButton = new Button
+                            {
+                                Text = "🔒 Cambia Password",
+                                BackgroundColor = Color.FromArgb("#5B9CFD"),
+                                TextColor = Colors.White,
+                                FontAttributes = FontAttributes.Bold,
+                                FontSize = 14,
+                                CornerRadius = 12,
+                                HeightRequest = 48
+                            };
+                            changePasswordButton.Clicked += OnNavigateToChangePassword;
+
+                            var logoutButton = new Button
+                            {
+                                Text = "🚪 Logout",
+                                BackgroundColor = Color.FromArgb("#FF5A5F"),
+                                TextColor = Colors.White,
+                                FontAttributes = FontAttributes.Bold,
+                                FontSize = 14,
+                                CornerRadius = 12,
+                                HeightRequest = 48
+                            };
+                            logoutButton.Clicked += OnLogoutButtonClicked;
+
+                            Grid.SetColumn(changePasswordButton, 0);
+                            Grid.SetColumn(logoutButton, 1);
+
+                            existingButtonsGrid.Children.Add(changePasswordButton);
+                            existingButtonsGrid.Children.Add(logoutButton);
+
+                            buttonStack.Children.Add(existingButtonsGrid);
+
+                            // Sostituisci il contenuto della riga dei pulsanti
+                            bottomGrid.Children.Clear();
+                            bottomGrid.Children.Add(buttonStack);
+                        }
+                    }
+
+                    Debug.WriteLine("[ADMIN] Pulsante amministratore aggiunto al profilo");
+                }
+                catch (Exception ex)
                 {
-                    mainLayout.Insert(0, adminButton); // Aggiunge in cima
+                    Debug.WriteLine($"[ADMIN] Errore nell'aggiunta del pulsante admin: {ex.Message}");
+
+                    // Fallback: mostra un alert
+                    DisplayAlert("Amministratore", "Hai privilegi di amministratore! Il pannello admin sarà disponibile a breve.", "OK");
                 }
             });
         }
