@@ -44,7 +44,6 @@ namespace trovagiocatoriApp.Views
 
         private async void OnLoginClicked(object sender, EventArgs e)
         {
-            // NUOVO: Disabilita il pulsante durante il login per evitare doppi click
             var loginButton = sender as Button;
             if (loginButton != null)
             {
@@ -54,14 +53,12 @@ namespace trovagiocatoriApp.Views
 
             try
             {
-                // Raccogli i dati del login
                 var loginData = new
                 {
                     email_or_username = EmailEntry.Text?.Trim(),
                     password = PasswordEntry.Text
                 };
 
-                // Validazione input
                 if (string.IsNullOrEmpty(loginData.email_or_username) || string.IsNullOrEmpty(loginData.password))
                 {
                     await DisplayAlert("Errore", "Inserisci email/username e password", "OK");
@@ -71,18 +68,14 @@ namespace trovagiocatoriApp.Views
                 string json = JsonSerializer.Serialize(loginData);
                 var content = new StringContent(json, Encoding.UTF8, "application/json");
 
-                var baseUrl = ApiConfig.BaseUrl;
-
                 using var client = new HttpClient();
-
-                //  Timeout più breve per evitare hang
                 client.Timeout = TimeSpan.FromSeconds(30);
 
-                var response = await client.PostAsync($"{baseUrl}/login", content);
+                var response = await client.PostAsync($"{ApiConfig.BaseUrl}/login", content);
 
                 if (response.IsSuccessStatusCode)
                 {
-                    //Pulisci sessioni precedenti prima di salvare la nuova
+                    // Pulisci sessioni precedenti
                     Preferences.Clear();
 
                     // Salva il cookie di sessione
@@ -93,8 +86,6 @@ namespace trovagiocatoriApp.Views
                         {
                             var sessionId = sessionCookie.Split(';')[0].Split('=')[1];
                             Preferences.Set("session_id", sessionId);
-
-                            // NUOVO: Salva timestamp login per debug
                             Preferences.Set("login_timestamp", DateTime.Now.ToString());
 
                             Debug.WriteLine($"[LOGIN] ✅ Session salvata: {sessionId}");
@@ -103,40 +94,30 @@ namespace trovagiocatoriApp.Views
 
                     await DisplayAlert("Login", "Login eseguito con successo!", "OK");
 
-                    // NUOVO: Naviga con MainThread per evitare problemi
-                    MainThread.BeginInvokeOnMainThread(() =>
+                    // Crea la nuova Shell e riconfigura
+                    MainThread.BeginInvokeOnMainThread(async () =>
                     {
-                        Application.Current.MainPage = new AppShell();
+                        var appShell = new AppShell();
+                        Application.Current.MainPage = appShell;
+
+                        // Aspetta un attimo per la configurazione
+                        await Task.Delay(500);
+                        await appShell.ReconfigureAsync();
                     });
                 }
                 else
                 {
                     var errorMsg = await response.Content.ReadAsStringAsync();
-                    Debug.WriteLine($"[LOGIN] Errore login: {response.StatusCode} - {errorMsg}");
                     await DisplayAlert("Errore Login", errorMsg, "OK");
                 }
             }
-            catch (HttpRequestException httpEx)
-            {
-                Debug.WriteLine($"[LOGIN] Errore HTTP: {httpEx}");
-                await DisplayAlert("Errore di connessione",
-                    "Impossibile raggiungere il server. Controlla la connessione di rete.", "OK");
-            }
-            catch (TaskCanceledException timeoutEx)
-            {
-                Debug.WriteLine($"[LOGIN] Timeout: {timeoutEx}");
-                await DisplayAlert("Timeout",
-                    "Il server non risponde. Riprova tra qualche momento.", "OK");
-            }
             catch (Exception ex)
             {
-                Debug.WriteLine($"[LOGIN] Errore generico: {ex}");
-                await DisplayAlert("Errore",
-                    "Si è verificato un errore imprevisto. Riprova.", "OK");
+                Debug.WriteLine($"[LOGIN] Errore: {ex}");
+                await DisplayAlert("Errore", "Errore durante il login. Riprova.", "OK");
             }
             finally
             {
-                // NUOVO: Riabilita sempre il pulsante
                 if (loginButton != null)
                 {
                     loginButton.IsEnabled = true;

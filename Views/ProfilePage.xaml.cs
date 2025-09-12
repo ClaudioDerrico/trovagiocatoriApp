@@ -20,31 +20,30 @@ namespace trovagiocatoriApp.Views
         // Stato dei tab
         private TabType _activeTab = TabType.MyPosts;
 
-        // Liste per i diversi contenuti
+        // Flag per tipo utente
+        private bool _isAdmin = false;
+
+        // Liste per i diversi contenuti (solo per utenti normali)
         public ObservableCollection<PostResponse> FavoritePosts { get; set; } = new ObservableCollection<PostResponse>();
         public ObservableCollection<PostResponse> CalendarEvents { get; set; } = new ObservableCollection<PostResponse>();
         public ObservableCollection<PostResponse> MyPosts { get; set; } = new ObservableCollection<PostResponse>();
 
-        // NUOVO: Collection per gli inviti eventi
+        // Collection per gli inviti eventi
         public ObservableCollection<EventInviteInfo> EventInvites { get; set; } = new ObservableCollection<EventInviteInfo>();
-
-        // NUOVO: Flag per utente admin
-        private bool _isAdmin = false;
 
         // Enum per i tipi di tab
         private enum TabType
         {
             MyPosts,
             MyEvents,
-            Favorites,
-            AdminPanel // NUOVO: Tab per pannello admin
+            Favorites
         }
 
         public ProfilePage()
         {
             InitializeComponent();
 
-            // Imposta le CollectionView
+            // Imposta le CollectionView per utenti normali
             FavoritesCollectionView.ItemsSource = FavoritePosts;
             CalendarEventsCollectionView.ItemsSource = CalendarEvents;
             MyPostsCollectionView.ItemsSource = MyPosts;
@@ -53,21 +52,13 @@ namespace trovagiocatoriApp.Views
         protected override async void OnAppearing()
         {
             base.OnAppearing();
-            LoadProfile();
-
-            // MODIFICATO: Carica contenuti solo se non è admin
-            if (!_isAdmin)
-            {
-                await LoadMyPosts();
-                await LoadCalendarEvents();
-                await LoadFavorites();
-            }
-
-            await ConfigureAdminInterface();
+            await LoadProfile();
+            await CheckAndSetupUserType();
         }
 
-        // NUOVO: Configura l'interfaccia per admin
-        private async Task ConfigureAdminInterface()
+        // ========== SETUP TIPO UTENTE ==========
+
+        private async Task CheckAndSetupUserType()
         {
             try
             {
@@ -91,36 +82,57 @@ namespace trovagiocatoriApp.Views
                     if (_isAdmin)
                     {
                         await SetupAdminProfile();
+                        Debug.WriteLine("[PROFILE] ✅ Configurato profilo ADMIN");
                     }
+                    else
+                    {
+                        await SetupUserProfile();
+                        Debug.WriteLine("[PROFILE] ✅ Configurato profilo USER");
+                    }
+                }
+                else
+                {
+                    // Default: tratta come utente normale
+                    await SetupUserProfile();
                 }
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"Errore configurazione admin: {ex.Message}");
+                Debug.WriteLine($"[PROFILE] Errore setup tipo utente: {ex.Message}");
+                // Fallback: setup utente normale
+                await SetupUserProfile();
             }
         }
 
-        // NUOVO: Configura il profilo per amministratori
+        private async Task SetupUserProfile()
+        {
+            // Carica tutti i dati per utenti normali
+            await LoadMyPosts();
+            await LoadCalendarEvents();
+            await LoadFavorites();
+
+            // Mantieni l'interfaccia tab normale (è già così di default)
+            Debug.WriteLine("[PROFILE] Setup utente normale completato");
+        }
+
         private async Task SetupAdminProfile()
         {
             MainThread.BeginInvokeOnMainThread(() =>
             {
                 try
                 {
-                    // Nascondi i tab normali per admin
+                    // 1. NASCONDI I TAB UTENTE NORMALI
+                    if (MyPostsTabButton != null) MyPostsTabButton.IsVisible = false;
+                    if (MyEventsTabButton != null) MyEventsTabButton.IsVisible = false;
+                    if (FavoritesTabButton != null) FavoritesTabButton.IsVisible = false;
+                    if (TabIndicator != null) TabIndicator.IsVisible = false;
+
+                    // 2. SOSTITUISCI L'AREA TAB CON MESSAGGIO ADMIN
                     if (Content is Grid mainGrid)
                     {
-                        // Trova il frame dei tab (Grid.Row="1")
                         var tabFrame = mainGrid.Children.OfType<Frame>().FirstOrDefault(f => Grid.GetRow(f) == 1);
                         if (tabFrame?.Content is Grid tabGrid)
                         {
-                            // Nascondi tutti i tab normali
-                            MyPostsTabButton.IsVisible = false;
-                            MyEventsTabButton.IsVisible = false;
-                            FavoritesTabButton.IsVisible = false;
-                            TabIndicator.IsVisible = false;
-
-                            // Sostituisci con un messaggio admin
                             tabGrid.Children.Clear();
                             var adminLabel = new Label
                             {
@@ -134,14 +146,14 @@ namespace trovagiocatoriApp.Views
                             tabGrid.Children.Add(adminLabel);
                         }
 
-                        // Trova l'area del contenuto (Grid.Row="2") e sostituiscila
+                        // 3. SOSTITUISCI IL CONTENUTO CON INTERFACCIA ADMIN
                         var contentScrollView = mainGrid.Children.OfType<ScrollView>().FirstOrDefault(s => Grid.GetRow(s) == 2);
                         if (contentScrollView != null)
                         {
                             contentScrollView.Content = CreateAdminContent();
                         }
 
-                        // Modifica i pulsanti in basso
+                        // 4. MODIFICA I PULSANTI IN BASSO
                         var bottomGrid = mainGrid.Children.OfType<Grid>().LastOrDefault();
                         if (bottomGrid != null)
                         {
@@ -149,16 +161,17 @@ namespace trovagiocatoriApp.Views
                         }
                     }
 
-                    Debug.WriteLine("[ADMIN] Interfaccia admin configurata");
+                    Debug.WriteLine("[PROFILE] ✅ Interfaccia admin configurata");
                 }
                 catch (Exception ex)
                 {
-                    Debug.WriteLine($"[ADMIN] Errore setup interfaccia admin: {ex.Message}");
+                    Debug.WriteLine($"[PROFILE] Errore setup interfaccia admin: {ex.Message}");
                 }
             });
         }
 
-        // NUOVO: Crea il contenuto specifico per admin
+        // ========== INTERFACCIA ADMIN ==========
+
         private View CreateAdminContent()
         {
             var adminStack = new VerticalStackLayout
@@ -167,7 +180,7 @@ namespace trovagiocatoriApp.Views
                 Padding = new Thickness(16)
             };
 
-            // Card di benvenuto admin
+            // CARD BENVENUTO ADMIN
             var welcomeFrame = new Frame
             {
                 BackgroundColor = Color.FromArgb("#FFFFFF"),
@@ -177,10 +190,7 @@ namespace trovagiocatoriApp.Views
                 BorderColor = Color.FromArgb("#DC2626")
             };
 
-            var welcomeContent = new VerticalStackLayout
-            {
-                Spacing = 16
-            };
+            var welcomeContent = new VerticalStackLayout { Spacing = 16 };
 
             welcomeContent.Children.Add(new Label
             {
@@ -200,7 +210,7 @@ namespace trovagiocatoriApp.Views
                 HorizontalTextAlignment = TextAlignment.Center
             });
 
-            // Pulsante per aprire admin panel
+            // PULSANTE PRINCIPALE ADMIN
             var adminPanelButton = new Button
             {
                 Text = "🚀 APRI PANNELLO GESTIONE",
@@ -221,7 +231,7 @@ namespace trovagiocatoriApp.Views
                 }
                 catch (Exception ex)
                 {
-                    Debug.WriteLine($"Errore apertura AdminPage: {ex.Message}");
+                    Debug.WriteLine($"[PROFILE] Errore apertura AdminPage: {ex.Message}");
                     await DisplayAlert("Errore", "Impossibile aprire il pannello amministratore", "OK");
                 }
             };
@@ -230,8 +240,8 @@ namespace trovagiocatoriApp.Views
             welcomeFrame.Content = welcomeContent;
             adminStack.Children.Add(welcomeFrame);
 
-            // Card statistiche rapide
-            var statsFrame = new Frame
+            // CARD ACCESSI RAPIDI
+            var quickAccessFrame = new Frame
             {
                 BackgroundColor = Color.FromArgb("#FFFFFF"),
                 CornerRadius = 16,
@@ -239,17 +249,62 @@ namespace trovagiocatoriApp.Views
                 HasShadow = true
             };
 
-            var statsContent = new VerticalStackLayout
+            var quickAccessContent = new VerticalStackLayout { Spacing = 16 };
+
+            quickAccessContent.Children.Add(new Label
             {
-                Spacing = 16
+                Text = "⚡ Accesso Rapido",
+                FontSize = 18,
+                FontAttributes = FontAttributes.Bold,
+                TextColor = Color.FromArgb("#1E293B"),
+                HorizontalOptions = LayoutOptions.Start
+            });
+
+            // GRIGLIA PULSANTI RAPIDI
+            var quickButtonsGrid = new Grid
+            {
+                ColumnDefinitions =
+                {
+                    new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) },
+                    new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) }
+                },
+                RowDefinitions =
+                {
+                    new RowDefinition { Height = new GridLength(60, GridUnitType.Absolute) },
+                    new RowDefinition { Height = new GridLength(60, GridUnitType.Absolute) }
+                },
+                ColumnSpacing = 12,
+                RowSpacing = 12
             };
 
-        
+            // Pulsanti di accesso rapido
+            var postsButton = CreateQuickButton("📝", "Gestisci Post", "#6366F1");
+            var commentsButton = CreateQuickButton("💬", "Commenti", "#10B981");
+            var usersButton = CreateQuickButton("👥", "Utenti", "#F59E0B");
+            var statsButton = CreateQuickButton("📊", "Statistiche", "#DC2626");
+
+            Grid.SetColumn(postsButton, 0);
+            Grid.SetRow(postsButton, 0);
+            Grid.SetColumn(commentsButton, 1);
+            Grid.SetRow(commentsButton, 0);
+            Grid.SetColumn(usersButton, 0);
+            Grid.SetRow(usersButton, 1);
+            Grid.SetColumn(statsButton, 1);
+            Grid.SetRow(statsButton, 1);
+
+            quickButtonsGrid.Children.Add(postsButton);
+            quickButtonsGrid.Children.Add(commentsButton);
+            quickButtonsGrid.Children.Add(usersButton);
+            quickButtonsGrid.Children.Add(statsButton);
+
+            quickAccessContent.Children.Add(quickButtonsGrid);
+            quickAccessFrame.Content = quickAccessContent;
+            adminStack.Children.Add(quickAccessFrame);
+
             return adminStack;
         }
 
-        // NUOVO: Crea pulsanti di accesso rapido
-        private Button CreateQuickAccessButton(string icon, string text, string colorHex)
+        private Button CreateQuickButton(string icon, string text, string colorHex)
         {
             var button = new Button
             {
@@ -264,14 +319,13 @@ namespace trovagiocatoriApp.Views
 
             button.Clicked += async (s, e) =>
             {
-                // Apri direttamente AdminPage per tutti i pulsanti
                 try
                 {
                     await Navigation.PushAsync(new AdminPage());
                 }
                 catch (Exception ex)
                 {
-                    Debug.WriteLine($"Errore apertura AdminPage: {ex.Message}");
+                    Debug.WriteLine($"[PROFILE] Errore apertura AdminPage: {ex.Message}");
                     await DisplayAlert("Errore", "Impossibile aprire il pannello amministratore", "OK");
                 }
             };
@@ -279,13 +333,12 @@ namespace trovagiocatoriApp.Views
             return button;
         }
 
-        // NUOVO: Configura i pulsanti per admin
         private void SetupAdminButtons(Grid bottomGrid)
         {
             bottomGrid.Children.Clear();
             bottomGrid.ColumnDefinitions.Clear();
 
-            // Solo un pulsante per admin: Logout
+            // Solo logout per admin
             bottomGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
 
             var logoutButton = new Button
@@ -297,7 +350,7 @@ namespace trovagiocatoriApp.Views
                 FontSize = 16,
                 CornerRadius = 12,
                 HeightRequest = 48,
-                Margin = new Thickness(16)
+                Margin = new Thickness(0, 16)
             };
 
             logoutButton.Clicked += OnAdminLogoutClicked;
@@ -306,7 +359,6 @@ namespace trovagiocatoriApp.Views
             bottomGrid.Children.Add(logoutButton);
         }
 
-        // NUOVO: Logout specifico per admin
         private async void OnAdminLogoutClicked(object sender, EventArgs e)
         {
             try
@@ -322,25 +374,23 @@ namespace trovagiocatoriApp.Views
 
                 // Pulisci i dati di sessione
                 Preferences.Clear();
-
-                // IMPORTANTE: Resetta anche il flag admin welcome
                 HomePage.ResetAdminWelcome();
 
-                Debug.WriteLine($"[ADMIN] Session cleared e flag resettato");
+                Debug.WriteLine($"[PROFILE] Admin logout completato");
 
-                // Naviga alla pagina di login
+                // Torna alla pagina di login
                 Application.Current.MainPage = new NavigationPage(new LoginPage());
 
-                await DisplayAlert("Logout Completato", "Sei stato disconnesso con successo dal pannello amministratore.", "OK");
+                await DisplayAlert("Logout Completato", "Sei stato disconnesso con successo.", "OK");
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"Errore durante il logout admin: {ex.Message}");
+                Debug.WriteLine($"[PROFILE] Errore durante logout admin: {ex.Message}");
                 await DisplayAlert("Errore", "Errore durante il logout", "OK");
             }
         }
 
-        // ========== METODI ORIGINALI (usati solo per utenti normali) ==========
+        // ========== CARICAMENTO PROFILO (COMUNE) ==========
 
         private async void LoadProfile()
         {
@@ -397,7 +447,7 @@ namespace trovagiocatoriApp.Views
             }
         }
 
-        // ========== GESTIONE TAB (solo per utenti normali) ==========
+        // ========== GESTIONE TAB (SOLO PER UTENTI NORMALI) ==========
 
         private void OnMyPostsTabClicked(object sender, EventArgs e)
         {
@@ -469,9 +519,7 @@ namespace trovagiocatoriApp.Views
             }
         }
 
-        // ========== METODI DI CARICAMENTO (solo per utenti normali) ==========
-        // [Resto dei metodi LoadMyPosts, LoadCalendarEvents, etc. rimangono identici]
-        // Li ometto per brevità ma vanno mantenuti per gli utenti normali
+        // ========== CARICAMENTO DATI (SOLO UTENTI NORMALI) ==========
 
         private async Task LoadMyPosts()
         {
@@ -768,375 +816,4 @@ namespace trovagiocatoriApp.Views
                         Debug.WriteLine($"Caricati {favoriteIds.Count} preferiti");
 
                         FavoritePosts.Clear();
-                        foreach (var postId in favoriteIds)
-                        {
-                            await LoadFavoritePostDetails(postId);
-                        }
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine($"Eccezione durante il caricamento dei preferiti: {ex.Message}");
-            }
-        }
-
-        private async Task LoadCalendarEventDetails(int postId)
-        {
-            try
-            {
-                var response = await _client.GetAsync($"{pythonApiBaseUrl}/posts/{postId}");
-
-                if (response.IsSuccessStatusCode)
-                {
-                    var jsonResponse = await response.Content.ReadAsStringAsync();
-                    var post = JsonSerializer.Deserialize<PostResponse>(jsonResponse,
-                        new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-
-                    if (post != null)
-                    {
-                        MainThread.BeginInvokeOnMainThread(() =>
-                        {
-                            CalendarEvents.Add(post);
-                        });
-
-                        Debug.WriteLine($"[CALENDAR] Aggiunto evento calendario: {post.titolo} - {post.data_partita} {post.ora_partita}");
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine($"[CALENDAR] Errore nel caricamento dettagli evento {postId}: {ex.Message}");
-            }
-        }
-
-        private async Task LoadFavoritePostDetails(int postId)
-        {
-            try
-            {
-                var response = await _client.GetAsync($"{pythonApiBaseUrl}/posts/{postId}");
-
-                if (response.IsSuccessStatusCode)
-                {
-                    var jsonResponse = await response.Content.ReadAsStringAsync();
-                    var post = JsonSerializer.Deserialize<PostResponse>(jsonResponse,
-                        new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-
-                    if (post != null)
-                    {
-                        FavoritePosts.Add(post);
-                        Debug.WriteLine($"Aggiunto post preferito: {post.titolo}");
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine($"Errore nel caricamento dettagli post {postId}: {ex.Message}");
-            }
-        }
-
-        // ========== METODI HELPER ==========
-
-        private string GetStringProperty(JsonElement element, string propertyName, string defaultValue = "")
-        {
-            try
-            {
-                return element.TryGetProperty(propertyName, out var prop) && prop.ValueKind != JsonValueKind.Null
-                    ? prop.GetString() ?? defaultValue
-                    : defaultValue;
-            }
-            catch
-            {
-                return defaultValue;
-            }
-        }
-
-        private int GetIntProperty(JsonElement element, string propertyName, int defaultValue = 0)
-        {
-            try
-            {
-                return element.TryGetProperty(propertyName, out var prop) && prop.ValueKind != JsonValueKind.Null
-                    ? prop.GetInt32()
-                    : defaultValue;
-            }
-            catch
-            {
-                return defaultValue;
-            }
-        }
-
-        private int? GetNullableIntProperty(JsonElement element, string propertyName)
-        {
-            try
-            {
-                if (element.TryGetProperty(propertyName, out var prop))
-                {
-                    if (prop.ValueKind == JsonValueKind.Null)
-                        return null;
-                    return prop.GetInt32();
-                }
-                return null;
-            }
-            catch
-            {
-                return null;
-            }
-        }
-
-        private long GetLongProperty(JsonElement element, string propertyName, long defaultValue = 0)
-        {
-            try
-            {
-                return element.TryGetProperty(propertyName, out var prop) && prop.ValueKind != JsonValueKind.Null
-                    ? prop.GetInt64()
-                    : defaultValue;
-            }
-            catch
-            {
-                return defaultValue;
-            }
-        }
-
-        private CampoInfo GetCampoProperty(JsonElement element)
-        {
-            try
-            {
-                if (element.TryGetProperty("campo", out var campoProp) && campoProp.ValueKind != JsonValueKind.Null)
-                {
-                    return new CampoInfo
-                    {
-                        nome = GetStringProperty(campoProp, "nome"),
-                        indirizzo = GetStringProperty(campoProp, "indirizzo")
-                    };
-                }
-                return null;
-            }
-            catch
-            {
-                return null;
-            }
-        }
-
-        // ========== GESTIONE SELEZIONI (solo per utenti normali) ==========
-
-        private async void OnFavoriteSelected(object sender, SelectionChangedEventArgs e)
-        {
-            if (_isAdmin || e.CurrentSelection.FirstOrDefault() is not PostResponse selectedPost) return;
-
-            ((CollectionView)sender).SelectedItem = null;
-            await Navigation.PushAsync(new PostDetailMainPage(selectedPost.id));
-        }
-
-        private async void OnMyPostSelected(object sender, SelectionChangedEventArgs e)
-        {
-            if (_isAdmin || e.CurrentSelection.FirstOrDefault() is not PostResponse selectedPost) return;
-
-            ((CollectionView)sender).SelectedItem = null;
-            await Navigation.PushAsync(new PostDetailMainPage(selectedPost.id));
-        }
-
-        private async void OnCalendarEventSelected(object sender, SelectionChangedEventArgs e)
-        {
-            if (_isAdmin || e.CurrentSelection.FirstOrDefault() is not PostResponse selectedEvent) return;
-
-            ((CollectionView)sender).SelectedItem = null;
-
-            if (selectedEvent.IsInvite)
-            {
-                await HandleEventInviteSelection(selectedEvent);
-            }
-            else
-            {
-                await Navigation.PushAsync(new PostDetailMainPage(selectedEvent.id));
-            }
-        }
-
-        private async Task HandleEventInviteSelection(PostResponse inviteEvent)
-        {
-            try
-            {
-                var action = await DisplayActionSheet(
-                    $"Invito da {inviteEvent.autore_email}",
-                    "Annulla",
-                    null,
-                    "✅ Accetta Invito",
-                    "❌ Rifiuta Invito",
-                    "👀 Visualizza Dettagli Evento"
-                );
-
-                switch (action)
-                {
-                    case "✅ Accetta Invito":
-                        await AcceptEventInvite(inviteEvent);
-                        break;
-                    case "❌ Rifiuta Invito":
-                        await RejectEventInvite(inviteEvent);
-                        break;
-                    case "👀 Visualizza Dettagli Evento":
-                        await Navigation.PushAsync(new PostDetailMainPage(inviteEvent.id));
-                        break;
-                }
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine($"[INVITES] Errore gestione selezione invito: {ex.Message}");
-                await DisplayAlert("Errore", "Errore nella gestione dell'invito", "OK");
-            }
-        }
-
-        private async Task AcceptEventInvite(PostResponse inviteEvent)
-        {
-            try
-            {
-                var confirm = await DisplayAlert(
-                    "Accetta Invito",
-                    $"Vuoi accettare l'invito per '{inviteEvent.titolo.Replace("📩 INVITO: ", "")}'? Sarai automaticamente iscritto all'evento.",
-                    "Accetta",
-                    "Annulla"
-                );
-
-                if (!confirm) return;
-
-                var request = new HttpRequestMessage(HttpMethod.Post, $"{apiBaseUrl}/events/invite/accept?invite_id={inviteEvent.InviteID}");
-
-                if (Preferences.ContainsKey("session_id"))
-                {
-                    string sessionId = Preferences.Get("session_id", "");
-                    request.Headers.Add("Cookie", $"session_id={sessionId}");
-                }
-
-                var response = await _client.SendAsync(request);
-
-                if (response.IsSuccessStatusCode)
-                {
-                    var inviteToRemove = CalendarEvents.FirstOrDefault(e => e.IsInvite && e.InviteID == inviteEvent.InviteID);
-                    if (inviteToRemove != null)
-                    {
-                        CalendarEvents.Remove(inviteToRemove);
-                    }
-
-                    await DisplayAlert("Invito Accettato", "Sei ora iscritto all'evento! Puoi vedere i dettagli nella sezione eventi.", "OK");
-                    await LoadCalendarEvents();
-                    Debug.WriteLine($"[INVITES] ✅ Invito accettato per evento {inviteEvent.id}");
-                }
-                else
-                {
-                    await DisplayAlert("Errore", "Impossibile accettare l'invito. Riprova più tardi.", "OK");
-                }
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine($"[INVITES] Errore accettazione invito: {ex.Message}");
-                await DisplayAlert("Errore", "Errore nell'accettazione dell'invito", "OK");
-            }
-        }
-
-        private async Task RejectEventInvite(PostResponse inviteEvent)
-        {
-            try
-            {
-                var confirm = await DisplayAlert(
-                    "Rifiuta Invito",
-                    $"Vuoi rifiutare l'invito per '{inviteEvent.titolo.Replace("📩 INVITO: ", "")}'?",
-                    "Rifiuta",
-                    "Annulla"
-                );
-
-                if (!confirm) return;
-
-                var request = new HttpRequestMessage(HttpMethod.Post, $"{apiBaseUrl}/events/invite/reject?invite_id={inviteEvent.InviteID}");
-
-                if (Preferences.ContainsKey("session_id"))
-                {
-                    string sessionId = Preferences.Get("session_id", "");
-                    request.Headers.Add("Cookie", $"session_id={sessionId}");
-                }
-
-                var response = await _client.SendAsync(request);
-
-                if (response.IsSuccessStatusCode)
-                {
-                    var inviteToRemove = CalendarEvents.FirstOrDefault(e => e.IsInvite && e.InviteID == inviteEvent.InviteID);
-                    if (inviteToRemove != null)
-                    {
-                        CalendarEvents.Remove(inviteToRemove);
-                    }
-
-                    await DisplayAlert("Invito Rifiutato", "Invito rifiutato con successo.", "OK");
-                    Debug.WriteLine($"[INVITES] ❌ Invito rifiutato per evento {inviteEvent.id}");
-                }
-                else
-                {
-                    await DisplayAlert("Errore", "Impossibile rifiutare l'invito. Riprova più tardi.", "OK");
-                }
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine($"[INVITES] Errore rifiuto invito: {ex.Message}");
-                await DisplayAlert("Errore", "Errore nel rifiuto dell'invito", "OK");
-            }
-        }
-
-        private async void OnAcceptInviteClicked(object sender, EventArgs e)
-        {
-            if (sender is Button button && button.CommandParameter is PostResponse inviteEvent)
-            {
-                await AcceptEventInvite(inviteEvent);
-            }
-        }
-
-        private async void OnRejectInviteClicked(object sender, EventArgs e)
-        {
-            if (sender is Button button && button.CommandParameter is PostResponse inviteEvent)
-            {
-                await RejectEventInvite(inviteEvent);
-            }
-        }
-
-        // ========== METODI DI NAVIGAZIONE (solo per utenti normali) ==========
-
-        private async void OnNavigateToChangePassword(object sender, EventArgs e)
-        {
-            if (_isAdmin) return; // Admin non cambia password da qui
-
-            try
-            {
-                await Navigation.PushAsync(new ChangePasswordPage());
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine($"Errore navigazione cambio password: {ex.Message}");
-                await DisplayAlert("Errore", "Impossibile aprire la pagina di cambio password", "OK");
-            }
-        }
-
-        private async void OnLogoutButtonClicked(object sender, EventArgs e)
-        {
-            if (_isAdmin) return; // Admin usa il logout specifico
-
-            try
-            {
-                var confirm = await DisplayAlert(
-                    "Logout",
-                    "Sei sicuro di voler effettuare il logout?",
-                    "Sì",
-                    "No"
-                );
-
-                if (!confirm) return;
-
-                Preferences.Clear();
-                HomePage.ResetAdminWelcome(); // Resetta sempre il flag
-                Debug.WriteLine($"[LOGOUT] Session cleared from ProfilePage");
-
-                Application.Current.MainPage = new NavigationPage(new LoginPage());
-                await DisplayAlert("Logout", "Sei stato disconnesso con successo.", "OK");
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine($"Errore durante il logout: {ex.Message}");
-                await DisplayAlert("Errore", "Errore durante il logout", "OK");
-            }
-        }
-    }
-}
+                        foreach (var postI

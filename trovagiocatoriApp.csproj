@@ -64,10 +64,6 @@
 </ItemGroup>
 
 	<ItemGroup>
-	  <Folder Include="Services\" />
-	</ItemGroup>
-
-	<ItemGroup>
 	<MauiImage Include="Resources\Images\*" />
 
 

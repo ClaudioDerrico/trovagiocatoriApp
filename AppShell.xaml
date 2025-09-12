@@ -4,10 +4,49 @@
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:local="clr-namespace:trovagiocatoriApp.Views"
-    Shell.FlyoutBehavior="Disabled">
+    Title="trovagiocatoriApp"
+    FlyoutBehavior="Disabled">
 
+    <!-- Shell per Amministratori -->
+    <TabBar x:Name="AdminTabBar" IsVisible="False">
+        <ShellContent
+            Title="Pannello Admin"
+            Icon="admin_dashboard.png"
+            ContentTemplate="{DataTemplate local:AdminPage}"
+            Route="admin_panel" />
 
+        <ShellContent
+            Title="Profilo"
+            Icon="admin_profile.png"
+            ContentTemplate="{DataTemplate local:ProfilePage}"
+            Route="admin_profile" />
+    </TabBar>
 
-    <ShellContent Route="HomePage" ContentTemplate="{DataTemplate local:HomePage}" />
+    <!-- Shell per Utenti Normali -->
+    <TabBar x:Name="UserTabBar" IsVisible="True">
+        <ShellContent
+            Title="Home"
+            ContentTemplate="{DataTemplate local:HomePage}"
+            Route="homepage"
+            Icon="home.png" />
+
+        <ShellContent
+            Title="Notifiche"
+            ContentTemplate="{DataTemplate local:NotificationsPage}"
+            Route="notifications"
+            Icon="notifications.png" />
+
+        <ShellContent
+            Title="Amici"
+            ContentTemplate="{DataTemplate local:FriendsPage}"
+            Route="friends"
+            Icon="friends.png" />
+
+        <ShellContent
+            Title="Profilo"
+            ContentTemplate="{DataTemplate local:ProfilePage}"
+            Route="profile"
+            Icon="profile.png" />
+    </TabBar>
 
 </Shell>
