@@ -1,94 +1,42 @@
-﻿using System.Diagnostics;
-using System.Net.Http;
-using System.Text.Json;
+﻿using Microsoft.Maui.Controls;
 using Microsoft.Maui.Storage;
-using trovagiocatoriApp.Models;
+using System.Diagnostics;
+using System.Threading.Tasks;
+using trovagiocatoriApp.Views;
 
-namespace trovagiocatoriApp;
-
-public partial class AppShell : Shell
+namespace trovagiocatoriApp
 {
-    private readonly HttpClient _client = new HttpClient();
-
-    public AppShell()
+    public partial class AppShell : Shell
     {
-        InitializeComponent();
-        _ = Task.Run(ConfigureShellAsync); // Configura in background
-    }
-
-    private async Task ConfigureShellAsync()
-    {
-        try
+        public AppShell()
         {
-            var isAdmin = await CheckIfUserIsAdminAsync();
+            InitializeComponent();
 
-            MainThread.BeginInvokeOnMainThread(() =>
-            {
-                if (isAdmin)
-                {
-                    // Mostra solo tab admin
-                    AdminTabBar.IsVisible = true;
-                    UserTabBar.IsVisible = false;
-                    CurrentItem = AdminTabBar;
-                    Debug.WriteLine("[SHELL] ✅ Configurazione ADMIN attiva");
-                }
-                else
-                {
-                    // Mostra tab utente normale
-                    AdminTabBar.IsVisible = false;
-                    UserTabBar.IsVisible = true;
-                    CurrentItem = UserTabBar;
-                    Debug.WriteLine("[SHELL] ✅ Configurazione USER attiva");
-                }
-            });
+
         }
-        catch (Exception ex)
+
+        protected override async void OnAppearing()
         {
-            Debug.WriteLine($"[SHELL] Errore configurazione: {ex.Message}");
-            // Default: utente normale
-            MainThread.BeginInvokeOnMainThread(() =>
-            {
-                AdminTabBar.IsVisible = false;
-                UserTabBar.IsVisible = true;
-                CurrentItem = UserTabBar;
-            });
+            base.OnAppearing();
+
         }
-    }
 
-    private async Task<bool> CheckIfUserIsAdminAsync()
-    {
-        try
+        private async void OnLogoutClicked(object sender, EventArgs e)
         {
-            if (!Preferences.ContainsKey("session_id"))
-                return false;
-
-            var request = new HttpRequestMessage(HttpMethod.Get, $"{ApiConfig.BaseUrl}/profile");
-            string sessionId = Preferences.Get("session_id", "");
-            request.Headers.Add("Cookie", $"session_id={sessionId}");
-
-            var response = await _client.SendAsync(request);
-
-            if (response.IsSuccessStatusCode)
+            bool confirm = await DisplayAlert("Logout", "Sei sicuro di voler effettuare il logout?", "Sì", "No");
+            if (confirm)
             {
-                var json = await response.Content.ReadAsStringAsync();
-                var user = JsonSerializer.Deserialize<User>(json,
-                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                // Pulisci TUTTE le preferences relative alla sessione
+                Preferences.Clear(); // O più specificamente:
+                                     // Preferences.Remove("session_id");
 
-                return user?.IsAdmin ?? false;
+                Debug.WriteLine($"[LOGOUT] Session cleared");
+
+                Application.Current.MainPage = new NavigationPage(new LoginPage());
+                await DisplayAlert("Logout", "Sei stato disconnesso con successo.", "OK");
             }
-
-            return false;
         }
-        catch (Exception ex)
-        {
-            Debug.WriteLine($"[SHELL] Errore controllo admin: {ex.Message}");
-            return false;
-        }
-    }
 
-    // Metodo pubblico per riconfigurare dopo login
-    public async Task ReconfigureAsync()
-    {
-        await ConfigureShellAsync();
+
     }
 }

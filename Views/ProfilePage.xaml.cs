@@ -9,6 +9,8 @@ using Microsoft.Maui.Controls;
 using Microsoft.Maui.Storage;
 using trovagiocatoriApp.Models;
 
+
+
 namespace trovagiocatoriApp.Views
 {
     public partial class ProfilePage : ContentPage
@@ -31,6 +33,8 @@ namespace trovagiocatoriApp.Views
         // Collection per gli inviti eventi
         public ObservableCollection<EventInviteInfo> EventInvites { get; set; } = new ObservableCollection<EventInviteInfo>();
 
+
+
         // Enum per i tipi di tab
         private enum TabType
         {
@@ -52,8 +56,8 @@ namespace trovagiocatoriApp.Views
         protected override async void OnAppearing()
         {
             base.OnAppearing();
-            await LoadProfile();
-            await CheckAndSetupUserType();
+            LoadProfile();
+            CheckAndSetupUserType();
         }
 
         // ========== SETUP TIPO UTENTE ==========
@@ -681,6 +685,33 @@ namespace trovagiocatoriApp.Views
             }
         }
 
+        private async Task LoadCalendarEventDetails(int postId)
+        {
+            try
+            {
+                var response = await _client.GetAsync($"{pythonApiBaseUrl}/posts/{postId}");
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var jsonResponse = await response.Content.ReadAsStringAsync();
+                    var post = JsonSerializer.Deserialize<PostResponse>(jsonResponse,
+                        new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+                    if (post != null)
+                    {
+                        MainThread.BeginInvokeOnMainThread(() =>
+                        {
+                            CalendarEvents.Add(post);
+                        });
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[CALENDAR] Errore caricamento dettagli evento {postId}: {ex.Message}");
+            }
+        }
+
         private async Task LoadEventInvites()
         {
             try
@@ -816,4 +847,302 @@ namespace trovagiocatoriApp.Views
                         Debug.WriteLine($"Caricati {favoriteIds.Count} preferiti");
 
                         FavoritePosts.Clear();
-                        foreach (var postI
+                        foreach (var postId in favoriteIds)
+                        {
+                            await LoadFavoritePostDetails(postId);
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Errore caricamento preferiti: {ex.Message}");
+            }
+        }
+
+        private async Task LoadFavoritePostDetails(int postId)
+        {
+            try
+            {
+                var response = await _client.GetAsync($"{pythonApiBaseUrl}/posts/{postId}");
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var jsonResponse = await response.Content.ReadAsStringAsync();
+                    var post = JsonSerializer.Deserialize<PostResponse>(jsonResponse,
+                        new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+                    if (post != null)
+                    {
+                        MainThread.BeginInvokeOnMainThread(() =>
+                        {
+                            FavoritePosts.Add(post);
+                        });
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Errore caricamento dettagli preferito {postId}: {ex.Message}");
+            }
+        }
+
+        // ========== GESTIONE EVENTI UI ==========
+
+        private async void OnMyPostSelected(object sender, SelectionChangedEventArgs e)
+        {
+            if (e.CurrentSelection.FirstOrDefault() is PostResponse selectedPost)
+            {
+                await Navigation.PushAsync(new PostDetailMainPage(selectedPost.id));
+                ((CollectionView)sender).SelectedItem = null;
+            }
+        }
+
+        private async void OnCalendarEventSelected(object sender, SelectionChangedEventArgs e)
+        {
+            if (e.CurrentSelection.FirstOrDefault() is PostResponse selectedEvent)
+            {
+                await Navigation.PushAsync(new PostDetailMainPage(selectedEvent.id));
+                ((CollectionView)sender).SelectedItem = null;
+            }
+        }
+
+        private async void OnFavoriteSelected(object sender, SelectionChangedEventArgs e)
+        {
+            if (e.CurrentSelection.FirstOrDefault() is PostResponse selectedFavorite)
+            {
+                await Navigation.PushAsync(new PostDetailMainPage(selectedFavorite.id));
+                ((CollectionView)sender).SelectedItem = null;
+            }
+        }
+
+        // ========== GESTIONE INVITI EVENTI ==========
+
+        private async void OnAcceptInviteClicked(object sender, EventArgs e)
+        {
+            if (sender is Button button && button.CommandParameter is PostResponse invitePost)
+            {
+                try
+                {
+                    var request = new HttpRequestMessage(HttpMethod.Post,
+                        $"{apiBaseUrl}/events/invite/accept?invite_id={invitePost.InviteID}");
+
+                    if (Preferences.ContainsKey("session_id"))
+                    {
+                        string sessionId = Preferences.Get("session_id", "");
+                        request.Headers.Add("Cookie", $"session_id={sessionId}");
+                    }
+
+                    var response = await _client.SendAsync(request);
+
+                    if (response.IsSuccessStatusCode)
+                    {
+                        await DisplayAlert("Successo", "Invito accettato! Sei ora iscritto all'evento.", "OK");
+
+                        // Rimuovi l'invito dalla lista e ricarica i dati
+                        CalendarEvents.Remove(invitePost);
+                        await LoadCalendarEvents();
+                    }
+                    else
+                    {
+                        await DisplayAlert("Errore", "Impossibile accettare l'invito.", "OK");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine($"[INVITES] Errore accettazione invito: {ex.Message}");
+                    await DisplayAlert("Errore", "Errore durante l'accettazione dell'invito.", "OK");
+                }
+            }
+        }
+
+        private async void OnRejectInviteClicked(object sender, EventArgs e)
+        {
+            if (sender is Button button && button.CommandParameter is PostResponse invitePost)
+            {
+                try
+                {
+                    var request = new HttpRequestMessage(HttpMethod.Post,
+                        $"{apiBaseUrl}/events/invite/reject?invite_id={invitePost.InviteID}");
+
+                    if (Preferences.ContainsKey("session_id"))
+                    {
+                        string sessionId = Preferences.Get("session_id", "");
+                        request.Headers.Add("Cookie", $"session_id={sessionId}");
+                    }
+
+                    var response = await _client.SendAsync(request);
+
+                    if (response.IsSuccessStatusCode)
+                    {
+                        await DisplayAlert("Invito Rifiutato", "L'invito è stato rifiutato.", "OK");
+
+                        // Rimuovi l'invito dalla lista
+                        CalendarEvents.Remove(invitePost);
+                    }
+                    else
+                    {
+                        await DisplayAlert("Errore", "Impossibile rifiutare l'invito.", "OK");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine($"[INVITES] Errore rifiuto invito: {ex.Message}");
+                    await DisplayAlert("Errore", "Errore durante il rifiuto dell'invito.", "OK");
+                }
+            }
+        }
+
+        // ========== GESTIONE PULSANTI PROFILO ==========
+
+        private async void OnNavigateToChangePassword(object sender, EventArgs e)
+        {
+            try
+            {
+                await Navigation.PushAsync(new ChangePasswordPage());
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[PROFILE] Errore navigazione cambio password: {ex.Message}");
+                await DisplayAlert("Errore", "Impossibile aprire la pagina di cambio password", "OK");
+            }
+        }
+
+        private async void OnLogoutButtonClicked(object sender, EventArgs e)
+        {
+            try
+            {
+                var confirm = await DisplayAlert(
+                    "Logout",
+                    "Sei sicuro di voler effettuare il logout?",
+                    "Logout",
+                    "Annulla"
+                );
+
+                if (!confirm) return;
+
+                // Effettua il logout chiamando il server
+                var request = new HttpRequestMessage(HttpMethod.Post, $"{apiBaseUrl}/logout");
+
+                if (Preferences.ContainsKey("session_id"))
+                {
+                    string sessionId = Preferences.Get("session_id", "");
+                    request.Headers.Add("Cookie", $"session_id={sessionId}");
+                }
+
+                await _client.SendAsync(request); // Non importa se fallisce
+
+                // Pulisci i dati di sessione
+                Preferences.Clear();
+                HomePage.ResetAdminWelcome();
+
+                Debug.WriteLine($"[PROFILE] Logout completato");
+
+                // Torna alla pagina di login
+                Application.Current.MainPage = new NavigationPage(new LoginPage());
+
+                await DisplayAlert("Logout Completato", "Sei stato disconnesso con successo.", "OK");
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[PROFILE] Errore durante logout: {ex.Message}");
+                await DisplayAlert("Errore", "Errore durante il logout", "OK");
+            }
+        }
+
+        // ========== HELPER METHODS ==========
+
+        private string GetStringProperty(JsonElement element, string propertyName, string defaultValue = "")
+        {
+            try
+            {
+                return element.TryGetProperty(propertyName, out var prop) && prop.ValueKind != JsonValueKind.Null
+                    ? prop.GetString() ?? defaultValue
+                    : defaultValue;
+            }
+            catch
+            {
+                return defaultValue;
+            }
+        }
+
+        private int GetIntProperty(JsonElement element, string propertyName, int defaultValue = 0)
+        {
+            try
+            {
+                return element.TryGetProperty(propertyName, out var prop) && prop.ValueKind != JsonValueKind.Null
+                    ? prop.GetInt32()
+                    : defaultValue;
+            }
+            catch
+            {
+                return defaultValue;
+            }
+        }
+
+        private long GetLongProperty(JsonElement element, string propertyName, long defaultValue = 0)
+        {
+            try
+            {
+                return element.TryGetProperty(propertyName, out var prop) && prop.ValueKind != JsonValueKind.Null
+                    ? prop.GetInt64()
+                    : defaultValue;
+            }
+            catch
+            {
+                return defaultValue;
+            }
+        }
+
+        private int? GetNullableIntProperty(JsonElement element, string propertyName)
+        {
+            try
+            {
+                return element.TryGetProperty(propertyName, out var prop) && prop.ValueKind != JsonValueKind.Null
+                    ? prop.GetInt32()
+                    : null;
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        private CampoInfo GetCampoProperty(JsonElement element)
+        {
+            try
+            {
+                if (element.TryGetProperty("campo", out var campoElement) && campoElement.ValueKind == JsonValueKind.Object)
+                {
+                    return new CampoInfo
+                    {
+                        nome = GetStringProperty(campoElement, "nome"),
+                        indirizzo = GetStringProperty(campoElement, "indirizzo")
+                    };
+                }
+                return null;
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        // ========== MODELLI DATI AGGIUNTIVI ==========
+
+
+        public class EventInviteInfo
+        {
+            public long InviteID { get; set; }
+            public int PostID { get; set; }
+            public string Message { get; set; }
+            public string CreatedAt { get; set; }
+            public string Status { get; set; }
+            public string SenderUsername { get; set; }
+            public string SenderNome { get; set; }
+            public string SenderCognome { get; set; }
+            public string SenderEmail { get; set; }
+            public string SenderProfilePicture { get; set; }
+        }
+    }
+}                        

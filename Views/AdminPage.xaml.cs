@@ -5,14 +5,15 @@ using Microsoft.Maui.Storage;
 using System.Text;
 using System.Diagnostics;
 using trovagiocatoriApp.Models;
+using trovagiocatoriApp.Services;
 
 namespace trovagiocatoriApp.Views;
 
 public partial class AdminPage : ContentPage
 {
-    private readonly HttpClient _client = new HttpClient();
+    private readonly IAdminService _adminService;
 
-    // Collections per i dati
+    // Collections per i dati utilizzando i nuovi Models
     public ObservableCollection<AdminPostInfo> AllPosts { get; set; } = new ObservableCollection<AdminPostInfo>();
     public ObservableCollection<AdminCommentInfo> AllComments { get; set; } = new ObservableCollection<AdminCommentInfo>();
     public ObservableCollection<AdminUserInfo> AllUsers { get; set; } = new ObservableCollection<AdminUserInfo>();
@@ -37,6 +38,9 @@ public partial class AdminPage : ContentPage
     {
         InitializeComponent();
         BindingContext = this;
+
+        // Inizializza il service (normalmente dovrebbe essere iniettato via DI)
+        _adminService = new AdminService();
     }
 
     protected override async void OnAppearing()
@@ -61,7 +65,9 @@ public partial class AdminPage : ContentPage
                 request.Headers.Add("Cookie", $"session_id={sessionId}");
             }
 
-            var response = await _client.SendAsync(request);
+            var httpClient = new HttpClient();
+            var response = await httpClient.SendAsync(request);
+
             if (response.IsSuccessStatusCode)
             {
                 var json = await response.Content.ReadAsStringAsync();
@@ -84,35 +90,32 @@ public partial class AdminPage : ContentPage
     {
         try
         {
-            var request = new HttpRequestMessage(HttpMethod.Get, $"{ApiConfig.PythonApiUrl}/admin/stats");
+            Debug.WriteLine("[ADMIN] Caricamento statistiche dashboard...");
 
-            if (Preferences.ContainsKey("session_id"))
+            var stats = await _adminService.GetStatsAsync();
+
+            MainThread.BeginInvokeOnMainThread(() =>
             {
-                string sessionId = Preferences.Get("session_id", "");
-                request.Headers.Add("Cookie", $"session_id={sessionId}");
-            }
+                TotalPostsLabel.Text = stats.TotalPosts.ToString();
+                TotalCommentsLabel.Text = stats.TotalComments.ToString();
+                TotalUsersLabel.Text = stats.TotalUsers.ToString();
+                TotalFieldsLabel.Text = stats.TotalSportFields.ToString();
+            });
 
-            var response = await _client.SendAsync(request);
-            if (response.IsSuccessStatusCode)
-            {
-                var json = await response.Content.ReadAsStringAsync();
-                var stats = JsonSerializer.Deserialize<Dictionary<string, object>>(json);
-
-                if (stats != null)
-                {
-                    MainThread.BeginInvokeOnMainThread(() =>
-                    {
-                        TotalPostsLabel.Text = stats.TryGetValue("total_posts", out var posts) ? posts.ToString() : "0";
-                        TotalCommentsLabel.Text = stats.TryGetValue("total_comments", out var comments) ? comments.ToString() : "0";
-                        TotalUsersLabel.Text = stats.TryGetValue("total_users", out var users) ? users.ToString() : "0";
-                        TotalFieldsLabel.Text = stats.TryGetValue("total_sport_fields", out var fields) ? fields.ToString() : "0";
-                    });
-                }
-            }
+            Debug.WriteLine($"[ADMIN] ✅ Statistiche caricate: {stats.TotalPosts} post, {stats.TotalComments} commenti, {stats.TotalUsers} utenti");
         }
         catch (Exception ex)
         {
             Debug.WriteLine($"[ADMIN] Errore caricamento stats: {ex.Message}");
+
+            // Fallback con statistiche di default
+            MainThread.BeginInvokeOnMainThread(() =>
+            {
+                TotalPostsLabel.Text = "0";
+                TotalCommentsLabel.Text = "0";
+                TotalUsersLabel.Text = "0";
+                TotalFieldsLabel.Text = "0";
+            });
         }
     }
 
@@ -127,37 +130,31 @@ public partial class AdminPage : ContentPage
     {
         try
         {
-            var request = new HttpRequestMessage(HttpMethod.Get, $"{ApiConfig.PythonApiUrl}/admin/posts");
+            Debug.WriteLine("[ADMIN] Caricamento tutti i post...");
 
-            if (Preferences.ContainsKey("session_id"))
+            var posts = await _adminService.GetAllPostsAsync();
+
+            MainThread.BeginInvokeOnMainThread(() =>
             {
-                string sessionId = Preferences.Get("session_id", "");
-                request.Headers.Add("Cookie", $"session_id={sessionId}");
-            }
-
-            var response = await _client.SendAsync(request);
-            if (response.IsSuccessStatusCode)
-            {
-                var json = await response.Content.ReadAsStringAsync();
-                var posts = JsonSerializer.Deserialize<List<AdminPostInfo>>(json,
-                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-
-                MainThread.BeginInvokeOnMainThread(() =>
+                AllPosts.Clear();
+                foreach (var post in posts)
                 {
-                    AllPosts.Clear();
-                    foreach (var post in posts ?? new List<AdminPostInfo>())
-                    {
-                        AllPosts.Add(post);
-                    }
+                    AllPosts.Add(post);
+                }
 
-                    PostsCollectionView.ItemsSource = AllPosts;
-                    Debug.WriteLine($"[ADMIN] Caricati {AllPosts.Count} post");
-                });
-            }
+                PostsCollectionView.ItemsSource = AllPosts;
+                Debug.WriteLine($"[ADMIN] Caricati {AllPosts.Count} post");
+            });
         }
         catch (Exception ex)
         {
             Debug.WriteLine($"[ADMIN] Errore caricamento post: {ex.Message}");
+
+            MainThread.BeginInvokeOnMainThread(() =>
+            {
+                AllPosts.Clear();
+                PostsCollectionView.ItemsSource = AllPosts;
+            });
         }
     }
 
@@ -165,37 +162,31 @@ public partial class AdminPage : ContentPage
     {
         try
         {
-            var request = new HttpRequestMessage(HttpMethod.Get, $"{ApiConfig.PythonApiUrl}/admin/comments");
+            Debug.WriteLine("[ADMIN] Caricamento tutti i commenti...");
 
-            if (Preferences.ContainsKey("session_id"))
+            var comments = await _adminService.GetAllCommentsAsync();
+
+            MainThread.BeginInvokeOnMainThread(() =>
             {
-                string sessionId = Preferences.Get("session_id", "");
-                request.Headers.Add("Cookie", $"session_id={sessionId}");
-            }
-
-            var response = await _client.SendAsync(request);
-            if (response.IsSuccessStatusCode)
-            {
-                var json = await response.Content.ReadAsStringAsync();
-                var comments = JsonSerializer.Deserialize<List<AdminCommentInfo>>(json,
-                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-
-                MainThread.BeginInvokeOnMainThread(() =>
+                AllComments.Clear();
+                foreach (var comment in comments)
                 {
-                    AllComments.Clear();
-                    foreach (var comment in comments ?? new List<AdminCommentInfo>())
-                    {
-                        AllComments.Add(comment);
-                    }
+                    AllComments.Add(comment);
+                }
 
-                    CommentsCollectionView.ItemsSource = AllComments;
-                    Debug.WriteLine($"[ADMIN] Caricati {AllComments.Count} commenti");
-                });
-            }
+                CommentsCollectionView.ItemsSource = AllComments;
+                Debug.WriteLine($"[ADMIN] Caricati {AllComments.Count} commenti");
+            });
         }
         catch (Exception ex)
         {
             Debug.WriteLine($"[ADMIN] Errore caricamento commenti: {ex.Message}");
+
+            MainThread.BeginInvokeOnMainThread(() =>
+            {
+                AllComments.Clear();
+                CommentsCollectionView.ItemsSource = AllComments;
+            });
         }
     }
 
@@ -203,37 +194,31 @@ public partial class AdminPage : ContentPage
     {
         try
         {
-            var request = new HttpRequestMessage(HttpMethod.Get, $"{ApiConfig.BaseUrl}/admin/users");
+            Debug.WriteLine("[ADMIN] Caricamento tutti gli utenti...");
 
-            if (Preferences.ContainsKey("session_id"))
+            var users = await _adminService.GetAllUsersAsync();
+
+            MainThread.BeginInvokeOnMainThread(() =>
             {
-                string sessionId = Preferences.Get("session_id", "");
-                request.Headers.Add("Cookie", $"session_id={sessionId}");
-            }
-
-            var response = await _client.SendAsync(request);
-            if (response.IsSuccessStatusCode)
-            {
-                var json = await response.Content.ReadAsStringAsync();
-                var users = JsonSerializer.Deserialize<List<AdminUserInfo>>(json,
-                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-
-                MainThread.BeginInvokeOnMainThread(() =>
+                AllUsers.Clear();
+                foreach (var user in users)
                 {
-                    AllUsers.Clear();
-                    foreach (var user in users ?? new List<AdminUserInfo>())
-                    {
-                        AllUsers.Add(user);
-                    }
+                    AllUsers.Add(user);
+                }
 
-                    UsersCollectionView.ItemsSource = AllUsers;
-                    Debug.WriteLine($"[ADMIN] Caricati {AllUsers.Count} utenti");
-                });
-            }
+                UsersCollectionView.ItemsSource = AllUsers;
+                Debug.WriteLine($"[ADMIN] Caricati {AllUsers.Count} utenti");
+            });
         }
         catch (Exception ex)
         {
             Debug.WriteLine($"[ADMIN] Errore caricamento utenti: {ex.Message}");
+
+            MainThread.BeginInvokeOnMainThread(() =>
+            {
+                AllUsers.Clear();
+                UsersCollectionView.ItemsSource = AllUsers;
+            });
         }
     }
 
@@ -405,27 +390,23 @@ public partial class AdminPage : ContentPage
 
             if (!confirm) return;
 
-            var request = new HttpRequestMessage(HttpMethod.Delete, $"{ApiConfig.BaseUrl}/admin/posts/{post.Id}");
+            Debug.WriteLine($"[ADMIN] Eliminazione post {post.Id}...");
 
-            if (Preferences.ContainsKey("session_id"))
-            {
-                string sessionId = Preferences.Get("session_id", "");
-                request.Headers.Add("Cookie", $"session_id={sessionId}");
-            }
+            bool success = await _adminService.DeletePostAsync(post.Id);
 
-            var response = await _client.SendAsync(request);
-
-            if (response.IsSuccessStatusCode)
+            if (success)
             {
                 AllPosts.Remove(post);
                 FilterPosts();
                 await DisplayAlert("Successo", $"Post '{post.Titolo}' eliminato con successo!", "OK");
                 await LoadDashboardStats(); // Aggiorna le statistiche
+
+                Debug.WriteLine($"[ADMIN] ✅ Post {post.Id} eliminato con successo");
             }
             else
             {
-                var error = await response.Content.ReadAsStringAsync();
-                await DisplayAlert("Errore", $"Impossibile eliminare il post: {error}", "OK");
+                await DisplayAlert("Errore", "Impossibile eliminare il post. Riprova più tardi.", "OK");
+                Debug.WriteLine($"[ADMIN] ❌ Errore eliminazione post {post.Id}");
             }
         }
         catch (Exception ex)
@@ -442,7 +423,7 @@ public partial class AdminPage : ContentPage
             bool confirm = await DisplayAlert(
                 "Elimina Commento",
                 $"Sei sicuro di voler eliminare il commento:\n\n" +
-                $"💬 {comment.Contenuto}\n" +
+                $"💬 {comment.Contenuto.Substring(0, Math.Min(100, comment.Contenuto.Length))}...\n" +
                 $"👤 di {comment.AutoreEmail}\n" +
                 $"📝 nel post: {comment.PostTitolo}\n" +
                 $"📅 {comment.DataCreazione:dd/MM/yyyy}\n\n" +
@@ -453,27 +434,23 @@ public partial class AdminPage : ContentPage
 
             if (!confirm) return;
 
-            var request = new HttpRequestMessage(HttpMethod.Delete, $"{ApiConfig.BaseUrl}/admin/comments/{comment.Id}");
+            Debug.WriteLine($"[ADMIN] Eliminazione commento {comment.Id}...");
 
-            if (Preferences.ContainsKey("session_id"))
-            {
-                string sessionId = Preferences.Get("session_id", "");
-                request.Headers.Add("Cookie", $"session_id={sessionId}");
-            }
+            bool success = await _adminService.DeleteCommentAsync(comment.Id);
 
-            var response = await _client.SendAsync(request);
-
-            if (response.IsSuccessStatusCode)
+            if (success)
             {
                 AllComments.Remove(comment);
                 FilterComments();
                 await DisplayAlert("Successo", "Commento eliminato con successo!", "OK");
                 await LoadDashboardStats(); // Aggiorna le statistiche
+
+                Debug.WriteLine($"[ADMIN] ✅ Commento {comment.Id} eliminato con successo");
             }
             else
             {
-                var error = await response.Content.ReadAsStringAsync();
-                await DisplayAlert("Errore", $"Impossibile eliminare il commento: {error}", "OK");
+                await DisplayAlert("Errore", "Impossibile eliminare il commento. Riprova più tardi.", "OK");
+                Debug.WriteLine($"[ADMIN] ❌ Errore eliminazione commento {comment.Id}");
             }
         }
         catch (Exception ex)
@@ -495,33 +472,32 @@ public partial class AdminPage : ContentPage
                 $"Sei sicuro di voler {action} l'utente:\n\n" +
                 $"👤 {user.Username} ({user.Nome} {user.Cognome})\n" +
                 $"📧 {user.Email}\n" +
-                $"📅 Registrato: {user.DataRegistrazione:dd/MM/yyyy}",
+                $"📅 Registrato: {user.DataRegistrazione:dd/MM/yyyy}\n\n" +
+                $"ℹ️ L'utente {(user.IsActive ? "non potrà più" : "potrà di nuovo")} accedere alla piattaforma.",
                 actionCaps,
                 "Annulla"
             );
 
             if (!confirm) return;
 
-            var request = new HttpRequestMessage(HttpMethod.Post, $"{ApiConfig.BaseUrl}/admin/users/{user.Id}/toggle-status");
+            Debug.WriteLine($"[ADMIN] Toggle status utente {user.Id}...");
 
-            if (Preferences.ContainsKey("session_id"))
-            {
-                string sessionId = Preferences.Get("session_id", "");
-                request.Headers.Add("Cookie", $"session_id={sessionId}");
-            }
+            bool success = await _adminService.ToggleUserStatusAsync(user.Id);
 
-            var response = await _client.SendAsync(request);
-
-            if (response.IsSuccessStatusCode)
+            if (success)
             {
                 user.IsActive = !user.IsActive;
                 FilterUsers();
-                await DisplayAlert("Successo", $"Utente {(user.IsActive ? "riattivato" : "disattivato")} con successo!", "OK");
+
+                string statusMessage = user.IsActive ? "riattivato" : "disattivato";
+                await DisplayAlert("Successo", $"Utente {statusMessage} con successo!", "OK");
+
+                Debug.WriteLine($"[ADMIN] ✅ Utente {user.Id} {statusMessage} con successo");
             }
             else
             {
-                var error = await response.Content.ReadAsStringAsync();
-                await DisplayAlert("Errore", $"Impossibile modificare lo stato dell'utente: {error}", "OK");
+                await DisplayAlert("Errore", "Impossibile modificare lo stato dell'utente. Riprova più tardi.", "OK");
+                Debug.WriteLine($"[ADMIN] ❌ Errore toggle status utente {user.Id}");
             }
         }
         catch (Exception ex)
@@ -535,16 +511,51 @@ public partial class AdminPage : ContentPage
 
     private async void OnRefreshStatsClicked(object sender, EventArgs e)
     {
-        await LoadDashboardStats();
-        await LoadAllData();
-        await DisplayAlert("Aggiornato", "Dati aggiornati con successo!", "OK");
+        try
+        {
+            Debug.WriteLine("[ADMIN] Avvio refresh dati...");
+
+            // Mostra indicatore di caricamento (opzionale)
+            var button = sender as Button;
+            var originalText = button?.Text;
+            if (button != null)
+            {
+                button.Text = "🔄 Aggiornamento...";
+                button.IsEnabled = false;
+            }
+
+            await LoadDashboardStats();
+            await LoadAllData();
+
+            if (button != null)
+            {
+                button.Text = originalText;
+                button.IsEnabled = true;
+            }
+
+            await DisplayAlert("Aggiornato", "Dati aggiornati con successo!", "OK");
+            Debug.WriteLine("[ADMIN] ✅ Refresh completato");
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"[ADMIN] Errore durante refresh: {ex.Message}");
+            await DisplayAlert("Errore", "Errore durante l'aggiornamento dei dati", "OK");
+        }
     }
 
     private async void OnViewPostDetailsClicked(object sender, EventArgs e)
     {
         if (sender is Button button && button.CommandParameter is AdminPostInfo post)
         {
-            await Navigation.PushAsync(new PostDetailMainPage(post.Id));
+            try
+            {
+                await Navigation.PushAsync(new PostDetailMainPage(post.Id));
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[ADMIN] Errore apertura dettagli post {post.Id}: {ex.Message}");
+                await DisplayAlert("Errore", "Impossibile aprire i dettagli del post", "OK");
+            }
         }
     }
 
@@ -552,201 +563,129 @@ public partial class AdminPage : ContentPage
     {
         if (sender is Button button && button.CommandParameter is AdminUserInfo user)
         {
-            var userPosts = AllPosts.Where(p => p.AutoreEmail == user.Email).ToList();
-
-            if (userPosts.Any())
+            try
             {
-                var postTitles = string.Join("\n• ", userPosts.Select(p => p.Titolo));
-                await DisplayAlert(
-                    $"Post di {user.Username}",
-                    $"Post creati ({userPosts.Count}):\n\n• {postTitles}",
-                    "OK"
-                );
-            }
-            else
-            {
-                await DisplayAlert("Info", $"{user.Username} non ha ancora creato post.", "OK");
-            }
-        }
-    }
-}
+                var userPosts = AllPosts.Where(p => p.AutoreEmail == user.Email).ToList();
 
-private async Task LoadDashboardStats()
-    {
-        try
-        {
-            // Prima prova l'endpoint specifico per dashboard
-            var request = new HttpRequestMessage(HttpMethod.Get, $"{ApiConfig.PythonApiUrl}/admin/dashboard-stats");
-
-            if (Preferences.ContainsKey("session_id"))
-            {
-                string sessionId = Preferences.Get("session_id", "");
-                request.Headers.Add("Cookie", $"session_id={sessionId}");
-            }
-
-            var response = await _client.SendAsync(request);
-            if (response.IsSuccessStatusCode)
-            {
-                var json = await response.Content.ReadAsStringAsync();
-                var stats = JsonSerializer.Deserialize<Dictionary<string, object>>(json);
-
-                if (stats != null)
+                if (userPosts.Any())
                 {
-                    MainThread.BeginInvokeOnMainThread(() =>
-                    {
-                        TotalPostsLabel.Text = GetStatValue(stats, "total_posts");
-                        TotalCommentsLabel.Text = GetStatValue(stats, "total_comments");
-                        TotalUsersLabel.Text = GetStatValue(stats, "total_users");
-                        TotalFieldsLabel.Text = GetStatValue(stats, "total_sport_fields");
-                    });
-                    Debug.WriteLine("[ADMIN] ✅ Statistiche dashboard caricate");
-                    return;
+                    var postTitles = string.Join("\n• ", userPosts.Select(p => $"{p.Titolo} ({p.DataCreazione:dd/MM/yyyy})"));
+
+                    await DisplayAlert(
+                        $"Post di {user.Username}",
+                        $"Post creati ({userPosts.Count}):\n\n• {postTitles}",
+                        "OK"
+                    );
+                }
+                else
+                {
+                    await DisplayAlert("Info", $"{user.Username} non ha ancora creato post.", "OK");
                 }
             }
-
-            // Fallback: usa endpoint normale
-            await LoadFallbackStats();
-        }
-        catch (Exception ex)
-        {
-            Debug.WriteLine($"[ADMIN] Errore caricamento stats dashboard: {ex.Message}");
-            await LoadFallbackStats();
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[ADMIN] Errore visualizzazione post utente {user.Username}: {ex.Message}");
+                await DisplayAlert("Errore", "Errore nel caricamento dei post dell'utente", "OK");
+            }
         }
     }
 
-    private async Task LoadFallbackStats()
+    // ========== GESTIONE ERRORI E FALLBACK ==========
+
+    private AdminStats GetFallbackStats()
     {
-        try
+        return new AdminStats
         {
-            var request = new HttpRequestMessage(HttpMethod.Get, $"{ApiConfig.PythonApiUrl}/admin/stats");
-
-            if (Preferences.ContainsKey("session_id"))
-            {
-                string sessionId = Preferences.Get("session_id", "");
-                request.Headers.Add("Cookie", $"session_id={sessionId}");
-            }
-
-            var response = await _client.SendAsync(request);
-            if (response.IsSuccessStatusCode)
-            {
-                var json = await response.Content.ReadAsStringAsync();
-                var stats = JsonSerializer.Deserialize<Dictionary<string, object>>(json);
-
-                MainThread.BeginInvokeOnMainThread(() =>
-                {
-                    TotalPostsLabel.Text = GetStatValue(stats, "total_posts");
-                    TotalCommentsLabel.Text = GetStatValue(stats, "total_comments");
-                    TotalUsersLabel.Text = GetStatValue(stats, "total_users", "0");
-                    TotalFieldsLabel.Text = GetStatValue(stats, "total_sport_fields");
-                });
-                Debug.WriteLine("[ADMIN] ✅ Statistiche fallback caricate");
-            }
-            else
-            {
-                // Ultima risorsa: dati mock
-                MainThread.BeginInvokeOnMainThread(() =>
-                {
-                    TotalPostsLabel.Text = "12";
-                    TotalCommentsLabel.Text = "45";
-                    TotalUsersLabel.Text = "8";
-                    TotalFieldsLabel.Text = "15";
-                });
-                Debug.WriteLine("[ADMIN] ⚠️ Usando statistiche mock");
-            }
-        }
-        catch (Exception ex)
-        {
-            Debug.WriteLine($"[ADMIN] Errore caricamento stats fallback: {ex.Message}");
-            // Dati mock come ultima risorsa
-            MainThread.BeginInvokeOnMainThread(() =>
-            {
-                TotalPostsLabel.Text = "0";
-                TotalCommentsLabel.Text = "0";
-                TotalUsersLabel.Text = "0";
-                TotalFieldsLabel.Text = "0";
-            });
-        }
+            TotalPosts = AllPosts.Count,
+            TotalComments = AllComments.Count,
+            TotalUsers = AllUsers.Count,
+            TotalSportFields = 0,
+            PostsThisWeek = 0,
+            CommentsToday = 0,
+            GeneratedAt = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")
+        };
     }
 
-    private string GetStatValue(Dictionary<string, object> stats, string key, string defaultValue = "0")
+    private void LoadMockDataIfNeeded()
     {
-        if (stats?.ContainsKey(key) == true)
+        // Carica dati mock solo se le collections sono vuote e in modalità debug
+#if DEBUG
+        if (!AllPosts.Any())
         {
-            var value = stats[key];
-            if (value is JsonElement element)
-            {
-                return element.ValueKind switch
-                {
-                    JsonValueKind.Number => element.GetInt32().ToString(),
-                    JsonValueKind.String => element.GetString() ?? defaultValue,
-                    _ => defaultValue
-                };
-            }
-            return value?.ToString() ?? defaultValue;
+            LoadMockPosts();
         }
-        return defaultValue;
+
+        if (!AllComments.Any())
+        {
+            LoadMockComments();
+        }
+
+        if (!AllUsers.Any())
+        {
+            LoadMockUsers();
+        }
+#endif
     }
 
-    // Correggi LoadAllComments
-    private async Task LoadAllComments()
+#if DEBUG
+    private void LoadMockPosts()
     {
-        try
+        var mockPosts = new List<AdminPostInfo>
         {
-            var request = new HttpRequestMessage(HttpMethod.Get, $"{ApiConfig.PythonApiUrl}/admin/comments");
-
-            if (Preferences.ContainsKey("session_id"))
+            new AdminPostInfo
             {
-                string sessionId = Preferences.Get("session_id", "");
-                request.Headers.Add("Cookie", $"session_id={sessionId}");
-            }
-
-            var response = await _client.SendAsync(request);
-            if (response.IsSuccessStatusCode)
+                Id = 1,
+                Titolo = "Partita di calcio a Milano",
+                AutoreEmail = "utente1@email.com",
+                Sport = "Calcio",
+                Citta = "Milano",
+                Provincia = "Milano",
+                DataCreazione = DateTime.Now.AddDays(-2),
+                DataPartita = DateTime.Now.AddDays(3),
+                OraPartita = "18:00",
+                NumeroGiocatori = 10,
+                PartecipantiIscritti = 7,
+                Status = "Aperto",
+                Livello = "Intermedio",
+                Commento = "Partita amichevole"
+            },
+            new AdminPostInfo
             {
-                var json = await response.Content.ReadAsStringAsync();
-                var comments = JsonSerializer.Deserialize<List<AdminCommentInfo>>(json,
-                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-
-                MainThread.BeginInvokeOnMainThread(() =>
-                {
-                    AllComments.Clear();
-                    foreach (var comment in comments ?? new List<AdminCommentInfo>())
-                    {
-                        AllComments.Add(comment);
-                    }
-
-                    CommentsCollectionView.ItemsSource = AllComments;
-                    Debug.WriteLine($"[ADMIN] Caricati {AllComments.Count} commenti");
-                });
+                Id = 2,
+                Titolo = "Tennis al parco",
+                AutoreEmail = "utente2@email.com",
+                Sport = "Tennis",
+                Citta = "Roma",
+                Provincia = "Roma",
+                DataCreazione = DateTime.Now.AddDays(-1),
+                DataPartita = DateTime.Now.AddDays(5),
+                OraPartita = "16:30",
+                NumeroGiocatori = 4,
+                PartecipantiIscritti = 4,
+                Status = "Completo",
+                Livello = "Avanzato",
+                Commento = "Doppio misto"
             }
-            else
-            {
-                Debug.WriteLine($"[ADMIN] Errore caricamento commenti: {response.StatusCode}");
-                await LoadMockComments();
-            }
-        }
-        catch (Exception ex)
+        };
+
+        foreach (var post in mockPosts)
         {
-            Debug.WriteLine($"[ADMIN] Errore caricamento commenti: {ex.Message}");
-            await LoadMockComments();
+            AllPosts.Add(post);
         }
+
+        Debug.WriteLine($"[ADMIN] Caricati {mockPosts.Count} post mock");
     }
 
-    private async Task LoadMockComments()
+    private void LoadMockComments()
     {
-        MainThread.BeginInvokeOnMainThread(() =>
-        {
-            AllComments.Clear();
-
-            // Dati mock per test
-            var mockComments = new List<AdminCommentInfo>
+        var mockComments = new List<AdminCommentInfo>
         {
             new AdminCommentInfo
             {
                 Id = 1,
                 PostId = 1,
                 PostTitolo = "Partita di calcio a Milano",
-                AutoreEmail = "user1@test.com",
+                AutoreEmail = "commentatore1@email.com",
                 Contenuto = "Sono interessato a partecipare! Che livello è richiesto?",
                 DataCreazione = DateTime.Now.AddHours(-2)
             },
@@ -755,253 +694,194 @@ private async Task LoadDashboardStats()
                 Id = 2,
                 PostId = 2,
                 PostTitolo = "Tennis al parco",
-                AutoreEmail = "user2@test.com",
+                AutoreEmail = "commentatore2@email.com",
                 Contenuto = "Perfetto! Ci sarò sicuramente. A che ora iniziamo esattamente?",
                 DataCreazione = DateTime.Now.AddHours(-1)
-            },
-            new AdminCommentInfo
-            {
-                Id = 3,
-                PostId = 1,
-                PostTitolo = "Partita di calcio a Milano",
-                AutoreEmail = "admin@test.com",
-                Contenuto = "Ottimo! Abbiamo già 5 persone confermate.",
-                DataCreazione = DateTime.Now.AddMinutes(-30)
             }
         };
 
-            foreach (var comment in mockComments)
-            {
-                AllComments.Add(comment);
-            }
+        foreach (var comment in mockComments)
+        {
+            AllComments.Add(comment);
+        }
 
-            CommentsCollectionView.ItemsSource = AllComments;
-            Debug.WriteLine($"[ADMIN] Caricati {AllComments.Count} commenti (mock)");
-        });
+        Debug.WriteLine($"[ADMIN] Caricati {mockComments.Count} commenti mock");
     }
 
-    // Correggi LoadAllPosts per gestire il fallback
-    private async Task LoadAllPosts()
+    private void LoadMockUsers()
+    {
+        var mockUsers = new List<AdminUserInfo>
+        {
+            new AdminUserInfo
+            {
+                Id = 1,
+                Username = "mario_rossi",
+                Nome = "Mario",
+                Cognome = "Rossi",
+                Email = "mario.rossi@email.com",
+                DataRegistrazione = DateTime.Now.AddDays(-30),
+                IsActive = true,
+                IsAdmin = false,
+                PostCreati = 3,
+                CommentiScritti = 12
+            },
+            new AdminUserInfo
+            {
+                Id = 2,
+                Username = "giulia_verdi",
+                Nome = "Giulia",
+                Cognome = "Verdi",
+                Email = "giulia.verdi@email.com",
+                DataRegistrazione = DateTime.Now.AddDays(-15),
+                IsActive = true,
+                IsAdmin = false,
+                PostCreati = 1,
+                CommentiScritti = 5
+            },
+            new AdminUserInfo
+            {
+                Id = 3,
+                Username = "luca_bianchi",
+                Nome = "Luca",
+                Cognome = "Bianchi",
+                Email = "luca.bianchi@email.com",
+                DataRegistrazione = DateTime.Now.AddDays(-45),
+                IsActive = false,
+                IsAdmin = false,
+                PostCreati = 0,
+                CommentiScritti = 2
+            }
+        };
+
+        foreach (var user in mockUsers)
+        {
+            AllUsers.Add(user);
+        }
+
+        Debug.WriteLine($"[ADMIN] Caricati {mockUsers.Count} utenti mock");
+    }
+#endif
+
+    // ========== GESTIONE ERRORI PERSONALIZZATA ==========
+
+    private async Task HandleServiceError(Exception ex, string operation)
+    {
+        Debug.WriteLine($"[ADMIN] Errore durante {operation}: {ex.Message}");
+
+        string userMessage = operation switch
+        {
+            "caricamento statistiche" => "Impossibile caricare le statistiche del dashboard",
+            "caricamento post" => "Impossibile caricare la lista dei post",
+            "caricamento commenti" => "Impossibile caricare la lista dei commenti",
+            "caricamento utenti" => "Impossibile caricare la lista degli utenti",
+            "eliminazione post" => "Impossibile eliminare il post selezionato",
+            "eliminazione commento" => "Impossibile eliminare il commento selezionato",
+            "modifica utente" => "Impossibile modificare lo stato dell'utente",
+            _ => "Si è verificato un errore imprevisto"
+        };
+
+        await DisplayAlert("Errore", $"{userMessage}. Riprova più tardi.", "OK");
+    }
+
+    // ========== METODI DI UTILITÀ ==========
+
+    private async Task<bool> ConfirmAction(string title, string message, string acceptText = "Conferma", string cancelText = "Annulla")
+    {
+        return await DisplayAlert(title, message, acceptText, cancelText);
+    }
+
+    private void ShowLoadingState(Button button, bool isLoading)
+    {
+        if (button == null) return;
+
+        if (isLoading)
+        {
+            button.Text = "⏳ Caricamento...";
+            button.IsEnabled = false;
+        }
+        else
+        {
+            // Il testo originale dovrebbe essere ripristinato dal chiamante
+            button.IsEnabled = true;
+        }
+    }
+
+    private string FormatUserActivity(AdminUserInfo user)
+    {
+        var activities = new List<string>();
+
+        if (user.PostCreati > 0)
+            activities.Add($"{user.PostCreati} post");
+
+        if (user.CommentiScritti > 0)
+            activities.Add($"{user.CommentiScritti} commenti");
+
+        return activities.Any() ? string.Join(" • ", activities) : "Nessuna attività";
+    }
+
+    // ========== GESTIONE NAVIGAZIONE ==========
+
+    protected override bool OnBackButtonPressed()
+    {
+        // Gestione personalizzata del pulsante indietro se necessario
+        return base.OnBackButtonPressed();
+    }
+
+    private async void OnBackToMainClicked(object sender, EventArgs e)
     {
         try
         {
-            var request = new HttpRequestMessage(HttpMethod.Get, $"{ApiConfig.PythonApiUrl}/admin/posts");
+            await Navigation.PopAsync();
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"[ADMIN] Errore navigazione indietro: {ex.Message}");
+        }
+    }
 
-            if (Preferences.ContainsKey("session_id"))
+    // ========== GESTIONE CICLO DI VITA ==========
+
+    protected override void OnDisappearing()
+    {
+        base.OnDisappearing();
+        Debug.WriteLine("[ADMIN] AdminPage OnDisappearing");
+    }
+
+    // ========== METODI DIAGNOSTICI ==========
+
+    private void LogCurrentState()
+    {
+        Debug.WriteLine($"[ADMIN] Current State:");
+        Debug.WriteLine($"  - Tab attivo: {_currentTab}");
+        Debug.WriteLine($"  - Post caricati: {AllPosts.Count}");
+        Debug.WriteLine($"  - Commenti caricati: {AllComments.Count}");
+        Debug.WriteLine($"  - Utenti caricati: {AllUsers.Count}");
+        Debug.WriteLine($"  - Filtro post: '{_postSearchFilter}'");
+        Debug.WriteLine($"  - Filtro commenti: '{_commentSearchFilter}'");
+        Debug.WriteLine($"  - Filtro utenti: '{_userSearchFilter}'");
+    }
+
+    private async Task ValidateDataIntegrity()
+    {
+        try
+        {
+            // Verifica integrità dei dati
+            var invalidPosts = AllPosts.Where(p => string.IsNullOrEmpty(p.Titolo) || string.IsNullOrEmpty(p.AutoreEmail)).Count();
+            var invalidComments = AllComments.Where(c => string.IsNullOrEmpty(c.Contenuto) || string.IsNullOrEmpty(c.AutoreEmail)).Count();
+            var invalidUsers = AllUsers.Where(u => string.IsNullOrEmpty(u.Username) || string.IsNullOrEmpty(u.Email)).Count();
+
+            if (invalidPosts > 0 || invalidComments > 0 || invalidUsers > 0)
             {
-                string sessionId = Preferences.Get("session_id", "");
-                request.Headers.Add("Cookie", $"session_id={sessionId}");
-            }
-
-            var response = await _client.SendAsync(request);
-            if (response.IsSuccessStatusCode)
-            {
-                var json = await response.Content.ReadAsStringAsync();
-                var posts = JsonSerializer.Deserialize<List<AdminPostInfo>>(json,
-                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-
-                MainThread.BeginInvokeOnMainThread(() =>
-                {
-                    AllPosts.Clear();
-                    foreach (var post in posts ?? new List<AdminPostInfo>())
-                    {
-                        AllPosts.Add(post);
-                    }
-
-                    PostsCollectionView.ItemsSource = AllPosts;
-                    Debug.WriteLine($"[ADMIN] Caricati {AllPosts.Count} post");
-                });
+                Debug.WriteLine($"[ADMIN] ⚠️ Dati non validi trovati: {invalidPosts} post, {invalidComments} commenti, {invalidUsers} utenti");
             }
             else
             {
-                Debug.WriteLine($"[ADMIN] Errore caricamento post: {response.StatusCode}");
-                await LoadMockPosts();
+                Debug.WriteLine("[ADMIN] ✅ Tutti i dati sono validi");
             }
         }
         catch (Exception ex)
         {
-            Debug.WriteLine($"[ADMIN] Errore caricamento post: {ex.Message}");
-            await LoadMockPosts();
+            Debug.WriteLine($"[ADMIN] Errore validazione dati: {ex.Message}");
         }
     }
-
-    private async Task LoadMockPosts()
-    {
-        try
-        {
-            // Usa i post esistenti dal backend normale come base
-            var response = await _client.GetAsync($"{ApiConfig.PythonApiUrl}/posts/search?provincia=Milano&sport=Calcio");
-
-            if (response.IsSuccessStatusCode)
-            {
-                var json = await response.Content.ReadAsStringAsync();
-                var regularPosts = JsonSerializer.Deserialize<List<JsonElement>>(json);
-
-                MainThread.BeginInvokeOnMainThread(() =>
-                {
-                    AllPosts.Clear();
-
-                    foreach (var postElement in regularPosts?.Take(10) ?? new List<JsonElement>())
-                    {
-                        var adminPost = new AdminPostInfo
-                        {
-                            Id = GetIntProperty(postElement, "id"),
-                            Titolo = GetStringProperty(postElement, "titolo"),
-                            AutoreEmail = GetStringProperty(postElement, "autore_email"),
-                            Sport = GetStringProperty(postElement, "sport"),
-                            Citta = GetStringProperty(postElement, "citta"),
-                            Provincia = GetStringProperty(postElement, "provincia"),
-                            DataCreazione = DateTime.Now.AddDays(-Random.Shared.Next(1, 30)),
-                            DataPartita = DateTime.TryParse(GetStringProperty(postElement, "data_partita"), out var dataPartita)
-                                         ? dataPartita : DateTime.Now.AddDays(Random.Shared.Next(1, 15)),
-                            NumeroGiocatori = GetIntProperty(postElement, "numero_giocatori", 1),
-                            PartecipantiIscritti = GetIntProperty(postElement, "partecipanti_iscritti", 0),
-                            Status = GetIntProperty(postElement, "posti_disponibili", 0) > 0 ? "Aperto" : "Completo"
-                        };
-
-                        AllPosts.Add(adminPost);
-                    }
-
-                    PostsCollectionView.ItemsSource = AllPosts;
-                    Debug.WriteLine($"[ADMIN] Caricati {AllPosts.Count} post (mock da backend)");
-                });
-            }
-            else
-            {
-                // Mock completo se anche il backend normale non funziona
-                MainThread.BeginInvokeOnMainThread(() =>
-                {
-                    AllPosts.Clear();
-                    var mockPosts = new List<AdminPostInfo>
-                {
-                    new AdminPostInfo
-                    {
-                        Id = 1,
-                        Titolo = "Partita di calcio a Milano",
-                        AutoreEmail = "utente1@email.com",
-                        Sport = "Calcio",
-                        Citta = "Milano",
-                        Provincia = "Milano",
-                        DataCreazione = DateTime.Now.AddDays(-2),
-                        DataPartita = DateTime.Now.AddDays(3),
-                        NumeroGiocatori = 10,
-                        PartecipantiIscritti = 7,
-                        Status = "Aperto"
-                    },
-                    new AdminPostInfo
-                    {
-                        Id = 2,
-                        Titolo = "Tennis al parco",
-                        AutoreEmail = "utente2@email.com",
-                        Sport = "Tennis",
-                        Citta = "Roma",
-                        Provincia = "Roma",
-                        DataCreazione = DateTime.Now.AddDays(-1),
-                        DataPartita = DateTime.Now.AddDays(5),
-                        NumeroGiocatori = 4,
-                        PartecipantiIscritti = 4,
-                        Status = "Completo"
-                    }
-                };
-
-                    foreach (var post in mockPosts)
-                    {
-                        AllPosts.Add(post);
-                    }
-
-                    PostsCollectionView.ItemsSource = AllPosts;
-                    Debug.WriteLine($"[ADMIN] Caricati {AllPosts.Count} post (mock completo)");
-                });
-            }
-        }
-        catch (Exception ex)
-        {
-            Debug.WriteLine($"[ADMIN] Errore caricamento mock post: {ex.Message}");
-        }
-    }
-
-    // Helper methods già esistenti ma assicurati che ci siano
-    private string GetStringProperty(JsonElement element, string propertyName, string defaultValue = "")
-    {
-        try
-        {
-            return element.TryGetProperty(propertyName, out var prop) && prop.ValueKind != JsonValueKind.Null
-                ? prop.GetString() ?? defaultValue
-                : defaultValue;
-        }
-        catch
-        {
-            return defaultValue;
-        }
-    }
-
-    private int GetIntProperty(JsonElement element, string propertyName, int defaultValue = 0)
-    {
-        try
-        {
-            return element.TryGetProperty(propertyName, out var prop) && prop.ValueKind != JsonValueKind.Null
-                ? prop.GetInt32()
-                : defaultValue;
-        }
-        catch
-        {
-            return defaultValue;
-        }
-    }
-}
-
-// ========== MODELLI DATI ADMIN ==========
-
-public class AdminPostInfo
-{
-    public int Id { get; set; }
-    public string Titolo { get; set; }
-    public string AutoreEmail { get; set; }
-    public string Sport { get; set; }
-    public string Citta { get; set; }
-    public string Provincia { get; set; }
-    public DateTime DataCreazione { get; set; }
-    public DateTime DataPartita { get; set; }
-    public int NumeroGiocatori { get; set; }
-    public int PartecipantiIscritti { get; set; }
-    public string Status { get; set; }
-
-    public string DataCreazioneFormatted => DataCreazione.ToString("dd/MM/yyyy HH:mm");
-    public string DataPartitaFormatted => DataPartita.ToString("dd/MM/yyyy HH:mm");
-    public string PostiLiberi => $"{Math.Max(0, NumeroGiocatori - PartecipantiIscritti)}";
-    public Color StatusColor => Status == "Completo" ? Colors.Red : Colors.Green;
-}
-
-public class AdminCommentInfo
-{
-    public int Id { get; set; }
-    public int PostId { get; set; }
-    public string PostTitolo { get; set; }
-    public string AutoreEmail { get; set; }
-    public string Contenuto { get; set; }
-    public DateTime DataCreazione { get; set; }
-
-    public string DataCreazioneFormatted => DataCreazione.ToString("dd/MM/yyyy HH:mm");
-    public string ContenutoPreview => Contenuto.Length > 100 ? $"{Contenuto.Substring(0, 100)}..." : Contenuto;
-}
-
-public class AdminUserInfo
-{
-    public int Id { get; set; }
-    public string Username { get; set; }
-    public string Nome { get; set; }
-    public string Cognome { get; set; }
-    public string Email { get; set; }
-    public DateTime DataRegistrazione { get; set; }
-    public bool IsActive { get; set; }
-    public bool IsAdmin { get; set; }
-    public int PostCreati { get; set; }
-    public int CommentiScritti { get; set; }
-
-    public string DataRegistrazioneFormatted => DataRegistrazione.ToString("dd/MM/yyyy");
-    public string NomeCompleto => $"{Nome} {Cognome}";
-    public string StatusText => IsActive ? "Attivo" : "Disattivato";
-    public Color StatusColor => IsActive ? Colors.Green : Colors.Red;
-    public string AdminBadge => IsAdmin ? "👑 ADMIN" : "";
-    public string AttivitaText => $"{PostCreati} post • {CommentiScritti} commenti";
 }

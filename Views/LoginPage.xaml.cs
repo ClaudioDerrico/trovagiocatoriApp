@@ -102,7 +102,7 @@ namespace trovagiocatoriApp.Views
 
                         // Aspetta un attimo per la configurazione
                         await Task.Delay(500);
-                        await appShell.ReconfigureAsync();
+                        
                     });
                 }
                 else
