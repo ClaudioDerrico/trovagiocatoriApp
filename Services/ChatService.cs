@@ -33,6 +33,7 @@ namespace trovagiocatoriApp.Services
         public event Action<string> UserOnline;
         public event Action<string> UserOffline;
         public event Action<bool> ConnectionStatusChanged;
+        public event Action<List<LiveChatMessage>> ChatHistoryReceived; 
 
         // Dizionario per tenere traccia dei messaggi per ogni post
         public Dictionary<int, ObservableCollection<LiveChatMessage>> PostMessages { get; private set; }
@@ -64,7 +65,7 @@ namespace trovagiocatoriApp.Services
                 }
 
                 // Configura Socket.IO
-                _socket = new SocketIOClient.SocketIO(_serverUrl, new SocketIOOptions  
+                _socket = new SocketIOClient.SocketIO(_serverUrl, new SocketIOOptions
                 {
                     Path = "/ws/socket.io",
                     Transport = SocketIOClient.Transport.TransportProtocol.WebSocket,
@@ -108,7 +109,52 @@ namespace trovagiocatoriApp.Services
                 MainThread.BeginInvokeOnMainThread(() => ConnectionStatusChanged?.Invoke(false));
             };
 
-            // Nuovo messaggio privato ricevuto
+            // Cronologia messaggi ricevuta
+            _socket.On("chat_history", response =>
+            {
+                try
+                {
+                    var historyJson = response.GetValue<JsonElement>();
+                    var postId = historyJson.GetProperty("post_id").GetInt32();
+                    var messagesArray = historyJson.GetProperty("messages").EnumerateArray();
+
+                    var historyMessages = new List<LiveChatMessage>();
+                    foreach (var messageElement in messagesArray)
+                    {
+                        var message = ParseChatMessage(messageElement);
+                        message.IsSentByMe = message.SenderEmail == _currentUserEmail;
+                        historyMessages.Add(message);
+                    }
+
+                    MainThread.BeginInvokeOnMainThread(() =>
+                    {
+                        // Inizializza la collezione se non esiste
+                        if (!PostMessages.ContainsKey(postId))
+                        {
+                            PostMessages[postId] = new ObservableCollection<LiveChatMessage>();
+                        }
+
+                        // Aggiungi i messaggi alla collezione
+                        var collection = PostMessages[postId];
+                        collection.Clear(); // Pulisci eventuali messaggi esistenti
+
+                        foreach (var msg in historyMessages.OrderBy(m => m.Timestamp))
+                        {
+                            collection.Add(msg);
+                        }
+
+                        ChatHistoryReceived?.Invoke(historyMessages);
+                    });
+
+                    Debug.WriteLine($"[CHAT] Cronologia caricata: {historyMessages.Count} messaggi per post {postId}");
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine($"[CHAT] Errore parsing cronologia: {ex.Message}");
+                }
+            });
+
+            // messaggio privato ricevuto (SOLO per messaggi degli altri)
             _socket.On("new_private_message", response =>
             {
                 try
@@ -116,8 +162,8 @@ namespace trovagiocatoriApp.Services
                     var messageJson = response.GetValue<JsonElement>();
                     var message = ParseChatMessage(messageJson);
 
-                    // Determina se è un messaggio inviato da noi
-                    message.IsSentByMe = message.SenderEmail == _currentUserEmail;
+                    // IMPORTANTE: Questo evento arriva SOLO per messaggi degli altri utenti
+                    message.IsSentByMe = false;
 
                     // Aggiungi alla collezione appropriata
                     MainThread.BeginInvokeOnMainThread(() =>
@@ -131,11 +177,29 @@ namespace trovagiocatoriApp.Services
                         NewMessageReceived?.Invoke(message);
                     });
 
-                    Debug.WriteLine($"[CHAT] Nuovo messaggio da {message.SenderEmail}: {message.Content}");
+                    Debug.WriteLine($"[CHAT] Nuovo messaggio ricevuto da {message.SenderEmail}: {message.Content}");
                 }
                 catch (Exception ex)
                 {
                     Debug.WriteLine($"[CHAT] Errore parsing messaggio: {ex.Message}");
+                }
+            });
+
+            // Conferma di invio messaggio (per i nostri messaggi)
+            _socket.On("message_sent", response =>
+            {
+                try
+                {
+                    var data = response.GetValue<JsonElement>();
+                    var messageId = data.GetProperty("message_id").GetString();
+                    var status = data.GetProperty("status").GetString();
+
+                    Debug.WriteLine($"[CHAT] Messaggio {messageId} {status}");
+                    // Qui potresti aggiornare l'UI per mostrare lo stato del messaggio
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine($"[CHAT] Errore parsing message_sent: {ex.Message}");
                 }
             });
 
@@ -232,6 +296,7 @@ namespace trovagiocatoriApp.Services
             }
         }
 
+        // Metodo per inviare messaggi che aggiunge immediatamente alla UI
         public async Task SendMessageAsync(int postId, string recipientEmail, string message)
         {
             if (!_isConnected)
@@ -245,6 +310,30 @@ namespace trovagiocatoriApp.Services
 
             try
             {
+                // PRIMA aggiungi il messaggio alla UI locale
+                var localMessage = new LiveChatMessage
+                {
+                    Id = Guid.NewGuid().ToString(), // ID temporaneo
+                    PostId = postId,
+                    SenderEmail = _currentUserEmail,
+                    RecipientEmail = recipientEmail,
+                    Content = message.Trim(),
+                    Timestamp = DateTime.Now,
+                    IsSentByMe = true,
+                    Read = false
+                };
+
+                // Aggiungi alla collezione
+                MainThread.BeginInvokeOnMainThread(() =>
+                {
+                    if (!PostMessages.ContainsKey(postId))
+                    {
+                        PostMessages[postId] = new ObservableCollection<LiveChatMessage>();
+                    }
+                    PostMessages[postId].Add(localMessage);
+                });
+
+                // POI invia al server
                 await _socket.EmitAsync("send_private_message", new
                 {
                     post_id = postId,
@@ -257,6 +346,9 @@ namespace trovagiocatoriApp.Services
             catch (Exception ex)
             {
                 Debug.WriteLine($"[CHAT] Errore invio messaggio: {ex.Message}");
+
+                // In caso di errore, potresti rimuovere il messaggio dalla UI
+                // o mostrare un indicatore di errore
             }
         }
 
@@ -386,6 +478,5 @@ namespace trovagiocatoriApp.Services
                 Read = messageJson.GetProperty("read").GetBoolean()
             };
         }
-
     }
 }

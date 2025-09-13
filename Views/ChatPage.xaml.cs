@@ -54,21 +54,19 @@ namespace trovagiocatoriApp.Views
 
         private async void InitializeChatService()
         {
-            // Registra gli event handlers - Ora usa LiveChatMessage
+            // Registra gli event handlers
             _chatService.NewMessageReceived += OnNewMessageReceived;
             _chatService.UserTyping += OnUserTyping;
             _chatService.UserStoppedTyping += OnUserStoppedTyping;
             _chatService.ConnectionStatusChanged += OnConnectionStatusChanged;
+            _chatService.ChatHistoryReceived += OnChatHistoryReceived; // NUOVO
 
             // Connetti al server
             var connected = await _chatService.ConnectAsync();
             if (connected)
             {
-                // Entra nella chat del post
+                // Entra nella chat del post (questo caricherà automaticamente la cronologia)
                 await _chatService.JoinPostChatAsync(_post.id, _post.autore_email);
-
-                // Carica i messaggi esistenti
-                LoadExistingMessages();
             }
             else
             {
@@ -76,19 +74,20 @@ namespace trovagiocatoriApp.Views
             }
         }
 
-        private void LoadExistingMessages()
+        // NUOVO: Gestisce la cronologia messaggi ricevuta dal server
+        private void OnChatHistoryReceived(List<LiveChatMessage> historyMessages)
         {
-            // Carica i messaggi dalla collezione del ChatService
-            var messages = _chatService.GetMessagesForPost(_post.id);
-
             MainThread.BeginInvokeOnMainThread(() =>
             {
                 MessagesContainer.Clear();
-                foreach (var message in messages)
+
+                foreach (var message in historyMessages.OrderBy(m => m.Timestamp))
                 {
                     AddMessageToUI(message);
                 }
+
                 ScrollToBottom();
+                Debug.WriteLine($"[CHAT UI] Cronologia caricata: {historyMessages.Count} messaggi");
             });
         }
 
@@ -193,6 +192,7 @@ namespace trovagiocatoriApp.Views
             MessagesContainer.Children.Add(messageFrame);
         }
 
+        // AGGIORNATO: Rimozione della duplicazione
         private async void OnSendMessageClicked(object sender, EventArgs e)
         {
             var message = MessageEntry.Text?.Trim();
@@ -201,24 +201,7 @@ namespace trovagiocatoriApp.Views
 
             Debug.WriteLine($"[CHAT UI] Invio messaggio: {message}");
 
-            // CORREZIONE: Aggiungi subito il messaggio alla UI come "inviato da me"
-            var localMessage = new LiveChatMessage
-            {
-                Id = Guid.NewGuid().ToString(),
-                PostId = _post.id,
-                SenderEmail = _currentUserEmail,
-                RecipientEmail = _recipientEmail,
-                Content = message,
-                Timestamp = DateTime.Now,
-                IsSentByMe = true,
-                Read = false
-            };
-
-            // Aggiungi immediatamente alla UI
-            AddMessageToUI(localMessage);
-            ScrollToBottom();
-
-            // Pulisci il campo di input subito
+            // Pulisci il campo di input immediatamente
             MessageEntry.Text = "";
 
             // Disabilita il pulsante temporaneamente
@@ -226,6 +209,9 @@ namespace trovagiocatoriApp.Views
 
             try
             {
+                // RIMOSSO: Non aggiungiamo più il messaggio manualmente alla UI
+                // Il ChatService ora lo fa automaticamente nel metodo SendMessageAsync
+
                 // Invia il messaggio al server
                 await _chatService.SendMessageAsync(_post.id, _recipientEmail, message);
 
@@ -244,10 +230,6 @@ namespace trovagiocatoriApp.Views
 
                 // In caso di errore, mostra un messaggio di errore
                 await DisplayAlert("Errore", "Impossibile inviare il messaggio", "OK");
-
-                // OPZIONALE: Rimuovi il messaggio dalla UI se l'invio è fallito
-                // var lastChild = MessagesContainer.Children.LastOrDefault();
-                // if (lastChild != null) MessagesContainer.Children.Remove(lastChild);
             }
             finally
             {
