@@ -201,10 +201,10 @@ namespace trovagiocatoriApp.Views
         {
             try
             {
-                var title = "🚫 Account Sospeso";
+                var title = "🚫 Account Sospeso Permanentemente";
 
                 var message = new StringBuilder();
-                message.AppendLine($"Il tuo account è stato {banInfo.BanTypeDisplay.ToLower()}.");
+                message.AppendLine("Il tuo account è stato sospeso permanentemente.");
                 message.AppendLine();
 
                 if (!string.IsNullOrEmpty(banInfo.Reason))
@@ -214,33 +214,14 @@ namespace trovagiocatoriApp.Views
                 }
 
                 message.AppendLine($"📅 Data sospensione: {banInfo.BannedAt:dd/MM/yyyy HH:mm}");
-
-                if (banInfo.IsPermanent)
-                {
-                    message.AppendLine("⏰ Durata: Permanente");
-                    message.AppendLine();
-                    message.AppendLine("❌ Questo ban non ha scadenza.");
-                }
-                else if (banInfo.ExpiresAt.HasValue)
-                {
-                    message.AppendLine($"⏰ Scadenza: {banInfo.ExpiresAt.Value:dd/MM/yyyy HH:mm}");
-
-                    var timeRemaining = banInfo.ExpiresAt.Value - DateTime.Now;
-                    if (timeRemaining.TotalMinutes > 0)
-                    {
-                        var remainingText = FormatTimeRemaining(timeRemaining);
-                        message.AppendLine($"⏳ Tempo rimanente: {remainingText}");
-                    }
-                    else
-                    {
-                        message.AppendLine("✅ Il ban dovrebbe essere scaduto. Contatta l'amministratore.");
-                    }
-                }
-
+                message.AppendLine("⏰ Durata: Permanente");
                 message.AppendLine();
-                message.AppendLine("📧 Per assistenza, contatta l'amministratore del sito.");
+                message.AppendLine("❌ Questo ban è permanente e non ha scadenza.");
+                message.AppendLine("Solo un amministratore può revocare questa sospensione.");
+                message.AppendLine();
+                message.AppendLine("📧 Per richiedere la revoca del ban, contatta l'amministratore del sito.");
 
-                // Mostra un dialog personalizzato invece del semplice DisplayAlert
+                // Mostra dialog per contattare admin
                 bool contactAdmin = await DisplayAlert(
                     title,
                     message.ToString(),
@@ -257,35 +238,11 @@ namespace trovagiocatoriApp.Views
             {
                 Debug.WriteLine($"[LOGIN] Errore showing ban dialog: {ex.Message}");
                 await DisplayAlert("Account Sospeso",
-                    "Il tuo account è stato sospeso. Contatta l'amministratore.",
+                    "Il tuo account è stato sospeso permanentemente. Contatta l'amministratore per la revoca.",
                     "OK");
             }
         }
 
-        private string FormatTimeRemaining(TimeSpan timeSpan)
-        {
-            if (timeSpan.TotalDays >= 1)
-            {
-                var days = (int)timeSpan.TotalDays;
-                var hours = timeSpan.Hours;
-                return days == 1 ? "1 giorno" : $"{days} giorni" + (hours > 0 ? $" e {hours} ore" : "");
-            }
-            else if (timeSpan.TotalHours >= 1)
-            {
-                var hours = (int)timeSpan.TotalHours;
-                var minutes = timeSpan.Minutes;
-                return hours == 1 ? "1 ora" : $"{hours} ore" + (minutes > 0 ? $" e {minutes} minuti" : "");
-            }
-            else if (timeSpan.TotalMinutes >= 1)
-            {
-                var minutes = (int)timeSpan.TotalMinutes;
-                return minutes == 1 ? "1 minuto" : $"{minutes} minuti";
-            }
-            else
-            {
-                return "meno di un minuto";
-            }
-        }
 
         private async Task HandleContactAdmin()
         {
@@ -322,8 +279,8 @@ namespace trovagiocatoriApp.Views
             {
                 var message = new EmailMessage
                 {
-                    Subject = "Richiesta Assistenza - Account Sospeso",
-                    Body = "Buongiorno,\n\nIl mio account è stato sospeso e vorrei richiedere assistenza.\n\nGrazie per l'attenzione.",
+                    Subject = "Richiesta Revoca Ban - Account Sospeso Permanentemente",
+                    Body = "Buongiorno,\n\nIl mio account è stato sospeso permanentemente e vorrei richiedere la revoca del ban.\n\nSpiego i motivi della mia richiesta:\n[Inserisci qui la tua spiegazione]\n\nGrazie per l'attenzione e spero in una vostra risposta.",
                     To = new List<string> { "admin@trovagiocatori.com" }
                 };
 

@@ -11,46 +11,18 @@ namespace trovagiocatoriApp.Models
         [JsonPropertyName("banned_at")]
         public DateTime BannedAt { get; set; }
 
-        [JsonPropertyName("expires_at")]
-        public DateTime? ExpiresAt { get; set; }
-
         [JsonPropertyName("ban_type")]
-        public string BanType { get; set; }
+        public string BanType { get; set; } = "permanent";
 
         [JsonPropertyName("is_permanent")]
-        public bool IsPermanent { get; set; }
+        public bool IsPermanent { get; set; } = true;
 
         // Proprietà computed per il display
-        public string BanTypeDisplay => BanType switch
-        {
-            "permanent" => "Permanente",
-            "temporary" => "Temporaneo",
-            _ => "Sconosciuto"
-        };
+        public string BanTypeDisplay => "Permanente";
 
-        public string ExpirationDisplay => ExpiresAt?.ToString("dd/MM/yyyy HH:mm") ?? "Mai";
+        public string StatusDisplay => "Ban Permanente";
 
-        public bool IsExpired => ExpiresAt.HasValue && ExpiresAt.Value <= DateTime.Now;
-
-        public string StatusDisplay
-        {
-            get
-            {
-                if (IsPermanent) return "Ban Permanente";
-                if (IsExpired) return "Ban Scaduto";
-                return $"Ban fino al {ExpirationDisplay}";
-            }
-        }
-
-        public Color StatusColor
-        {
-            get
-            {
-                if (IsPermanent) return Colors.Red;
-                if (IsExpired) return Colors.Orange;
-                return Colors.Orange;
-            }
-        }
+        public Color StatusColor => Colors.Red;
     }
 
     public class LoginResponse
@@ -95,10 +67,7 @@ namespace trovagiocatoriApp.Models
         public bool IsActive { get; set; }
 
         [JsonPropertyName("ban_type")]
-        public string BanType { get; set; }
-
-        [JsonPropertyName("expires_at")]
-        public DateTime? ExpiresAt { get; set; }
+        public string BanType { get; set; } = "permanent";
 
         [JsonPropertyName("notes")]
         public string Notes { get; set; }
@@ -116,9 +85,7 @@ namespace trovagiocatoriApp.Models
         public string BanStatusDisplay => IsActive ? "Attivo" : "Inattivo";
         public Color BanStatusColor => IsActive ? Colors.Red : Colors.Gray;
         public string BannedAtFormatted => BannedAt.ToString("dd/MM/yyyy HH:mm");
-        public string ExpiresAtFormatted => ExpiresAt?.ToString("dd/MM/yyyy HH:mm") ?? "Mai";
-        public bool IsPermanent => BanType == "permanent";
-        public bool IsExpired => ExpiresAt.HasValue && ExpiresAt.Value <= DateTime.Now;
+        public bool IsPermanent => true;
     }
 
     public class BanUserRequest
@@ -130,10 +97,7 @@ namespace trovagiocatoriApp.Models
         public string Reason { get; set; }
 
         [JsonPropertyName("ban_type")]
-        public string BanType { get; set; } = "temporary";
-
-        [JsonPropertyName("expires_at")]
-        public DateTime? ExpiresAt { get; set; }
+        public string BanType { get; set; } = "permanent";
 
         [JsonPropertyName("notes")]
         public string Notes { get; set; }
@@ -161,9 +125,6 @@ namespace trovagiocatoriApp.Models
 
         [JsonPropertyName("total_bans")]
         public int TotalBans { get; set; }
-
-        [JsonPropertyName("expired_today")]
-        public int ExpiredToday { get; set; }
 
         [JsonPropertyName("permanent_bans")]
         public int PermanentBans { get; set; }

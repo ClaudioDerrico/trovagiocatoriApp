@@ -162,7 +162,7 @@ public partial class AdminPage : ContentPage
     {
         try
         {
-            // Per ogni utente, controlla se è bannato
+            // Per ogni utente, controlla se è bannato (senza controlli di scadenza)
             foreach (var user in AllUsers)
             {
                 var isBanned = await _banService.CheckUserBanStatusAsync(user.Id);
@@ -528,28 +528,29 @@ public partial class AdminPage : ContentPage
 
             if (user.IsActive)
             {
-                // L'utente è attivo -> BANNA
+                // L'utente è attivo -> BANNA PERMANENTEMENTE
                 bool confirm = await DisplayAlert(
-                    "Ban Utente",
-                    $"Sei sicuro di voler bannare {user.Username}?\n\n" +
+                    "Ban Permanente",
+                    $"Sei sicuro di voler bannare permanentemente {user.Username}?\n\n" +
                     $"👤 {user.NomeCompleto}\n" +
                     $"📧 {user.Email}\n\n" +
-                    $"⚠️ L'utente non potrà più accedere alla piattaforma!",
-                    "Banna",
+                    $"⚠️ Il ban sarà PERMANENTE e l'utente non potrà più accedere alla piattaforma!\n\n" +
+                    $"Questa azione può essere revocata solo manualmente dall'amministratore.",
+                    "Ban Permanente",
                     "Annulla"
                 );
 
                 if (!confirm) return;
 
-                Debug.WriteLine($"[ADMIN] Bannando utente {user.Username}...");
+                Debug.WriteLine($"[ADMIN] Bannando permanentemente utente {user.Username}...");
 
-                // Crea richiesta di ban semplice
+                // Crea richiesta di ban permanente
                 var banRequest = new BanUserRequest
                 {
                     UserId = user.Id,
-                    Reason = "Ban amministrativo",
-                    BanType = "permanent", // Ban permanente per semplicità
-                    Notes = "Utente bannato dall'amministratore"
+                    Reason = "Ban amministrativo permanente",
+                    BanType = "permanent",
+                    Notes = "Utente bannato permanentemente dall'amministratore"
                 };
 
                 var response = await _banService.BanUserAsync(banRequest);
@@ -560,8 +561,11 @@ public partial class AdminPage : ContentPage
                     user.IsActive = false;
                     FilterUsers();
 
-                    await DisplayAlert("Successo", $"Utente {user.Username} bannato con successo!\n\nNon potrà più accedere alla piattaforma.", "OK");
-                    Debug.WriteLine($"[ADMIN] ✅ Utente {user.Username} bannato con successo");
+                    await DisplayAlert("Ban Applicato",
+                        $"Utente {user.Username} bannato permanentemente!\n\n" +
+                        $"Non potrà più accedere alla piattaforma fino a revoca manuale del ban.",
+                        "OK");
+                    Debug.WriteLine($"[ADMIN] ✅ Utente {user.Username} bannato permanentemente");
                 }
                 else
                 {
@@ -573,18 +577,18 @@ public partial class AdminPage : ContentPage
             {
                 // L'utente non è attivo (bannato) -> SBANNA
                 bool confirm = await DisplayAlert(
-                    "Sbanna Utente",
-                    $"Vuoi sbannare {user.Username}?\n\n" +
+                    "Revoca Ban",
+                    $"Vuoi revocare il ban per {user.Username}?\n\n" +
                     $"👤 {user.NomeCompleto}\n" +
                     $"📧 {user.Email}\n\n" +
                     $"L'utente potrà nuovamente accedere alla piattaforma.",
-                    "Sbanna",
+                    "Revoca Ban",
                     "Annulla"
                 );
 
                 if (!confirm) return;
 
-                Debug.WriteLine($"[ADMIN] Sbannando utente {user.Username}...");
+                Debug.WriteLine($"[ADMIN] Revocando ban per utente {user.Username}...");
 
                 var response = await _banService.UnbanUserAsync(user.Id);
 
@@ -594,13 +598,16 @@ public partial class AdminPage : ContentPage
                     user.IsActive = true;
                     FilterUsers();
 
-                    await DisplayAlert("Successo", $"Utente {user.Username} sbannato con successo!\n\nPuò nuovamente accedere alla piattaforma.", "OK");
-                    Debug.WriteLine($"[ADMIN] ✅ Utente {user.Username} sbannato con successo");
+                    await DisplayAlert("Ban Revocato",
+                        $"Ban revocato per {user.Username}!\n\n" +
+                        $"L'utente può nuovamente accedere alla piattaforma.",
+                        "OK");
+                    Debug.WriteLine($"[ADMIN] ✅ Ban revocato per {user.Username}");
                 }
                 else
                 {
-                    await DisplayAlert("Errore", response.Error ?? "Errore durante lo sbannamento", "OK");
-                    Debug.WriteLine($"[ADMIN] ❌ Errore sbannamento {user.Username}: {response.Error}");
+                    await DisplayAlert("Errore", response.Error ?? "Errore durante la revoca del ban", "OK");
+                    Debug.WriteLine($"[ADMIN] ❌ Errore revoca ban {user.Username}: {response.Error}");
                 }
             }
 
@@ -614,10 +621,10 @@ public partial class AdminPage : ContentPage
         }
     }
 
-   
 
 
-   
+
+
 
     // ========== AZIONI RAPIDE ==========
 

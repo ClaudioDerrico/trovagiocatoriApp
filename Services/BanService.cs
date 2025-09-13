@@ -53,7 +53,10 @@ namespace trovagiocatoriApp.Services
         {
             try
             {
-                Debug.WriteLine($"[BAN_SERVICE] Richiesta ban per user ID: {banRequest.UserId}");
+                Debug.WriteLine($"[BAN_SERVICE] Richiesta ban permanente per user ID: {banRequest.UserId}");
+
+                // Forza sempre ban permanente
+                banRequest.BanType = "permanent";
 
                 var json = JsonSerializer.Serialize(banRequest, _jsonOptions);
                 var content = new StringContent(json, Encoding.UTF8, "application/json");
@@ -67,7 +70,7 @@ namespace trovagiocatoriApp.Services
                 if (response.IsSuccessStatusCode)
                 {
                     var banResponse = JsonSerializer.Deserialize<BanResponse>(responseJson, _jsonOptions);
-                    Debug.WriteLine($"[BAN_SERVICE] ✅ Utente {banRequest.UserId} bannato con successo");
+                    Debug.WriteLine($"[BAN_SERVICE] ✅ Utente {banRequest.UserId} bannato permanentemente");
                     return banResponse;
                 }
                 else
@@ -239,7 +242,8 @@ namespace trovagiocatoriApp.Services
             try
             {
                 var userBan = await GetUserBanAsync(userId);
-                return userBan != null && userBan.IsActive && !userBan.IsExpired;
+                // Solo controlla se è attivo, non ci sono più scadenze
+                return userBan != null && userBan.IsActive;
             }
             catch (Exception ex)
             {
@@ -248,56 +252,10 @@ namespace trovagiocatoriApp.Services
             }
         }
 
-        // Metodi di utilità
+        // Metodi di utilità semplificati
         public static string GetBanReasonOptions()
         {
             return "Violazione regole comunità|Spam|Linguaggio inappropriato|Comportamento molesto|Contenuti offensivi|Account fake|Altro";
-        }
-
-        public static List<string> GetBanDurationOptions()
-        {
-            return new List<string>
-            {
-                "1 ora",
-                "6 ore",
-                "12 ore",
-                "1 giorno",
-                "3 giorni",
-                "1 settimana",
-                "2 settimane",
-                "1 mese",
-                "3 mesi",
-                "6 mesi",
-                "1 anno",
-                "Permanente"
-            };
-        }
-
-        public static DateTime? GetExpirationDateFromDuration(string duration)
-        {
-            var now = DateTime.Now;
-
-            return duration switch
-            {
-                "1 ora" => now.AddHours(1),
-                "6 ore" => now.AddHours(6),
-                "12 ore" => now.AddHours(12),
-                "1 giorno" => now.AddDays(1),
-                "3 giorni" => now.AddDays(3),
-                "1 settimana" => now.AddDays(7),
-                "2 settimane" => now.AddDays(14),
-                "1 mese" => now.AddMonths(1),
-                "3 mesi" => now.AddMonths(3),
-                "6 mesi" => now.AddMonths(6),
-                "1 anno" => now.AddYears(1),
-                "Permanente" => null,
-                _ => now.AddDays(1)
-            };
-        }
-
-        public static string GetBanTypeFromDuration(string duration)
-        {
-            return duration == "Permanente" ? "permanent" : "temporary";
         }
 
         public void Dispose()
