@@ -1,12 +1,12 @@
-﻿using Microsoft.Maui.Storage;
-using SocketIOClient; // Assicurati che questa using sia presente
+﻿// Services/ChatService.cs - VERSIONE CORRETTA
+using Microsoft.Maui.Storage;
+using SocketIOClient;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Text.Json;
 
 namespace trovagiocatoriApp.Services
 {
-    // Rinominiamo la classe per evitare conflitti
     public class LiveChatMessage
     {
         public string Id { get; set; }
@@ -39,7 +39,7 @@ namespace trovagiocatoriApp.Services
 
         public ChatService()
         {
-            _serverUrl = ApiConfig.PythonApiUrl; // Usa lo stesso URL del backend Python
+            _serverUrl = ApiConfig.PythonApiUrl;
             ChatMessages = new Dictionary<string, ObservableCollection<LiveChatMessage>>();
         }
 
@@ -47,7 +47,6 @@ namespace trovagiocatoriApp.Services
         {
             try
             {
-                // Recupera il session cookie dalle preferences
                 var sessionCookie = Preferences.Get("session_id", "");
                 if (string.IsNullOrEmpty(sessionCookie))
                 {
@@ -55,7 +54,6 @@ namespace trovagiocatoriApp.Services
                     return false;
                 }
 
-                // Recupera l'email dell'utente corrente
                 _currentUserEmail = await GetCurrentUserEmailAsync();
                 if (string.IsNullOrEmpty(_currentUserEmail))
                 {
@@ -63,7 +61,6 @@ namespace trovagiocatoriApp.Services
                     return false;
                 }
 
-                // Configura Socket.IO - ALLINEATO AL BACKEND
                 _socket = new SocketIOClient.SocketIO(_serverUrl, new SocketIOOptions
                 {
                     Path = "/ws/socket.io",
@@ -74,10 +71,7 @@ namespace trovagiocatoriApp.Services
                     }
                 });
 
-                // Registra gli event handlers
                 RegisterEventHandlers();
-
-                // Connetti
                 await _socket.ConnectAsync();
 
                 Debug.WriteLine($"[CHAT] Connesso come {_currentUserEmail}");
@@ -123,7 +117,7 @@ namespace trovagiocatoriApp.Services
                 }
             });
 
-            // Cronologia messaggi ricevuta - ALLINEATO AL BACKEND
+            // Cronologia messaggi ricevuta
             _socket.On("chat_history", response =>
             {
                 try
@@ -152,7 +146,7 @@ namespace trovagiocatoriApp.Services
                 }
             });
 
-            // NUOVO MESSAGGIO RICEVUTO - ALLINEATO AL BACKEND
+            // CORREZIONE: TUTTI i messaggi vengono gestiti qui (sia nostri che ricevuti)
             _socket.On("new_private_message", response =>
             {
                 try
@@ -163,22 +157,21 @@ namespace trovagiocatoriApp.Services
                     // Determina se il messaggio è nostro o dell'altro utente
                     message.IsSentByMe = message.SenderEmail == _currentUserEmail;
 
-                    // Se non è nostro (lo riceviamo dall'altro), aggiungilo alla UI
-                    if (!message.IsSentByMe)
+                    MainThread.BeginInvokeOnMainThread(() =>
                     {
-                        MainThread.BeginInvokeOnMainThread(() =>
+                        // Trova la chat room corretta
+                        var chatKey = GetChatKey(message.SenderEmail, message.RecipientEmail);
+                        if (!ChatMessages.ContainsKey(chatKey))
                         {
-                            // Trova la chat room corretta
-                            var chatKey = GetChatKey(message.SenderEmail, message.RecipientEmail);
-                            if (!ChatMessages.ContainsKey(chatKey))
-                            {
-                                ChatMessages[chatKey] = new ObservableCollection<LiveChatMessage>();
-                            }
-                            ChatMessages[chatKey].Add(message);
+                            ChatMessages[chatKey] = new ObservableCollection<LiveChatMessage>();
+                        }
 
-                            NewMessageReceived?.Invoke(message);
-                        });
-                    }
+                        // Aggiungi TUTTI i messaggi (sia nostri che ricevuti)
+                        ChatMessages[chatKey].Add(message);
+
+                        // Notifica la UI
+                        NewMessageReceived?.Invoke(message);
+                    });
 
                     Debug.WriteLine($"[CHAT] Nuovo messaggio: da {message.SenderEmail}, nostro={message.IsSentByMe}");
                 }
@@ -205,7 +198,7 @@ namespace trovagiocatoriApp.Services
                 }
             });
 
-            // Notifica che un utente sta scrivendo
+            // Altri event handlers rimangono invariati...
             _socket.On("user_typing", response =>
             {
                 try
@@ -228,7 +221,6 @@ namespace trovagiocatoriApp.Services
                 }
             });
 
-            // Utente online/offline
             _socket.On("user_online", response =>
             {
                 try
@@ -257,7 +249,6 @@ namespace trovagiocatoriApp.Services
                 }
             });
 
-            // Errori
             _socket.On("error", response =>
             {
                 try
@@ -273,7 +264,6 @@ namespace trovagiocatoriApp.Services
             });
         }
 
-        // AGGIORNATO: Entra nella chat con un altro utente (non più basato sui post)
         public async Task JoinChatAsync(string otherUserEmail)
         {
             if (!_isConnected)
@@ -297,13 +287,13 @@ namespace trovagiocatoriApp.Services
             }
         }
 
-        // AGGIORNATO: Invia messaggio privato (NON aggiunge più immediatamente alla UI)
+        // CORREZIONE: Invia messaggio e ASPETTA la conferma dal server
         public async Task SendMessageAsync(string recipientEmail, string message)
         {
             if (!_isConnected)
             {
                 Debug.WriteLine("[CHAT] Non connesso - impossibile inviare messaggio");
-                return;
+                throw new InvalidOperationException("Non connesso al server chat");
             }
 
             if (string.IsNullOrWhiteSpace(message))
@@ -320,15 +310,16 @@ namespace trovagiocatoriApp.Services
                     message = message.Trim()
                 });
 
-                Debug.WriteLine($"[CHAT] Messaggio inviato al server, in attesa conferma...");
+                Debug.WriteLine($"[CHAT] Messaggio inviato al server, in attesa echo...");
             }
             catch (Exception ex)
             {
                 Debug.WriteLine($"[CHAT] Errore invio messaggio: {ex.Message}");
-                throw; // Re-lancia l'eccezione per gestirla nella UI
+                throw;
             }
         }
 
+        // Resto dei metodi rimangono invariati...
         public async Task NotifyTypingStartAsync(string recipientEmail)
         {
             if (!_isConnected) return;
@@ -407,10 +398,8 @@ namespace trovagiocatoriApp.Services
         public bool IsConnected => _isConnected;
 
         // METODI HELPER PRIVATI
-
         private string GetChatKey(string email1, string email2)
         {
-            // Crea una chiave ordinata per identificare la chat
             var emails = new[] { email1, email2 }.OrderBy(e => e).ToArray();
             return $"{emails[0]}|{emails[1]}";
         }
