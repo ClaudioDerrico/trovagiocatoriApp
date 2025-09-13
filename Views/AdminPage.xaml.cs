@@ -89,6 +89,34 @@ public partial class AdminPage : ContentPage
         }
     }
 
+    private async Task LoadBanStats()
+    {
+        try
+        {
+            Debug.WriteLine("[ADMIN] Caricamento statistiche ban...");
+            var stats = await _banService.GetBanStatsAsync();
+            Debug.WriteLine($"[ADMIN] ✅ Ban Stats: {stats.ActiveBans} attivi, {stats.TotalBans} totali");
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"[ADMIN] Errore caricamento ban stats: {ex.Message}");
+        }
+    }
+
+    private async Task LoadAllBans()
+    {
+        try
+        {
+            Debug.WriteLine("[ADMIN] Caricamento ban attivi...");
+            var bans = await _banService.GetActiveBansAsync();
+            Debug.WriteLine($"[ADMIN] ✅ Caricati {bans.Count} ban attivi");
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"[ADMIN] Errore caricamento ban: {ex.Message}");
+        }
+    }
+
     private async Task LoadDashboardStats()
     {
         try
@@ -404,6 +432,7 @@ public partial class AdminPage : ContentPage
         }
     }
 
+
     private async Task DeletePost(AdminPostInfo post)
     {
         try
@@ -500,13 +529,83 @@ public partial class AdminPage : ContentPage
             if (user.IsActive)
             {
                 // L'utente è attivo -> BANNA
-                await BanUserFromUsersList(user);
+                bool confirm = await DisplayAlert(
+                    "Ban Utente",
+                    $"Sei sicuro di voler bannare {user.Username}?\n\n" +
+                    $"👤 {user.NomeCompleto}\n" +
+                    $"📧 {user.Email}\n\n" +
+                    $"⚠️ L'utente non potrà più accedere alla piattaforma!",
+                    "Banna",
+                    "Annulla"
+                );
+
+                if (!confirm) return;
+
+                Debug.WriteLine($"[ADMIN] Bannando utente {user.Username}...");
+
+                // Crea richiesta di ban semplice
+                var banRequest = new BanUserRequest
+                {
+                    UserId = user.Id,
+                    Reason = "Ban amministrativo",
+                    BanType = "permanent", // Ban permanente per semplicità
+                    Notes = "Utente bannato dall'amministratore"
+                };
+
+                var response = await _banService.BanUserAsync(banRequest);
+
+                if (response.Success)
+                {
+                    // Aggiorna lo stato dell'utente nella lista
+                    user.IsActive = false;
+                    FilterUsers();
+
+                    await DisplayAlert("Successo", $"Utente {user.Username} bannato con successo!\n\nNon potrà più accedere alla piattaforma.", "OK");
+                    Debug.WriteLine($"[ADMIN] ✅ Utente {user.Username} bannato con successo");
+                }
+                else
+                {
+                    await DisplayAlert("Errore", response.Error ?? "Errore durante il ban dell'utente", "OK");
+                    Debug.WriteLine($"[ADMIN] ❌ Errore ban {user.Username}: {response.Error}");
+                }
             }
             else
             {
-                // L'utente non è attivo (probabilmente bannato) -> SBANNA
-                await UnbanUserFromUsersList(user);
+                // L'utente non è attivo (bannato) -> SBANNA
+                bool confirm = await DisplayAlert(
+                    "Sbanna Utente",
+                    $"Vuoi sbannare {user.Username}?\n\n" +
+                    $"👤 {user.NomeCompleto}\n" +
+                    $"📧 {user.Email}\n\n" +
+                    $"L'utente potrà nuovamente accedere alla piattaforma.",
+                    "Sbanna",
+                    "Annulla"
+                );
+
+                if (!confirm) return;
+
+                Debug.WriteLine($"[ADMIN] Sbannando utente {user.Username}...");
+
+                var response = await _banService.UnbanUserAsync(user.Id);
+
+                if (response.Success)
+                {
+                    // Aggiorna lo stato dell'utente nella lista
+                    user.IsActive = true;
+                    FilterUsers();
+
+                    await DisplayAlert("Successo", $"Utente {user.Username} sbannato con successo!\n\nPuò nuovamente accedere alla piattaforma.", "OK");
+                    Debug.WriteLine($"[ADMIN] ✅ Utente {user.Username} sbannato con successo");
+                }
+                else
+                {
+                    await DisplayAlert("Errore", response.Error ?? "Errore durante lo sbannamento", "OK");
+                    Debug.WriteLine($"[ADMIN] ❌ Errore sbannamento {user.Username}: {response.Error}");
+                }
             }
+
+            // Aggiorna le statistiche
+            await LoadDashboardStats();
         }
         catch (Exception ex)
         {
@@ -515,162 +614,10 @@ public partial class AdminPage : ContentPage
         }
     }
 
-    private async Task BanUserFromUsersList(AdminUserInfo user)
-    {
-        try
-        {
-            // Mostra opzioni di ban rapido
-            var banOptions = new string[]
-            {
-            "Ban Rapido (1 giorno)",
-            "Ban Personalizzato",
-            "Annulla"
-            };
+   
 
-            var choice = await DisplayActionSheet(
-                $"Come vuoi bannare {user.Username}?",
-                "Annulla",
-                null,
-                banOptions
-            );
 
-            switch (choice)
-            {
-                case "Ban Rapido (1 giorno)":
-                    await ExecuteQuickBan(user);
-                    break;
-                case "Ban Personalizzato":
-                    await ShowCustomBanDialog(user);
-                    break;
-            }
-        }
-        catch (Exception ex)
-        {
-            Debug.WriteLine($"[ADMIN] Errore ban user from list: {ex.Message}");
-            await DisplayAlert("Errore", "Errore durante il ban dell'utente", "OK");
-        }
-    }
-
-    private async Task ExecuteQuickBan(AdminUserInfo user)
-    {
-        try
-        {
-            bool confirm = await DisplayAlert(
-                "Ban Rapido",
-                $"Vuoi bannare {user.Username} per 1 giorno?\n\n" +
-                "Motivo: Violazione regole comunità\n" +
-                "Durata: 1 giorno\n\n" +
-                "L'utente non potrà accedere alla piattaforma.",
-                "Banna",
-                "Annulla"
-            );
-
-            if (!confirm) return;
-
-            Debug.WriteLine($"[ADMIN] Eseguendo ban rapido per {user.Username}...");
-
-            var banRequest = new BanUserRequest
-            {
-                UserId = user.Id,
-                Reason = "Violazione regole comunità",
-                BanType = "temporary",
-                ExpiresAt = DateTime.Now.AddDays(1),
-                Notes = "Ban rapido eseguito dall'amministratore"
-            };
-
-            var response = await _banService.BanUserAsync(banRequest);
-
-            if (response.Success)
-            {
-                // Aggiorna lo stato dell'utente nella lista
-                user.IsActive = false;
-                FilterUsers();
-
-                // Aggiorna le statistiche
-                await LoadBanStats();
-                await LoadAllBans();
-
-                await DisplayAlert("Successo", $"Utente {user.Username} bannato per 1 giorno!", "OK");
-                Debug.WriteLine($"[ADMIN] ✅ Ban rapido completato per {user.Username}");
-            }
-            else
-            {
-                await DisplayAlert("Errore", response.Error ?? "Errore durante il ban", "OK");
-                Debug.WriteLine($"[ADMIN] ❌ Errore ban rapido per {user.Username}: {response.Error}");
-            }
-        }
-        catch (Exception ex)
-        {
-            Debug.WriteLine($"[ADMIN] Errore execute quick ban: {ex.Message}");
-            await DisplayAlert("Errore", "Errore durante il ban rapido", "OK");
-        }
-    }
-
-    private async Task ShowCustomBanDialog(AdminUserInfo user)
-    {
-        try
-        {
-            var banPage = new BanUserPage(user, _banService);
-            banPage.UserBanned += async (s, e) => {
-                // Aggiorna tutto quando un utente viene bannato
-                user.IsActive = false;
-                FilterUsers();
-                await LoadBanStats();
-                await LoadAllBans();
-            };
-
-            await Navigation.PushModalAsync(banPage);
-        }
-        catch (Exception ex)
-        {
-            Debug.WriteLine($"[ADMIN] Errore apertura custom ban dialog: {ex.Message}");
-            await DisplayAlert("Errore", "Errore nell'apertura della finestra ban", "OK");
-        }
-    }
-
-    private async Task UnbanUserFromUsersList(AdminUserInfo user)
-    {
-        try
-        {
-            bool confirm = await DisplayAlert(
-                "Sbanna Utente",
-                $"Vuoi sbannare {user.Username}?\n\n" +
-                "L'utente potrà nuovamente accedere alla piattaforma.",
-                "Sbanna",
-                "Annulla"
-            );
-
-            if (!confirm) return;
-
-            Debug.WriteLine($"[ADMIN] Sbannando utente {user.Username}...");
-
-            var response = await _banService.UnbanUserAsync(user.Id);
-
-            if (response.Success)
-            {
-                // Aggiorna lo stato dell'utente nella lista
-                user.IsActive = true;
-                FilterUsers();
-
-                // Aggiorna le statistiche
-                await LoadBanStats();
-                await LoadAllBans();
-
-                await DisplayAlert("Successo", $"Utente {user.Username} sbannato con successo!", "OK");
-                Debug.WriteLine($"[ADMIN] ✅ Utente {user.Username} sbannato con successo");
-            }
-            else
-            {
-                await DisplayAlert("Errore", response.Error ?? "Errore durante lo sbannamento", "OK");
-                Debug.WriteLine($"[ADMIN] ❌ Errore sbannamento {user.Username}: {response.Error}");
-            }
-        }
-        catch (Exception ex)
-        {
-            Debug.WriteLine($"[ADMIN] Errore unban user from list: {ex.Message}");
-            await DisplayAlert("Errore", "Errore durante lo sbannamento", "OK");
-        }
-    }
+   
 
     // ========== AZIONI RAPIDE ==========
 
@@ -707,21 +654,6 @@ public partial class AdminPage : ContentPage
         {
             Debug.WriteLine($"[ADMIN] Errore durante refresh completo: {ex.Message}");
             await DisplayAlert("Errore", "Errore durante l'aggiornamento dei dati", "OK");
-        }
-    }
-
-    private async Task RefreshAfterBanAction()
-    {
-        try
-        {
-            await LoadBanStats();
-            await LoadAllBans();
-            await LoadUserBanStatuses(); // Ricarica gli stati ban degli utenti
-            await LoadDashboardStats(); // Aggiorna le statistiche generali
-        }
-        catch (Exception ex)
-        {
-            Debug.WriteLine($"[ADMIN] Errore refresh after ban action: {ex.Message}");
         }
     }
 
