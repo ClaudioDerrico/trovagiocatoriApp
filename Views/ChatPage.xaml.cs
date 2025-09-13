@@ -13,6 +13,7 @@ namespace trovagiocatoriApp.Views
         private readonly string _currentUserEmail;
         private readonly string _recipientEmail;
         private readonly bool _isPostAuthor;
+        private readonly ObservableCollection<LiveChatMessage> _messages;
 
         private System.Timers.Timer _typingTimer;
         private bool _isTyping = false;
@@ -27,6 +28,7 @@ namespace trovagiocatoriApp.Views
             _isPostAuthor = isPostAuthor;
 
             _chatService = new ChatService();
+            _messages = new ObservableCollection<LiveChatMessage>();
 
             InitializeUI();
             InitializeChatService();
@@ -42,7 +44,7 @@ namespace trovagiocatoriApp.Views
             }
             else
             {
-                ChatWithLabel.Text = $"Chat con organizzatore";
+                ChatWithLabel.Text = "Chat con organizzatore";
             }
 
             UpdateConnectionStatus(false);
@@ -59,14 +61,28 @@ namespace trovagiocatoriApp.Views
             _chatService.UserTyping += OnUserTyping;
             _chatService.UserStoppedTyping += OnUserStoppedTyping;
             _chatService.ConnectionStatusChanged += OnConnectionStatusChanged;
-            _chatService.ChatHistoryReceived += OnChatHistoryReceived; // NUOVO
+            _chatService.ChatHistoryReceived += OnChatHistoryReceived;
 
             // Connetti al server
             var connected = await _chatService.ConnectAsync();
             if (connected)
             {
-                // Entra nella chat del post (questo caricherà automaticamente la cronologia)
-                await _chatService.JoinPostChatAsync(_post.id, _post.autore_email);
+                //  Entra nella chat con l'altro utente
+                await _chatService.JoinChatAsync(_recipientEmail);
+
+                // Ottieni i messaggi esistenti per questa chat
+                var existingMessages = _chatService.GetMessagesForChat(_recipientEmail);
+
+                // Se non ci sono messaggi in memoria, prova a caricare la cronologia
+                if (existingMessages.Count == 0)
+                {
+                    Debug.WriteLine("[CHAT UI] Nessun messaggio in cache, in attesa cronologia dal server...");
+                }
+                else
+                {
+                    // Mostra i messaggi già in memoria
+                    LoadMessagesFromCollection(existingMessages);
+                }
             }
             else
             {
@@ -74,33 +90,74 @@ namespace trovagiocatoriApp.Views
             }
         }
 
-        // NUOVO: Gestisce la cronologia messaggi ricevuta dal server
-        private void OnChatHistoryReceived(List<LiveChatMessage> historyMessages)
+        private void LoadMessagesFromCollection(ObservableCollection<LiveChatMessage> messages)
         {
             MainThread.BeginInvokeOnMainThread(() =>
             {
                 MessagesContainer.Clear();
 
-                foreach (var message in historyMessages.OrderBy(m => m.Timestamp))
+                foreach (var message in messages.OrderBy(m => m.Timestamp))
                 {
                     AddMessageToUI(message);
                 }
 
                 ScrollToBottom();
-                Debug.WriteLine($"[CHAT UI] Cronologia caricata: {historyMessages.Count} messaggi");
+                Debug.WriteLine($"[CHAT UI] Caricati {messages.Count} messaggi dalla collezione");
+            });
+        }
+
+        private void OnChatHistoryReceived(List<LiveChatMessage> historyMessages)
+        {
+            // Filtra solo i messaggi di questa chat
+            var relevantMessages = historyMessages.Where(m =>
+                (m.SenderEmail == _currentUserEmail && m.RecipientEmail == _recipientEmail) ||
+                (m.SenderEmail == _recipientEmail && m.RecipientEmail == _currentUserEmail)
+            ).ToList();
+
+            if (relevantMessages.Count == 0)
+            {
+                Debug.WriteLine("[CHAT UI] Nessun messaggio storico per questa chat");
+                // Assicurati che il placeholder sia visibile
+                MainThread.BeginInvokeOnMainThread(() =>
+                {
+                    EmptyStateContainer.IsVisible = true;
+                });
+                return;
+            }
+
+            MainThread.BeginInvokeOnMainThread(() =>
+            {
+                MessagesContainer.Clear();
+                EmptyStateContainer.IsVisible = false; // Nascondi il placeholder
+
+                foreach (var message in relevantMessages.OrderBy(m => m.Timestamp))
+                {
+                    AddMessageToUI(message);
+
+                    // Aggiungi anche alla collezione locale se non c'è già
+                    var chatMessages = _chatService.GetMessagesForChat(_recipientEmail);
+                    if (!chatMessages.Any(m => m.Id == message.Id))
+                    {
+                        chatMessages.Add(message);
+                    }
+                }
+
+                ScrollToBottom();
+                Debug.WriteLine($"[CHAT UI] Cronologia caricata: {relevantMessages.Count} messaggi");
             });
         }
 
         private void OnNewMessageReceived(LiveChatMessage message)
         {
-            // Verifica che il messaggio sia per questo post
-            if (message.PostId != _post.id)
+            // Verifica che il messaggio sia per questa chat
+            if (message.SenderEmail != _recipientEmail && message.RecipientEmail != _recipientEmail)
                 return;
 
             MainThread.BeginInvokeOnMainThread(() =>
             {
                 AddMessageToUI(message);
                 ScrollToBottom();
+                Debug.WriteLine($"[CHAT UI] Nuovo messaggio ricevuto da {message.SenderEmail}");
             });
         }
 
@@ -111,6 +168,7 @@ namespace trovagiocatoriApp.Views
                 MainThread.BeginInvokeOnMainThread(() =>
                 {
                     TypingIndicator.IsVisible = true;
+                    Debug.WriteLine($"[CHAT UI] {userEmail} sta scrivendo...");
                 });
             }
         }
@@ -122,6 +180,7 @@ namespace trovagiocatoriApp.Views
                 MainThread.BeginInvokeOnMainThread(() =>
                 {
                     TypingIndicator.IsVisible = false;
+                    Debug.WriteLine($"[CHAT UI] {userEmail} ha smesso di scrivere");
                 });
             }
         }
@@ -131,6 +190,7 @@ namespace trovagiocatoriApp.Views
             MainThread.BeginInvokeOnMainThread(() =>
             {
                 UpdateConnectionStatus(isConnected);
+                CheckSendButtonState();
             });
         }
 
@@ -192,7 +252,6 @@ namespace trovagiocatoriApp.Views
             MessagesContainer.Children.Add(messageFrame);
         }
 
-        // AGGIORNATO: Rimozione della duplicazione
         private async void OnSendMessageClicked(object sender, EventArgs e)
         {
             var message = MessageEntry.Text?.Trim();
@@ -202,6 +261,7 @@ namespace trovagiocatoriApp.Views
             Debug.WriteLine($"[CHAT UI] Invio messaggio: {message}");
 
             // Pulisci il campo di input immediatamente
+            var messageToSend = message;
             MessageEntry.Text = "";
 
             // Disabilita il pulsante temporaneamente
@@ -209,26 +269,25 @@ namespace trovagiocatoriApp.Views
 
             try
             {
-                // RIMOSSO: Non aggiungiamo più il messaggio manualmente alla UI
-                // Il ChatService ora lo fa automaticamente nel metodo SendMessageAsync
-
-                // Invia il messaggio al server
-                await _chatService.SendMessageAsync(_post.id, _recipientEmail, message);
-
-                Debug.WriteLine($"[CHAT UI] Messaggio inviato al server");
-
-                // Ferma il typing indicator
+                // Ferma il typing indicator prima di inviare
                 if (_isTyping)
                 {
-                    await _chatService.NotifyTypingStopAsync(_post.id, _recipientEmail);
+                    await _chatService.NotifyTypingStopAsync(_recipientEmail);
                     _isTyping = false;
                 }
+
+                //  Non aggiungiamo più manualmente il messaggio alla UI
+                // Il messaggio arriverà dal server tramite new_private_message
+                await _chatService.SendMessageAsync(_recipientEmail, messageToSend);
+
+                Debug.WriteLine($"[CHAT UI] Messaggio inviato al server, in attesa di ricezione...");
             }
             catch (Exception ex)
             {
                 Debug.WriteLine($"[CHAT UI] Errore invio messaggio: {ex.Message}");
 
-                // In caso di errore, mostra un messaggio di errore
+                // In caso di errore, ripristina il messaggio nel campo input
+                MessageEntry.Text = messageToSend;
                 await DisplayAlert("Errore", "Impossibile inviare il messaggio", "OK");
             }
             finally
@@ -249,7 +308,7 @@ namespace trovagiocatoriApp.Views
             if (hasText && !_isTyping)
             {
                 _isTyping = true;
-                await _chatService.NotifyTypingStartAsync(_post.id, _recipientEmail);
+                await _chatService.NotifyTypingStartAsync(_recipientEmail);
             }
 
             // Reset del timer typing
@@ -262,7 +321,7 @@ namespace trovagiocatoriApp.Views
             {
                 // Se il testo è vuoto, ferma subito il typing
                 _isTyping = false;
-                await _chatService.NotifyTypingStopAsync(_post.id, _recipientEmail);
+                await _chatService.NotifyTypingStopAsync(_recipientEmail);
                 _typingTimer.Stop();
             }
         }
@@ -272,7 +331,7 @@ namespace trovagiocatoriApp.Views
             if (_isTyping)
             {
                 _isTyping = false;
-                await _chatService.NotifyTypingStopAsync(_post.id, _recipientEmail);
+                await _chatService.NotifyTypingStopAsync(_recipientEmail);
                 _typingTimer.Stop();
             }
         }
@@ -287,7 +346,14 @@ namespace trovagiocatoriApp.Views
             MainThread.BeginInvokeOnMainThread(async () =>
             {
                 await Task.Delay(100); // Piccolo delay per assicurarsi che il layout sia completato
-                await MessagesScrollView.ScrollToAsync(0, MessagesScrollView.ContentSize.Height, true);
+                try
+                {
+                    await MessagesScrollView.ScrollToAsync(0, MessagesScrollView.ContentSize.Height, true);
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine($"[CHAT UI] Errore scroll: {ex.Message}");
+                }
             });
         }
 
@@ -296,7 +362,7 @@ namespace trovagiocatoriApp.Views
             // Esci dalla chat e disconnetti
             try
             {
-                await _chatService.LeavePostChatAsync(_post.id, _recipientEmail);
+                await _chatService.LeaveChatAsync(_recipientEmail);
                 await _chatService.DisconnectAsync();
             }
             catch (Exception ex)
@@ -322,7 +388,7 @@ namespace trovagiocatoriApp.Views
 
                 if (_isTyping)
                 {
-                    await _chatService.NotifyTypingStopAsync(_post.id, _recipientEmail);
+                    await _chatService.NotifyTypingStopAsync(_recipientEmail);
                 }
             }
             catch (Exception ex)

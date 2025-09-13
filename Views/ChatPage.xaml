@@ -2,7 +2,7 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="trovagiocatoriApp.Views.ChatPage"
-             Title="Chat Live"
+             Title="Chat Privata"
              BackgroundColor="#F8F9FA">
 
     <ContentPage.Resources>
@@ -42,7 +42,7 @@
 
     <Grid RowDefinitions="Auto,*,Auto,Auto">
 
-        <!-- Header con info post -->
+        <!-- Header con info chat -->
         <Frame Grid.Row="0" BackgroundColor="#007AFF" CornerRadius="0" Padding="20,16" HasShadow="True">
             <Grid ColumnDefinitions="Auto,*,Auto">
                 <ImageButton Grid.Column="0" 
@@ -55,7 +55,7 @@
 
                 <VerticalStackLayout Grid.Column="1" Spacing="4" Margin="16,0,0,0">
                     <Label x:Name="PostTitleLabel" 
-                           Text="Titolo del Post"
+                           Text="Chat Privata"
                            TextColor="White"
                            FontAttributes="Bold"
                            FontSize="16"/>
@@ -85,6 +85,30 @@
         <ScrollView Grid.Row="1" x:Name="MessagesScrollView" Padding="0,8">
             <StackLayout x:Name="MessagesContainer" Spacing="0">
                 <!-- I messaggi verranno aggiunti dinamicamente qui -->
+
+                <!-- Placeholder per quando non ci sono messaggi -->
+                <StackLayout x:Name="EmptyStateContainer" 
+                           IsVisible="True"
+                           VerticalOptions="CenterAndExpand" 
+                           HorizontalOptions="Center"
+                           Padding="40">
+                    <Label Text="💬" 
+                           FontSize="48" 
+                           HorizontalOptions="Center" 
+                           Margin="0,0,0,16"/>
+                    <Label Text="Inizia una conversazione" 
+                           FontSize="18" 
+                           FontAttributes="Bold"
+                           TextColor="#666666"
+                           HorizontalOptions="Center"
+                           HorizontalTextAlignment="Center"/>
+                    <Label Text="I tuoi messaggi appariranno qui"
+                           FontSize="14"
+                           TextColor="#999999"
+                           HorizontalOptions="Center"
+                           HorizontalTextAlignment="Center"
+                           Margin="0,8,0,0"/>
+                </StackLayout>
             </StackLayout>
         </ScrollView>
 
@@ -97,11 +121,18 @@
                Margin="16,4,50,8"
                HorizontalOptions="Start"
                IsVisible="False">
-            <Label x:Name="TypingLabel"
-                   Text="Sta scrivendo..."
-                   TextColor="#666666"
-                   FontSize="14"
-                   FontAttributes="Italic"/>
+            <StackLayout Orientation="Horizontal" Spacing="8">
+                <!-- Animazione typing (3 pallini) -->
+                <Label Text="●" TextColor="#666666" FontSize="8" x:Name="Dot1"/>
+                <Label Text="●" TextColor="#666666" FontSize="8" x:Name="Dot2"/>
+                <Label Text="●" TextColor="#666666" FontSize="8" x:Name="Dot3"/>
+                <Label x:Name="TypingLabel"
+                       Text="sta scrivendo..."
+                       TextColor="#666666"
+                       FontSize="14"
+                       FontAttributes="Italic"
+                       VerticalOptions="Center"/>
+            </StackLayout>
         </Frame>
 
         <!-- Input area -->
