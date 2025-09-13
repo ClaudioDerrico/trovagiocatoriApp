@@ -7,7 +7,7 @@
 
     <ContentPage.Resources>
         <ResourceDictionary>
-            <!-- Stili per i messaggi -->
+            <!-- Stili per i messaggi CON MAGGIORE CONTRASTO PER LO SFONDO -->
             <Style x:Key="SentMessageStyle" TargetType="Frame">
                 <Setter Property="BackgroundColor" Value="#007AFF"/>
                 <Setter Property="CornerRadius" Value="18"/>
@@ -15,15 +15,25 @@
                 <Setter Property="Margin" Value="50,4,16,4"/>
                 <Setter Property="HorizontalOptions" Value="End"/>
                 <Setter Property="HasShadow" Value="True"/>
+                <Setter Property="Shadow">
+                    <Setter.Value>
+                        <Shadow Brush="#40000000" Offset="0,2" Radius="4" Opacity="0.3"/>
+                    </Setter.Value>
+                </Setter>
             </Style>
 
             <Style x:Key="ReceivedMessageStyle" TargetType="Frame">
-                <Setter Property="BackgroundColor" Value="#E9ECEF"/>
+                <Setter Property="BackgroundColor" Value="#FFFFFF"/>
                 <Setter Property="CornerRadius" Value="18"/>
                 <Setter Property="Padding" Value="12,8"/>
                 <Setter Property="Margin" Value="16,4,50,4"/>
                 <Setter Property="HorizontalOptions" Value="Start"/>
                 <Setter Property="HasShadow" Value="True"/>
+                <Setter Property="Shadow">
+                    <Setter.Value>
+                        <Shadow Brush="#40000000" Offset="0,2" Radius="4" Opacity="0.3"/>
+                    </Setter.Value>
+                </Setter>
             </Style>
 
             <Style x:Key="SentMessageTextStyle" TargetType="Label">
@@ -33,7 +43,7 @@
             </Style>
 
             <Style x:Key="ReceivedMessageTextStyle" TargetType="Label">
-                <Setter Property="TextColor" Value="#333333"/>
+                <Setter Property="TextColor" Value="#1a1a1a"/>
                 <Setter Property="FontSize" Value="16"/>
                 <Setter Property="LineBreakMode" Value="WordWrap"/>
             </Style>
@@ -81,36 +91,54 @@
             </Grid>
         </Frame>
 
-        <!-- Area messaggi -->
-        <ScrollView Grid.Row="1" x:Name="MessagesScrollView" Padding="0,8">
-            <StackLayout x:Name="MessagesContainer" Spacing="0">
-                <!-- I messaggi verranno aggiunti dinamicamente qui -->
+        <!-- Area messaggi CON SFONDO -->
+        <Grid Grid.Row="1">
+            <!-- Immagine di sfondo -->
+            <Image Source="sfondo.png"
+                   Aspect="AspectFill"
+                   Opacity="0.3"/>
 
-                <!-- Placeholder per quando non ci sono messaggi -->
-                <StackLayout x:Name="EmptyStateContainer" 
-                           IsVisible="True"
-                           VerticalOptions="CenterAndExpand" 
-                           HorizontalOptions="Center"
-                           Padding="40">
-                    <Label Text="💬" 
-                           FontSize="48" 
-                           HorizontalOptions="Center" 
-                           Margin="0,0,0,16"/>
-                    <Label Text="Inizia una conversazione" 
-                           FontSize="18" 
-                           FontAttributes="Bold"
-                           TextColor="#666666"
-                           HorizontalOptions="Center"
-                           HorizontalTextAlignment="Center"/>
-                    <Label Text="I tuoi messaggi appariranno qui"
-                           FontSize="14"
-                           TextColor="#999999"
-                           HorizontalOptions="Center"
-                           HorizontalTextAlignment="Center"
-                           Margin="0,8,0,0"/>
+            <!-- Overlay semi-trasparente per migliorare la leggibilità -->
+            <BoxView BackgroundColor="White"
+                     Opacity="0.1"/>
+
+            <!-- ScrollView con i messaggi -->
+            <ScrollView x:Name="MessagesScrollView" Padding="0,8">
+                <StackLayout x:Name="MessagesContainer" Spacing="0">
+                    <!-- I messaggi verranno aggiunti dinamicamente qui -->
+
+                    <!-- Placeholder per quando non ci sono messaggi -->
+                    <StackLayout x:Name="EmptyStateContainer" 
+                               IsVisible="True"
+                               VerticalOptions="CenterAndExpand" 
+                               HorizontalOptions="Center"
+                               Padding="40">
+                        <Frame BackgroundColor="White"
+                               Opacity="0.9"
+                               CornerRadius="20"
+                               Padding="30"
+                               HasShadow="True">
+                            <StackLayout Spacing="16">
+                                <Label Text="💬" 
+                                       FontSize="48" 
+                                       HorizontalOptions="Center"/>
+                                <Label Text="Inizia una conversazione" 
+                                       FontSize="18" 
+                                       FontAttributes="Bold"
+                                       TextColor="#333333"
+                                       HorizontalOptions="Center"
+                                       HorizontalTextAlignment="Center"/>
+                                <Label Text="I tuoi messaggi appariranno qui"
+                                       FontSize="14"
+                                       TextColor="#666666"
+                                       HorizontalOptions="Center"
+                                       HorizontalTextAlignment="Center"/>
+                            </StackLayout>
+                        </Frame>
+                    </StackLayout>
                 </StackLayout>
-            </StackLayout>
-        </ScrollView>
+            </ScrollView>
+        </Grid>
 
         <!-- Indicatore typing -->
         <Frame Grid.Row="2" 
