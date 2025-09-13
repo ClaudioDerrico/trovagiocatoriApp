@@ -12,6 +12,7 @@ namespace trovagiocatoriApp.Views;
 public partial class AdminPage : ContentPage
 {
     private readonly IAdminService _adminService;
+    private readonly IBanService _banService;
 
     // Collections per i dati utilizzando i nuovi Models
     public ObservableCollection<AdminPostInfo> AllPosts { get; set; } = new ObservableCollection<AdminPostInfo>();
@@ -41,6 +42,7 @@ public partial class AdminPage : ContentPage
 
         // Inizializza il service (normalmente dovrebbe essere iniettato via DI)
         _adminService = new AdminService();
+        _banService = new BanService();
     }
 
     protected override async void OnAppearing()
@@ -48,7 +50,8 @@ public partial class AdminPage : ContentPage
         base.OnAppearing();
         await LoadAdminInfo();
         await LoadDashboardStats();
-        await LoadAllData();
+        await LoadAllData(); // Questo ora include anche LoadAllBans()
+        await LoadBanStats(); // Carica statistiche ban
     }
 
     // ========== CARICAMENTO DATI ==========
@@ -124,6 +127,29 @@ public partial class AdminPage : ContentPage
         await LoadAllPosts();
         await LoadAllComments();
         await LoadAllUsers();
+        await LoadAllBans();
+    }
+
+    private async Task LoadUserBanStatuses()
+    {
+        try
+        {
+            // Per ogni utente, controlla se è bannato
+            foreach (var user in AllUsers)
+            {
+                var isBanned = await _banService.CheckUserBanStatusAsync(user.Id);
+                if (isBanned)
+                {
+                    user.IsActive = false; // L'utente bannato viene mostrato come non attivo
+                }
+            }
+
+            FilterUsers(); // Riapplica i filtri con i nuovi stati
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"[ADMIN] Errore caricamento ban status utenti: {ex.Message}");
+        }
     }
 
     private async Task LoadAllPosts()
@@ -190,6 +216,8 @@ public partial class AdminPage : ContentPage
         }
     }
 
+
+
     private async Task LoadAllUsers()
     {
         try
@@ -209,6 +237,9 @@ public partial class AdminPage : ContentPage
                 UsersCollectionView.ItemsSource = AllUsers;
                 Debug.WriteLine($"[ADMIN] Caricati {AllUsers.Count} utenti");
             });
+
+            // Carica anche lo stato dei ban per gli utenti
+            await LoadUserBanStatuses();
         }
         catch (Exception ex)
         {
@@ -464,46 +495,180 @@ public partial class AdminPage : ContentPage
     {
         try
         {
-            string action = user.IsActive ? "disattivare" : "riattivare";
-            string actionCaps = user.IsActive ? "Disattiva" : "Riattiva";
+            Debug.WriteLine($"[ADMIN] Toggle status per utente {user.Username} - Attivo: {user.IsActive}");
 
+            if (user.IsActive)
+            {
+                // L'utente è attivo -> BANNA
+                await BanUserFromUsersList(user);
+            }
+            else
+            {
+                // L'utente non è attivo (probabilmente bannato) -> SBANNA
+                await UnbanUserFromUsersList(user);
+            }
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"[ADMIN] Errore toggle user status: {ex.Message}");
+            await DisplayAlert("Errore", "Errore nella gestione dello stato utente", "OK");
+        }
+    }
+
+    private async Task BanUserFromUsersList(AdminUserInfo user)
+    {
+        try
+        {
+            // Mostra opzioni di ban rapido
+            var banOptions = new string[]
+            {
+            "Ban Rapido (1 giorno)",
+            "Ban Personalizzato",
+            "Annulla"
+            };
+
+            var choice = await DisplayActionSheet(
+                $"Come vuoi bannare {user.Username}?",
+                "Annulla",
+                null,
+                banOptions
+            );
+
+            switch (choice)
+            {
+                case "Ban Rapido (1 giorno)":
+                    await ExecuteQuickBan(user);
+                    break;
+                case "Ban Personalizzato":
+                    await ShowCustomBanDialog(user);
+                    break;
+            }
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"[ADMIN] Errore ban user from list: {ex.Message}");
+            await DisplayAlert("Errore", "Errore durante il ban dell'utente", "OK");
+        }
+    }
+
+    private async Task ExecuteQuickBan(AdminUserInfo user)
+    {
+        try
+        {
             bool confirm = await DisplayAlert(
-                $"{actionCaps} Utente",
-                $"Sei sicuro di voler {action} l'utente:\n\n" +
-                $"👤 {user.Username} ({user.Nome} {user.Cognome})\n" +
-                $"📧 {user.Email}\n" +
-                $"📅 Registrato: {user.DataRegistrazione:dd/MM/yyyy}\n\n" +
-                $"ℹ️ L'utente {(user.IsActive ? "non potrà più" : "potrà di nuovo")} accedere alla piattaforma.",
-                actionCaps,
+                "Ban Rapido",
+                $"Vuoi bannare {user.Username} per 1 giorno?\n\n" +
+                "Motivo: Violazione regole comunità\n" +
+                "Durata: 1 giorno\n\n" +
+                "L'utente non potrà accedere alla piattaforma.",
+                "Banna",
                 "Annulla"
             );
 
             if (!confirm) return;
 
-            Debug.WriteLine($"[ADMIN] Toggle status utente {user.Id}...");
+            Debug.WriteLine($"[ADMIN] Eseguendo ban rapido per {user.Username}...");
 
-            bool success = await _adminService.ToggleUserStatusAsync(user.Id);
-
-            if (success)
+            var banRequest = new BanUserRequest
             {
-                user.IsActive = !user.IsActive;
+                UserId = user.Id,
+                Reason = "Violazione regole comunità",
+                BanType = "temporary",
+                ExpiresAt = DateTime.Now.AddDays(1),
+                Notes = "Ban rapido eseguito dall'amministratore"
+            };
+
+            var response = await _banService.BanUserAsync(banRequest);
+
+            if (response.Success)
+            {
+                // Aggiorna lo stato dell'utente nella lista
+                user.IsActive = false;
                 FilterUsers();
 
-                string statusMessage = user.IsActive ? "riattivato" : "disattivato";
-                await DisplayAlert("Successo", $"Utente {statusMessage} con successo!", "OK");
+                // Aggiorna le statistiche
+                await LoadBanStats();
+                await LoadAllBans();
 
-                Debug.WriteLine($"[ADMIN] ✅ Utente {user.Id} {statusMessage} con successo");
+                await DisplayAlert("Successo", $"Utente {user.Username} bannato per 1 giorno!", "OK");
+                Debug.WriteLine($"[ADMIN] ✅ Ban rapido completato per {user.Username}");
             }
             else
             {
-                await DisplayAlert("Errore", "Impossibile modificare lo stato dell'utente. Riprova più tardi.", "OK");
-                Debug.WriteLine($"[ADMIN] ❌ Errore toggle status utente {user.Id}");
+                await DisplayAlert("Errore", response.Error ?? "Errore durante il ban", "OK");
+                Debug.WriteLine($"[ADMIN] ❌ Errore ban rapido per {user.Username}: {response.Error}");
             }
         }
         catch (Exception ex)
         {
-            Debug.WriteLine($"[ADMIN] Errore toggle utente: {ex.Message}");
-            await DisplayAlert("Errore", "Errore nella modifica dello stato utente", "OK");
+            Debug.WriteLine($"[ADMIN] Errore execute quick ban: {ex.Message}");
+            await DisplayAlert("Errore", "Errore durante il ban rapido", "OK");
+        }
+    }
+
+    private async Task ShowCustomBanDialog(AdminUserInfo user)
+    {
+        try
+        {
+            var banPage = new BanUserPage(user, _banService);
+            banPage.UserBanned += async (s, e) => {
+                // Aggiorna tutto quando un utente viene bannato
+                user.IsActive = false;
+                FilterUsers();
+                await LoadBanStats();
+                await LoadAllBans();
+            };
+
+            await Navigation.PushModalAsync(banPage);
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"[ADMIN] Errore apertura custom ban dialog: {ex.Message}");
+            await DisplayAlert("Errore", "Errore nell'apertura della finestra ban", "OK");
+        }
+    }
+
+    private async Task UnbanUserFromUsersList(AdminUserInfo user)
+    {
+        try
+        {
+            bool confirm = await DisplayAlert(
+                "Sbanna Utente",
+                $"Vuoi sbannare {user.Username}?\n\n" +
+                "L'utente potrà nuovamente accedere alla piattaforma.",
+                "Sbanna",
+                "Annulla"
+            );
+
+            if (!confirm) return;
+
+            Debug.WriteLine($"[ADMIN] Sbannando utente {user.Username}...");
+
+            var response = await _banService.UnbanUserAsync(user.Id);
+
+            if (response.Success)
+            {
+                // Aggiorna lo stato dell'utente nella lista
+                user.IsActive = true;
+                FilterUsers();
+
+                // Aggiorna le statistiche
+                await LoadBanStats();
+                await LoadAllBans();
+
+                await DisplayAlert("Successo", $"Utente {user.Username} sbannato con successo!", "OK");
+                Debug.WriteLine($"[ADMIN] ✅ Utente {user.Username} sbannato con successo");
+            }
+            else
+            {
+                await DisplayAlert("Errore", response.Error ?? "Errore durante lo sbannamento", "OK");
+                Debug.WriteLine($"[ADMIN] ❌ Errore sbannamento {user.Username}: {response.Error}");
+            }
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"[ADMIN] Errore unban user from list: {ex.Message}");
+            await DisplayAlert("Errore", "Errore durante lo sbannamento", "OK");
         }
     }
 
@@ -513,9 +678,9 @@ public partial class AdminPage : ContentPage
     {
         try
         {
-            Debug.WriteLine("[ADMIN] Avvio refresh dati...");
+            Debug.WriteLine("[ADMIN] Avvio refresh completo dati...");
 
-            // Mostra indicatore di caricamento (opzionale)
+            // Mostra indicatore di caricamento
             var button = sender as Button;
             var originalText = button?.Text;
             if (button != null)
@@ -524,8 +689,10 @@ public partial class AdminPage : ContentPage
                 button.IsEnabled = false;
             }
 
+            // Carica tutto
             await LoadDashboardStats();
-            await LoadAllData();
+            await LoadBanStats(); // Carica statistiche ban
+            await LoadAllData(); // Include tutti i dati compreso ban
 
             if (button != null)
             {
@@ -533,15 +700,31 @@ public partial class AdminPage : ContentPage
                 button.IsEnabled = true;
             }
 
-            await DisplayAlert("Aggiornato", "Dati aggiornati con successo!", "OK");
-            Debug.WriteLine("[ADMIN] ✅ Refresh completato");
+            await DisplayAlert("Aggiornato", "Tutti i dati sono stati aggiornati con successo!", "OK");
+            Debug.WriteLine("[ADMIN] ✅ Refresh completo completato");
         }
         catch (Exception ex)
         {
-            Debug.WriteLine($"[ADMIN] Errore durante refresh: {ex.Message}");
+            Debug.WriteLine($"[ADMIN] Errore durante refresh completo: {ex.Message}");
             await DisplayAlert("Errore", "Errore durante l'aggiornamento dei dati", "OK");
         }
     }
+
+    private async Task RefreshAfterBanAction()
+    {
+        try
+        {
+            await LoadBanStats();
+            await LoadAllBans();
+            await LoadUserBanStatuses(); // Ricarica gli stati ban degli utenti
+            await LoadDashboardStats(); // Aggiorna le statistiche generali
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"[ADMIN] Errore refresh after ban action: {ex.Message}");
+        }
+    }
+
 
     private async void OnViewPostDetailsClicked(object sender, EventArgs e)
     {
