@@ -1,6 +1,8 @@
-﻿using System.Text.Json;
+﻿// Views/NotificationsPage.xaml.cs - VERSIONE CORRETTA
+using System.Text.Json;
 using Microsoft.Maui.Storage;
 using System.Diagnostics;
+using trovagiocatoriApp.Models;
 
 namespace trovagiocatoriApp.Views
 {
@@ -27,6 +29,9 @@ namespace trovagiocatoriApp.Views
                 LoadingIndicator.IsVisible = true;
                 LoadingIndicator.IsRunning = true;
 
+                // NASCONDE l'empty state durante il caricamento
+                EmptyStateLayout.IsVisible = false;
+
                 var request = new HttpRequestMessage(HttpMethod.Get, $"{_apiBaseUrl}/notifications?limit=50");
 
                 if (Preferences.ContainsKey("session_id"))
@@ -40,27 +45,76 @@ namespace trovagiocatoriApp.Views
                 if (response.IsSuccessStatusCode)
                 {
                     var json = await response.Content.ReadAsStringAsync();
-                    var result = JsonSerializer.Deserialize<Dictionary<string, object>>(json);
+                    Debug.WriteLine($"[NOTIFICATIONS] Risposta API: {json}");
 
-                    if (result.ContainsKey("data") && result["data"] is JsonElement dataElement)
+                    // GESTIONE PIÙ ROBUSTA del JSON
+                    var notifications = new List<NotificationItem>();
+
+                    if (!string.IsNullOrEmpty(json))
                     {
-                        if (dataElement.TryGetProperty("notifications", out var notificationsElement))
+                        try
                         {
-                            var notifications = ParseNotifications(notificationsElement);
+                            var result = JsonSerializer.Deserialize<Dictionary<string, object>>(json);
 
-                            MainThread.BeginInvokeOnMainThread(() =>
+                            if (result != null && result.ContainsKey("data") && result["data"] is JsonElement dataElement)
                             {
-                                DisplayNotifications(notifications);
-                                UpdateSummary(notifications);
-                            });
+                                if (dataElement.TryGetProperty("notifications", out var notificationsElement))
+                                {
+                                    notifications = ParseNotifications(notificationsElement);
+                                    Debug.WriteLine($"[NOTIFICATIONS] Trovate {notifications.Count} notifiche");
+                                }
+                                else
+                                {
+                                    Debug.WriteLine("[NOTIFICATIONS] Proprietà 'notifications' non trovata nel JSON");
+                                }
+                            }
+                            else
+                            {
+                                Debug.WriteLine("[NOTIFICATIONS] Struttura JSON non riconosciuta");
+                            }
+                        }
+                        catch (JsonException jsonEx)
+                        {
+                            Debug.WriteLine($"[NOTIFICATIONS] Errore parsing JSON: {jsonEx.Message}");
+                            Debug.WriteLine($"[NOTIFICATIONS] JSON ricevuto: {json}");
                         }
                     }
+
+                    // AGGIORNA UI sempre, anche se notifications è vuota
+                    MainThread.BeginInvokeOnMainThread(() =>
+                    {
+                        DisplayNotifications(notifications);
+                        UpdateSummary(notifications);
+                    });
+                }
+                else
+                {
+                    Debug.WriteLine($"[NOTIFICATIONS] Errore HTTP: {response.StatusCode}");
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    Debug.WriteLine($"[NOTIFICATIONS] Contenuto errore: {errorContent}");
+
+                    // MOSTRA empty state anche per errori HTTP
+                    MainThread.BeginInvokeOnMainThread(() =>
+                    {
+                        DisplayNotifications(new List<NotificationItem>());
+                        UpdateSummary(new List<NotificationItem>());
+                    });
                 }
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"Errore caricamento notifiche: {ex.Message}");
-                await DisplayAlert("Errore", "Impossibile caricare le notifiche", "OK");
+                Debug.WriteLine($"[NOTIFICATIONS] Errore caricamento notifiche: {ex.Message}");
+                Debug.WriteLine($"[NOTIFICATIONS] StackTrace: {ex.StackTrace}");
+
+                // GESTIONE ERRORE: mostra empty state invece di alert
+                MainThread.BeginInvokeOnMainThread(() =>
+                {
+                    DisplayNotifications(new List<NotificationItem>());
+                    UpdateSummary(new List<NotificationItem>());
+
+                    // OPZIONALE: Mostra un messaggio di errore discreto
+                    NotificationsSummaryLabel.Text = "Errore nel caricamento";
+                });
             }
             finally
             {
@@ -73,20 +127,43 @@ namespace trovagiocatoriApp.Views
         {
             var notifications = new List<NotificationItem>();
 
-            foreach (var notifElement in notificationsElement.EnumerateArray())
+            try
             {
-                var notification = new NotificationItem
+                // GESTISCE sia array che oggetti vuoti
+                if (notificationsElement.ValueKind == JsonValueKind.Array)
                 {
-                    Id = GetLongProperty(notifElement, "id"),
-                    Type = GetStringProperty(notifElement, "type"),
-                    Title = GetStringProperty(notifElement, "title"),
-                    Message = GetStringProperty(notifElement, "message"),
-                    Status = GetStringProperty(notifElement, "status"),
-                    CreatedAt = GetStringProperty(notifElement, "created_at"),
-                    SenderInfo = ParseSenderInfo(notifElement)
-                };
+                    foreach (var notifElement in notificationsElement.EnumerateArray())
+                    {
+                        try
+                        {
+                            var notification = new NotificationItem
+                            {
+                                Id = GetLongProperty(notifElement, "id"),
+                                Type = GetStringProperty(notifElement, "type"),
+                                Title = GetStringProperty(notifElement, "title"),
+                                Message = GetStringProperty(notifElement, "message"),
+                                Status = GetStringProperty(notifElement, "status"),
+                                CreatedAt = GetStringProperty(notifElement, "created_at"),
+                                SenderInfo = ParseSenderInfo(notifElement)
+                            };
 
-                notifications.Add(notification);
+                            notifications.Add(notification);
+                        }
+                        catch (Exception ex)
+                        {
+                            Debug.WriteLine($"[NOTIFICATIONS] Errore parsing singola notifica: {ex.Message}");
+                            // Continua con le altre notifiche
+                        }
+                    }
+                }
+                else
+                {
+                    Debug.WriteLine($"[NOTIFICATIONS] Tipo JSON non aspettato: {notificationsElement.ValueKind}");
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[NOTIFICATIONS] Errore durante il parsing delle notifiche: {ex.Message}");
             }
 
             return notifications;
@@ -94,16 +171,24 @@ namespace trovagiocatoriApp.Views
 
         private SenderInfo ParseSenderInfo(JsonElement notifElement)
         {
-            if (notifElement.TryGetProperty("sender_info", out var senderElement) &&
-                senderElement.ValueKind != JsonValueKind.Null)
+            try
             {
-                return new SenderInfo
+                if (notifElement.TryGetProperty("sender_info", out var senderElement) &&
+                    senderElement.ValueKind != JsonValueKind.Null)
                 {
-                    Username = GetStringProperty(senderElement, "username"),
-                    DisplayName = GetStringProperty(senderElement, "display_name"),
-                    ProfilePic = GetStringProperty(senderElement, "profile_picture")
-                };
+                    return new SenderInfo
+                    {
+                        Username = GetStringProperty(senderElement, "username"),
+                        DisplayName = GetStringProperty(senderElement, "display_name"),
+                        ProfilePic = GetStringProperty(senderElement, "profile_picture")
+                    };
+                }
             }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[NOTIFICATIONS] Errore parsing sender info: {ex.Message}");
+            }
+
             return null;
         }
 
@@ -114,15 +199,24 @@ namespace trovagiocatoriApp.Views
             if (notifications.Count == 0)
             {
                 EmptyStateLayout.IsVisible = true;
+                Debug.WriteLine("[NOTIFICATIONS] Mostrando empty state - nessuna notifica");
                 return;
             }
 
             EmptyStateLayout.IsVisible = false;
+            Debug.WriteLine($"[NOTIFICATIONS] Mostrando {notifications.Count} notifiche");
 
             foreach (var notification in notifications)
             {
-                var notificationView = CreateNotificationView(notification);
-                NotificationsContainer.Add(notificationView);
+                try
+                {
+                    var notificationView = CreateNotificationView(notification);
+                    NotificationsContainer.Add(notificationView);
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine($"[NOTIFICATIONS] Errore creazione view notifica: {ex.Message}");
+                }
             }
         }
 
@@ -279,22 +373,29 @@ namespace trovagiocatoriApp.Views
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"Errore gestione tap notifica: {ex.Message}");
+                Debug.WriteLine($"[NOTIFICATIONS] Errore gestione tap notifica: {ex.Message}");
             }
         }
 
         private async Task NavigateToRelevantSection(NotificationItem notification)
         {
-            switch (notification.Type)
+            try
             {
-                case "friend_request":
-                    await Navigation.PushAsync(new FriendsPage());
-                    break;
-                case "event_invite":
-                    await Navigation.PushAsync(new ProfilePage()); // Tab "I Miei Eventi"
-                    break;
-                default:
-                    break;
+                switch (notification.Type)
+                {
+                    case "friend_request":
+                        await Navigation.PushAsync(new FriendsPage());
+                        break;
+                    case "event_invite":
+                        await Navigation.PushAsync(new ProfilePage()); // Tab "I Miei Eventi"
+                        break;
+                    default:
+                        break;
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[NOTIFICATIONS] Errore navigazione: {ex.Message}");
             }
         }
 
@@ -314,7 +415,7 @@ namespace trovagiocatoriApp.Views
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"Errore segna notifica come letta: {ex.Message}");
+                Debug.WriteLine($"[NOTIFICATIONS] Errore segna notifica come letta: {ex.Message}");
             }
         }
 
@@ -340,19 +441,31 @@ namespace trovagiocatoriApp.Views
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"Errore segna tutte come lette: {ex.Message}");
+                Debug.WriteLine($"[NOTIFICATIONS] Errore segna tutte come lette: {ex.Message}");
                 await DisplayAlert("Errore", "Impossibile segnare le notifiche come lette", "OK");
             }
         }
 
         private void UpdateSummary(List<NotificationItem> notifications)
         {
-            var unreadCount = notifications.Count(n => n.Status == "unread");
-            var totalCount = notifications.Count;
+            try
+            {
+                var unreadCount = notifications.Count(n => n.Status == "unread");
+                var totalCount = notifications.Count;
 
-            NotificationsSummaryLabel.Text = unreadCount > 0
-                ? $"{unreadCount} non lette su {totalCount}"
-                : $"{totalCount} notifiche";
+                NotificationsSummaryLabel.Text = unreadCount > 0
+                    ? $"{unreadCount} non lette su {totalCount}"
+                    : totalCount > 0
+                        ? $"{totalCount} notifiche (tutte lette)"
+                        : "Nessuna notifica";
+
+                Debug.WriteLine($"[NOTIFICATIONS] Summary aggiornato: {NotificationsSummaryLabel.Text}");
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[NOTIFICATIONS] Errore aggiornamento summary: {ex.Message}");
+                NotificationsSummaryLabel.Text = "Errore caricamento";
+            }
         }
 
         private async void OnRefreshing(object sender, EventArgs e)
@@ -366,7 +479,7 @@ namespace trovagiocatoriApp.Views
             await Navigation.PopAsync();
         }
 
-        // Helper methods
+        // Helper methods SICURI
         private string GetStringProperty(JsonElement element, string propertyName, string defaultValue = "")
         {
             try
@@ -396,22 +509,5 @@ namespace trovagiocatoriApp.Views
         }
     }
 
-    // Classi di supporto
-    public class NotificationItem
-    {
-        public long Id { get; set; }
-        public string Type { get; set; }
-        public string Title { get; set; }
-        public string Message { get; set; }
-        public string Status { get; set; }
-        public string CreatedAt { get; set; }
-        public SenderInfo SenderInfo { get; set; }
-    }
 
-    public class SenderInfo
-    {
-        public string Username { get; set; }
-        public string DisplayName { get; set; }
-        public string ProfilePic { get; set; }
-    }
 }
