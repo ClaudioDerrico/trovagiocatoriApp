@@ -1,8 +1,5 @@
 ﻿using System.Collections.ObjectModel;
-using System.Net.Http;
 using System.Text.Json;
-using Microsoft.Maui.Storage;
-using System.Text;
 using System.Diagnostics;
 using trovagiocatoriApp.Models;
 using trovagiocatoriApp.Services;
@@ -13,6 +10,7 @@ public partial class AdminPage : ContentPage
 {
     private readonly IAdminService _adminService;
     private readonly IBanService _banService;
+    private string _currentAdminEmail = "";
 
     // Collections per i dati utilizzando i nuovi Models
     public ObservableCollection<AdminPostInfo> AllPosts { get; set; } = new ObservableCollection<AdminPostInfo>();
@@ -25,7 +23,7 @@ public partial class AdminPage : ContentPage
     private string _userSearchFilter = "";
 
     // Tab corrente
-    private AdminTab _currentTab = AdminTab.Dashboard;
+    private AdminTab _currentTab = AdminTab.Dashboard;  
 
     private enum AdminTab
     {
@@ -77,10 +75,15 @@ public partial class AdminPage : ContentPage
                 var user = JsonSerializer.Deserialize<Models.User>(json,
                     new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
 
+                // NUOVO: Salva l'email dell'admin corrente
+                _currentAdminEmail = user.Email;
+
                 MainThread.BeginInvokeOnMainThread(() =>
                 {
                     AdminInfoLabel.Text = $"Amministratore: {user.Username} ({user.Email})";
                 });
+
+                Debug.WriteLine($"[ADMIN] Admin corrente: {_currentAdminEmail}");
             }
         }
         catch (Exception ex)
@@ -396,16 +399,19 @@ public partial class AdminPage : ContentPage
     private void FilterUsers()
     {
         var filtered = AllUsers.Where(u =>
-            string.IsNullOrEmpty(_userSearchFilter) ||
+            // NUOVO: Escludi l'admin corrente dalla lista
+            !u.Email.Equals(_currentAdminEmail, StringComparison.OrdinalIgnoreCase) &&
+            (string.IsNullOrEmpty(_userSearchFilter) ||
             u.Username.ToLower().Contains(_userSearchFilter) ||
             u.Email.ToLower().Contains(_userSearchFilter) ||
             u.Nome.ToLower().Contains(_userSearchFilter) ||
-            u.Cognome.ToLower().Contains(_userSearchFilter)
+            u.Cognome.ToLower().Contains(_userSearchFilter))
         ).ToList();
 
         UsersCollectionView.ItemsSource = filtered;
-    }
 
+        Debug.WriteLine($"[ADMIN] Filtrati {filtered.Count} utenti (escluso admin corrente: {_currentAdminEmail})");
+    }
     // ========== AZIONI ADMIN ==========
 
     private async void OnDeletePostClicked(object sender, EventArgs e)
@@ -712,234 +718,7 @@ public partial class AdminPage : ContentPage
         }
     }
 
-    // ========== GESTIONE ERRORI E FALLBACK ==========
-
-    private AdminStats GetFallbackStats()
-    {
-        return new AdminStats
-        {
-            TotalPosts = AllPosts.Count,
-            TotalComments = AllComments.Count,
-            TotalUsers = AllUsers.Count,
-            TotalSportFields = 0,
-            PostsThisWeek = 0,
-            CommentsToday = 0,
-            GeneratedAt = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")
-        };
-    }
-
-    private void LoadMockDataIfNeeded()
-    {
-        // Carica dati mock solo se le collections sono vuote e in modalità debug
-#if DEBUG
-        if (!AllPosts.Any())
-        {
-            LoadMockPosts();
-        }
-
-        if (!AllComments.Any())
-        {
-            LoadMockComments();
-        }
-
-        if (!AllUsers.Any())
-        {
-            LoadMockUsers();
-        }
-#endif
-    }
-
-#if DEBUG
-    private void LoadMockPosts()
-    {
-        var mockPosts = new List<AdminPostInfo>
-        {
-            new AdminPostInfo
-            {
-                Id = 1,
-                Titolo = "Partita di calcio a Milano",
-                AutoreEmail = "utente1@email.com",
-                Sport = "Calcio",
-                Citta = "Milano",
-                Provincia = "Milano",
-                DataCreazione = DateTime.Now.AddDays(-2),
-                DataPartita = DateTime.Now.AddDays(3),
-                OraPartita = "18:00",
-                NumeroGiocatori = 10,
-                PartecipantiIscritti = 7,
-                Status = "Aperto",
-                Livello = "Intermedio",
-                Commento = "Partita amichevole"
-            },
-            new AdminPostInfo
-            {
-                Id = 2,
-                Titolo = "Tennis al parco",
-                AutoreEmail = "utente2@email.com",
-                Sport = "Tennis",
-                Citta = "Roma",
-                Provincia = "Roma",
-                DataCreazione = DateTime.Now.AddDays(-1),
-                DataPartita = DateTime.Now.AddDays(5),
-                OraPartita = "16:30",
-                NumeroGiocatori = 4,
-                PartecipantiIscritti = 4,
-                Status = "Completo",
-                Livello = "Avanzato",
-                Commento = "Doppio misto"
-            }
-        };
-
-        foreach (var post in mockPosts)
-        {
-            AllPosts.Add(post);
-        }
-
-        Debug.WriteLine($"[ADMIN] Caricati {mockPosts.Count} post mock");
-    }
-
-    private void LoadMockComments()
-    {
-        var mockComments = new List<AdminCommentInfo>
-        {
-            new AdminCommentInfo
-            {
-                Id = 1,
-                PostId = 1,
-                PostTitolo = "Partita di calcio a Milano",
-                AutoreEmail = "commentatore1@email.com",
-                Contenuto = "Sono interessato a partecipare! Che livello è richiesto?",
-                DataCreazione = DateTime.Now.AddHours(-2)
-            },
-            new AdminCommentInfo
-            {
-                Id = 2,
-                PostId = 2,
-                PostTitolo = "Tennis al parco",
-                AutoreEmail = "commentatore2@email.com",
-                Contenuto = "Perfetto! Ci sarò sicuramente. A che ora iniziamo esattamente?",
-                DataCreazione = DateTime.Now.AddHours(-1)
-            }
-        };
-
-        foreach (var comment in mockComments)
-        {
-            AllComments.Add(comment);
-        }
-
-        Debug.WriteLine($"[ADMIN] Caricati {mockComments.Count} commenti mock");
-    }
-
-    private void LoadMockUsers()
-    {
-        var mockUsers = new List<AdminUserInfo>
-        {
-            new AdminUserInfo
-            {
-                Id = 1,
-                Username = "mario_rossi",
-                Nome = "Mario",
-                Cognome = "Rossi",
-                Email = "mario.rossi@email.com",
-                DataRegistrazione = DateTime.Now.AddDays(-30),
-                IsActive = true,
-                IsAdmin = false,
-                PostCreati = 3,
-                CommentiScritti = 12
-            },
-            new AdminUserInfo
-            {
-                Id = 2,
-                Username = "giulia_verdi",
-                Nome = "Giulia",
-                Cognome = "Verdi",
-                Email = "giulia.verdi@email.com",
-                DataRegistrazione = DateTime.Now.AddDays(-15),
-                IsActive = true,
-                IsAdmin = false,
-                PostCreati = 1,
-                CommentiScritti = 5
-            },
-            new AdminUserInfo
-            {
-                Id = 3,
-                Username = "luca_bianchi",
-                Nome = "Luca",
-                Cognome = "Bianchi",
-                Email = "luca.bianchi@email.com",
-                DataRegistrazione = DateTime.Now.AddDays(-45),
-                IsActive = false,
-                IsAdmin = false,
-                PostCreati = 0,
-                CommentiScritti = 2
-            }
-        };
-
-        foreach (var user in mockUsers)
-        {
-            AllUsers.Add(user);
-        }
-
-        Debug.WriteLine($"[ADMIN] Caricati {mockUsers.Count} utenti mock");
-    }
-#endif
-
-    // ========== GESTIONE ERRORI PERSONALIZZATA ==========
-
-    private async Task HandleServiceError(Exception ex, string operation)
-    {
-        Debug.WriteLine($"[ADMIN] Errore durante {operation}: {ex.Message}");
-
-        string userMessage = operation switch
-        {
-            "caricamento statistiche" => "Impossibile caricare le statistiche del dashboard",
-            "caricamento post" => "Impossibile caricare la lista dei post",
-            "caricamento commenti" => "Impossibile caricare la lista dei commenti",
-            "caricamento utenti" => "Impossibile caricare la lista degli utenti",
-            "eliminazione post" => "Impossibile eliminare il post selezionato",
-            "eliminazione commento" => "Impossibile eliminare il commento selezionato",
-            "modifica utente" => "Impossibile modificare lo stato dell'utente",
-            _ => "Si è verificato un errore imprevisto"
-        };
-
-        await DisplayAlert("Errore", $"{userMessage}. Riprova più tardi.", "OK");
-    }
-
-    // ========== METODI DI UTILITÀ ==========
-
-    private async Task<bool> ConfirmAction(string title, string message, string acceptText = "Conferma", string cancelText = "Annulla")
-    {
-        return await DisplayAlert(title, message, acceptText, cancelText);
-    }
-
-    private void ShowLoadingState(Button button, bool isLoading)
-    {
-        if (button == null) return;
-
-        if (isLoading)
-        {
-            button.Text = "⏳ Caricamento...";
-            button.IsEnabled = false;
-        }
-        else
-        {
-            // Il testo originale dovrebbe essere ripristinato dal chiamante
-            button.IsEnabled = true;
-        }
-    }
-
-    private string FormatUserActivity(AdminUserInfo user)
-    {
-        var activities = new List<string>();
-
-        if (user.PostCreati > 0)
-            activities.Add($"{user.PostCreati} post");
-
-        if (user.CommentiScritti > 0)
-            activities.Add($"{user.CommentiScritti} commenti");
-
-        return activities.Any() ? string.Join(" • ", activities) : "Nessuna attività";
-    }
+  
 
     // ========== GESTIONE NAVIGAZIONE ==========
 
@@ -969,41 +748,4 @@ public partial class AdminPage : ContentPage
         Debug.WriteLine("[ADMIN] AdminPage OnDisappearing");
     }
 
-    // ========== METODI DIAGNOSTICI ==========
-
-    private void LogCurrentState()
-    {
-        Debug.WriteLine($"[ADMIN] Current State:");
-        Debug.WriteLine($"  - Tab attivo: {_currentTab}");
-        Debug.WriteLine($"  - Post caricati: {AllPosts.Count}");
-        Debug.WriteLine($"  - Commenti caricati: {AllComments.Count}");
-        Debug.WriteLine($"  - Utenti caricati: {AllUsers.Count}");
-        Debug.WriteLine($"  - Filtro post: '{_postSearchFilter}'");
-        Debug.WriteLine($"  - Filtro commenti: '{_commentSearchFilter}'");
-        Debug.WriteLine($"  - Filtro utenti: '{_userSearchFilter}'");
-    }
-
-    private async Task ValidateDataIntegrity()
-    {
-        try
-        {
-            // Verifica integrità dei dati
-            var invalidPosts = AllPosts.Where(p => string.IsNullOrEmpty(p.Titolo) || string.IsNullOrEmpty(p.AutoreEmail)).Count();
-            var invalidComments = AllComments.Where(c => string.IsNullOrEmpty(c.Contenuto) || string.IsNullOrEmpty(c.AutoreEmail)).Count();
-            var invalidUsers = AllUsers.Where(u => string.IsNullOrEmpty(u.Username) || string.IsNullOrEmpty(u.Email)).Count();
-
-            if (invalidPosts > 0 || invalidComments > 0 || invalidUsers > 0)
-            {
-                Debug.WriteLine($"[ADMIN] ⚠️ Dati non validi trovati: {invalidPosts} post, {invalidComments} commenti, {invalidUsers} utenti");
-            }
-            else
-            {
-                Debug.WriteLine("[ADMIN] ✅ Tutti i dati sono validi");
-            }
-        }
-        catch (Exception ex)
-        {
-            Debug.WriteLine($"[ADMIN] Errore validazione dati: {ex.Message}");
-        }
-    }
 }

@@ -124,31 +124,23 @@ namespace trovagiocatoriApp.Views
             {
                 try
                 {
-                    // 1. NASCONDI I TAB UTENTE NORMALI
+                    // 1. NASCONDI COMPLETAMENTE IL FRAME CON LE INFORMAZIONI UTENTE
+                    if (UserInfoFrame != null)
+                    {
+                        UserInfoFrame.IsVisible = false;
+                        Debug.WriteLine("[PROFILE] ✅ Frame informazioni utente completamente nascosto per admin");
+                    }
+
+                    // 2. NASCONDI I TAB UTENTE NORMALI
                     if (MyPostsTabButton != null) MyPostsTabButton.IsVisible = false;
                     if (MyEventsTabButton != null) MyEventsTabButton.IsVisible = false;
                     if (FavoritesTabButton != null) FavoritesTabButton.IsVisible = false;
                     if (TabIndicator != null) TabIndicator.IsVisible = false;
 
-                    // 2. SOSTITUISCI L'AREA TAB CON MESSAGGIO ADMIN
+                 
                     if (Content is Grid mainGrid)
                     {
-                        var tabFrame = mainGrid.Children.OfType<Frame>().FirstOrDefault(f => Grid.GetRow(f) == 1);
-                        if (tabFrame?.Content is Grid tabGrid)
-                        {
-                            tabGrid.Children.Clear();
-                            var adminLabel = new Label
-                            {
-                                Text = "👑 PANNELLO AMMINISTRATORE",
-                                FontSize = 16,
-                                FontAttributes = FontAttributes.Bold,
-                                TextColor = Color.FromArgb("#DC2626"),
-                                HorizontalOptions = LayoutOptions.Center,
-                                VerticalOptions = LayoutOptions.Center
-                            };
-                            tabGrid.Children.Add(adminLabel);
-                        }
-
+                       
                         // 3. SOSTITUISCI IL CONTENUTO CON INTERFACCIA ADMIN
                         var contentScrollView = mainGrid.Children.OfType<ScrollView>().FirstOrDefault(s => Grid.GetRow(s) == 2);
                         if (contentScrollView != null)
@@ -164,7 +156,7 @@ namespace trovagiocatoriApp.Views
                         }
                     }
 
-                    Debug.WriteLine("[PROFILE] ✅ Interfaccia admin configurata");
+                    Debug.WriteLine("[PROFILE] ✅ Interfaccia admin configurata con massimo spazio disponibile");
                 }
                 catch (Exception ex)
                 {
@@ -1127,8 +1119,7 @@ namespace trovagiocatoriApp.Views
             }
         }
 
-        // ========== MODELLI DATI AGGIUNTIVI ==========
-
+    
 
 
     }

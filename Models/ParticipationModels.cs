@@ -49,4 +49,6 @@ namespace trovagiocatoriApp.Models
         public int posti_disponibili { get; set; }
         public bool is_full { get; set; }
     }
+
+
 }

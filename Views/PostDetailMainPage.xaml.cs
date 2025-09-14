@@ -665,7 +665,7 @@ namespace trovagiocatoriApp.Views
 
             // Dati post
             TitoloLabel.Text = post.titolo;
-            DataOraLabel.Text = $"{post.data_partita} alle {post.ora_partita}";
+            DataOraLabel.Text = $"{post.data_partita} alle {post.ora_partita.Substring(0, 5)}";
             LocalitaLabel.Text = $"{post.citta}, {post.provincia}";
             SportLabel.Text = post.sport;
             CommentoLabel.Text = post.commento;

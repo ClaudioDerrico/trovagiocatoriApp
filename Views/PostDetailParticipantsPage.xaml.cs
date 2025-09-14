@@ -461,39 +461,6 @@ namespace trovagiocatoriApp.Views
             }
         }
 
-        // ========== METODI DI SUPPORTO ==========
-
-        private bool CanChatWithParticipant(ParticipantInfo participant)
-        {
-            // Solo l'organizzatore può iniziare chat private
-            if (!_isPostAuthor)
-                return false;
-
-            // Non può chattare con se stesso
-            if (participant.IsOrganizer)
-                return false;
-
-            // Deve essere un partecipante valido
-            if (string.IsNullOrEmpty(participant.email))
-                return false;
-
-            return true;
-        }
-
-        private async Task<int> GetActiveChatCountAsync()
-        {
-            try
-            {
-                // Qui potresti implementare una chiamata API per ottenere 
-                // il numero di chat attive per questo post
-                return Participants.Count(p => !p.IsOrganizer);
-            }
-            catch
-            {
-                return 0;
-            }
-        }
-
         // ========== INotifyPropertyChanged ==========
 
         public new event PropertyChangedEventHandler PropertyChanged;
@@ -504,45 +471,5 @@ namespace trovagiocatoriApp.Views
         }
     }
 
-    // ========== CLASSI DI SUPPORTO ==========
-
-    /// <summary>
-    /// Estensioni per ParticipantInfo per gestire meglio la logica di chat
-    /// </summary>
-    public static class ParticipantInfoExtensions
-    {
-        public static bool CanChatWith(this ParticipantInfo participant, bool currentUserIsAuthor, string currentUserEmail)
-        {
-            // L'organizzatore può chattare con tutti i partecipanti non-organizzatori
-            if (currentUserIsAuthor)
-            {
-                return !participant.IsOrganizer && !string.IsNullOrEmpty(participant.email);
-            }
-
-            // I partecipanti normali non possono iniziare chat da questa pagina
-            return false;
-        }
-
-        public static string GetChatDisplayName(this ParticipantInfo participant)
-        {
-            return !string.IsNullOrEmpty(participant.username)
-                ? participant.username
-                : (!string.IsNullOrEmpty(participant.nome) && !string.IsNullOrEmpty(participant.cognome))
-                    ? $"{participant.nome} {participant.cognome}"
-                    : participant.email ?? "Utente sconosciuto";
-        }
-    }
-
-    /// <summary>
-    /// Modello per rappresentare una chat attiva
-    /// </summary>
-    public class ActiveChatInfo
-    {
-        public string ParticipantEmail { get; set; }
-        public string ParticipantName { get; set; }
-        public int PostId { get; set; }
-        public DateTime LastActivity { get; set; }
-        public bool HasUnreadMessages { get; set; }
-        public int UnreadCount { get; set; }
-    }
+  
 }

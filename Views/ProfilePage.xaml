@@ -109,8 +109,14 @@
                 </Frame>
 
                 <!-- Card informazioni utente sotto -->
-                <Frame BackgroundColor="#FFFFFF" CornerRadius="12" Padding="16" HasShadow="True" BorderColor="#E2E8F0" HorizontalOptions="FillAndExpand">
-                    <Grid ColumnDefinitions="Auto,12,*" RowDefinitions="Auto,Auto,Auto" RowSpacing="10">
+                <Frame x:Name="UserInfoFrame" 
+                       BackgroundColor="#FFFFFF" 
+                       CornerRadius="12" 
+                       Padding="16" 
+                       HasShadow="True" 
+                       BorderColor="#E2E8F0" 
+                       HorizontalOptions="FillAndExpand">
+                                <Grid ColumnDefinitions="Auto,12,*" RowDefinitions="Auto,Auto,Auto" RowSpacing="10">                
 
                         <!-- Nome -->
                         <Frame Grid.Row="0" Grid.Column="0" BackgroundColor="#E3F2FD" CornerRadius="8" Padding="8,4" HasShadow="False" VerticalOptions="Center">

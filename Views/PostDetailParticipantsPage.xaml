@@ -265,27 +265,30 @@
                                             </Frame>
 
                                             <!-- NUOVO: Pulsante Chat (visibile solo se utente è organizzatore E il partecipante NON è organizzatore) -->
-                                            <ImageButton Grid.Column="3"
-                                                         BackgroundColor="#10B981"
-                                                         CornerRadius="20"
-                                                         WidthRequest="40"
-                                                         HeightRequest="40"
-                                                         Padding="8"
-                                                         VerticalOptions="Center"
-                                                         Source="chat_icon.png"
-                                                         x:Name="ChatWithParticipantButton"
-                                                         Clicked="OnChatWithParticipantClicked"
-                                                         CommandParameter="{Binding .}">
+                                            <Button Grid.Column="3"
+                                                    BackgroundColor="Transparent"
+                                                    BorderColor="#10B981"
+                                                    BorderWidth="2"
+                                                    CornerRadius="20"
+                                                    WidthRequest="40"
+                                                    HeightRequest="40"
+                                                    VerticalOptions="Center"
+                                                    Text="🖋️"
+                                                    FontSize="16"
+                                                    TextColor="White"
+                                                    x:Name="ChatWithParticipantButton"
+                                                    Clicked="OnChatWithParticipantClicked"
+                                                    CommandParameter="{Binding .}">             
                                                 <!-- Logica di visibilità: mostra solo se l'utente corrente è organizzatore E questo partecipante NON è organizzatore -->
-                                                <ImageButton.Triggers>
-                                                    <DataTrigger TargetType="ImageButton" Binding="{Binding IsOrganizer}" Value="True">
+                                                <Button.Triggers>
+                                                    <DataTrigger TargetType="Button" Binding="{Binding IsOrganizer}" Value="True">
                                                         <Setter Property="IsVisible" Value="False"/>
                                                     </DataTrigger>
-                                                    <DataTrigger TargetType="ImageButton" Binding="{Binding IsOrganizer}" Value="False">
+                                                    <DataTrigger TargetType="Button" Binding="{Binding IsOrganizer}" Value="False">
                                                         <Setter Property="IsVisible" Value="{Binding Source={x:Reference ParticipantsCollectionView}, Path=BindingContext.IsPostAuthor}"/>
                                                     </DataTrigger>
-                                                </ImageButton.Triggers>
-                                            </ImageButton>
+                                                </Button.Triggers>
+                                            </Button>
                                         </Grid>
                                     </Border>
                                 </DataTemplate>
