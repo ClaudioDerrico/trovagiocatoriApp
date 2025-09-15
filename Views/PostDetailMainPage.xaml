@@ -305,7 +305,7 @@
                 </Button.Triggers>
             </Button>
 
-            <!-- Bottone Commenti. -->
+            <!-- Bottone Commenti -->
             <Button Grid.Column="2"
 			Text="💭 Commenti"
 			Style="{StaticResource CleanButtonStyle}"
