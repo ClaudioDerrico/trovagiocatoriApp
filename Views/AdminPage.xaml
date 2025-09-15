@@ -88,7 +88,7 @@
 
         <!-- Statistiche Dashboard -->
         <Frame Grid.Row="1" Style="{StaticResource AdminCardStyle}" Margin="16,8">
-            <Grid ColumnDefinitions="*,*,*,*" ColumnSpacing="8">
+            <Grid ColumnDefinitions="*,*,*" ColumnSpacing="12">
                 <VerticalStackLayout Grid.Column="0" Spacing="4" HorizontalOptions="Center">
                     <Label x:Name="TotalPostsLabel" Text="0" FontSize="20" FontAttributes="Bold" TextColor="{StaticResource SecondaryColor}" HorizontalOptions="Center"/>
                     <Label Text="Post" FontSize="12" TextColor="{StaticResource TextSecondary}" HorizontalOptions="Center"/>
@@ -100,10 +100,6 @@
                 <VerticalStackLayout Grid.Column="2" Spacing="4" HorizontalOptions="Center">
                     <Label x:Name="TotalUsersLabel" Text="0" FontSize="20" FontAttributes="Bold" TextColor="{StaticResource WarningColor}" HorizontalOptions="Center"/>
                     <Label Text="Utenti" FontSize="12" TextColor="{StaticResource TextSecondary}" HorizontalOptions="Center"/>
-                </VerticalStackLayout>
-                <VerticalStackLayout Grid.Column="3" Spacing="4" HorizontalOptions="Center">
-                    <Label x:Name="TotalFieldsLabel" Text="0" FontSize="20" FontAttributes="Bold" TextColor="{StaticResource PrimaryColor}" HorizontalOptions="Center"/>
-                    <Label Text="Campi" FontSize="12" TextColor="{StaticResource TextSecondary}" HorizontalOptions="Center"/>
                 </VerticalStackLayout>
             </Grid>
         </Frame>

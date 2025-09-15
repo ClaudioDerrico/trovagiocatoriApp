@@ -124,23 +124,26 @@ public partial class AdminPage : ContentPage
     {
         try
         {
-            Debug.WriteLine("[ADMIN] Caricamento statistiche dashboard...");
+            Debug.WriteLine("[ADMIN] Aggiornamento statistiche dashboard con dati locali...");
 
-            var stats = await _adminService.GetStatsAsync();
+            // Usa i dati già caricati nelle collezioni locali
+            int totalPosts = AllPosts.Count;
+            int totalComments = AllComments.Count;
+            int totalUsers = AllUsers.Count;
 
             MainThread.BeginInvokeOnMainThread(() =>
             {
-                TotalPostsLabel.Text = stats.TotalPosts.ToString();
-                TotalCommentsLabel.Text = stats.TotalComments.ToString();
-                TotalUsersLabel.Text = stats.TotalUsers.ToString();
-                TotalFieldsLabel.Text = stats.TotalSportFields.ToString();
+                TotalPostsLabel.Text = totalPosts.ToString();
+                TotalCommentsLabel.Text = totalComments.ToString();
+                TotalUsersLabel.Text = totalUsers.ToString();
+                // Rimossa la riga TotalFieldsLabel
             });
 
-            Debug.WriteLine($"[ADMIN] ✅ Statistiche caricate: {stats.TotalPosts} post, {stats.TotalComments} commenti, {stats.TotalUsers} utenti");
+            Debug.WriteLine($"[ADMIN] ✅ Statistiche aggiornate: {totalPosts} post, {totalComments} commenti, {totalUsers} utenti");
         }
         catch (Exception ex)
         {
-            Debug.WriteLine($"[ADMIN] Errore caricamento stats: {ex.Message}");
+            Debug.WriteLine($"[ADMIN] Errore aggiornamento stats: {ex.Message}");
 
             // Fallback con statistiche di default
             MainThread.BeginInvokeOnMainThread(() =>
@@ -148,7 +151,7 @@ public partial class AdminPage : ContentPage
                 TotalPostsLabel.Text = "0";
                 TotalCommentsLabel.Text = "0";
                 TotalUsersLabel.Text = "0";
-                TotalFieldsLabel.Text = "0";
+                // Rimossa la riga TotalFieldsLabel
             });
         }
     }
@@ -480,7 +483,7 @@ public partial class AdminPage : ContentPage
                 // Rimuovi il post dalla collezione
                 AllPosts.Remove(post);
 
-                // NUOVO: Rimuovi tutti i commenti associati al post eliminato
+                // Rimuovi tutti i commenti associati al post eliminato
                 var commentsToRemove = AllComments.Where(c => c.PostId == post.Id).ToList();
                 foreach (var comment in commentsToRemove)
                 {
@@ -490,14 +493,15 @@ public partial class AdminPage : ContentPage
 
                 // Riapplica i filtri per aggiornare entrambe le viste
                 FilterPosts();
-                FilterComments(); // NUOVO: Aggiorna anche la vista commenti
+                FilterComments();
+
+                // AGGIORNA IMMEDIATAMENTE LE STATISTICHE
+                LoadDashboardStats();
 
                 await DisplayAlert("Successo",
                     $"Post '{post.Titolo}' eliminato con successo!\n" +
                     $"Eliminati anche {commentsToRemove.Count} commenti associati.",
                     "OK");
-
-                await LoadDashboardStats(); // Aggiorna le statistiche
 
                 Debug.WriteLine($"[ADMIN] ✅ Post {post.Id} eliminato con successo insieme a {commentsToRemove.Count} commenti");
             }
@@ -544,10 +548,10 @@ public partial class AdminPage : ContentPage
                 // Riapplica i filtri per aggiornare la vista
                 FilterComments();
 
-                await DisplayAlert("Successo", "Commento eliminato con successo!", "OK");
+                // AGGIORNA IMMEDIATAMENTE LE STATISTICHE
+                LoadDashboardStats();
 
-                // Aggiorna le statistiche del dashboard
-                await LoadDashboardStats();
+                await DisplayAlert("Successo", "Commento eliminato con successo!", "OK");
 
                 Debug.WriteLine($"[ADMIN] ✅ Commento {comment.Id} eliminato con successo");
             }
