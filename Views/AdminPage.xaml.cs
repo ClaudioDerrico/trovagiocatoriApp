@@ -23,7 +23,7 @@ public partial class AdminPage : ContentPage
     private string _userSearchFilter = "";
 
     // Tab corrente
-    private AdminTab _currentTab = AdminTab.Dashboard;  
+    private AdminTab _currentTab = AdminTab.Dashboard;
 
     private enum AdminTab
     {
@@ -247,8 +247,6 @@ public partial class AdminPage : ContentPage
         }
     }
 
-
-
     private async Task LoadAllUsers()
     {
         try
@@ -412,6 +410,7 @@ public partial class AdminPage : ContentPage
 
         Debug.WriteLine($"[ADMIN] Filtrati {filtered.Count} utenti (escluso admin corrente: {_currentAdminEmail})");
     }
+
     // ========== AZIONI ADMIN ==========
 
     private async void OnDeletePostClicked(object sender, EventArgs e)
@@ -430,6 +429,23 @@ public partial class AdminPage : ContentPage
         }
     }
 
+    private async void OnViewCommentPostClicked(object sender, EventArgs e)
+    {
+        if (sender is Button button && button.CommandParameter is AdminCommentInfo comment)
+        {
+            try
+            {
+                // Naviga al dettaglio del post associato al commento
+                await Navigation.PushAsync(new PostDetailMainPage(comment.PostId));
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[ADMIN] Errore apertura post del commento {comment.Id}: {ex.Message}");
+                await DisplayAlert("Errore", "Impossibile aprire il post associato", "OK");
+            }
+        }
+    }
+
     private async void OnToggleUserStatusClicked(object sender, EventArgs e)
     {
         if (sender is Button button && button.CommandParameter is AdminUserInfo user)
@@ -437,7 +453,6 @@ public partial class AdminPage : ContentPage
             await ToggleUserStatus(user);
         }
     }
-
 
     private async Task DeletePost(AdminPostInfo post)
     {
@@ -449,7 +464,7 @@ public partial class AdminPage : ContentPage
                 $"📝 {post.Titolo}\n" +
                 $"👤 di {post.AutoreEmail}\n" +
                 $"📅 {post.DataCreazione:dd/MM/yyyy}\n\n" +
-                $"⚠️ Questa azione è irreversibile!",
+                $"⚠️ Questa azione è irreversibile e eliminerà anche tutti i commenti associati!",
                 "Elimina",
                 "Annulla"
             );
@@ -462,12 +477,29 @@ public partial class AdminPage : ContentPage
 
             if (success)
             {
+                // Rimuovi il post dalla collezione
                 AllPosts.Remove(post);
+
+                // NUOVO: Rimuovi tutti i commenti associati al post eliminato
+                var commentsToRemove = AllComments.Where(c => c.PostId == post.Id).ToList();
+                foreach (var comment in commentsToRemove)
+                {
+                    AllComments.Remove(comment);
+                    Debug.WriteLine($"[ADMIN] Rimosso commento {comment.Id} associato al post {post.Id}");
+                }
+
+                // Riapplica i filtri per aggiornare entrambe le viste
                 FilterPosts();
-                await DisplayAlert("Successo", $"Post '{post.Titolo}' eliminato con successo!", "OK");
+                FilterComments(); // NUOVO: Aggiorna anche la vista commenti
+
+                await DisplayAlert("Successo",
+                    $"Post '{post.Titolo}' eliminato con successo!\n" +
+                    $"Eliminati anche {commentsToRemove.Count} commenti associati.",
+                    "OK");
+
                 await LoadDashboardStats(); // Aggiorna le statistiche
 
-                Debug.WriteLine($"[ADMIN] ✅ Post {post.Id} eliminato con successo");
+                Debug.WriteLine($"[ADMIN] ✅ Post {post.Id} eliminato con successo insieme a {commentsToRemove.Count} commenti");
             }
             else
             {
@@ -489,10 +521,10 @@ public partial class AdminPage : ContentPage
             bool confirm = await DisplayAlert(
                 "Elimina Commento",
                 $"Sei sicuro di voler eliminare il commento:\n\n" +
-                $"💬 {comment.Contenuto.Substring(0, Math.Min(100, comment.Contenuto.Length))}...\n" +
+                $"💬 {comment.ContenutoPreview}\n" +
                 $"👤 di {comment.AutoreEmail}\n" +
                 $"📝 nel post: {comment.PostTitolo}\n" +
-                $"📅 {comment.DataCreazione:dd/MM/yyyy}\n\n" +
+                $"📅 {comment.DataCreazione:dd/MM/yyyy HH:mm}\n\n" +
                 $"⚠️ Questa azione è irreversibile!",
                 "Elimina",
                 "Annulla"
@@ -506,10 +538,16 @@ public partial class AdminPage : ContentPage
 
             if (success)
             {
+                // Rimuovi il commento dalla collezione
                 AllComments.Remove(comment);
+
+                // Riapplica i filtri per aggiornare la vista
                 FilterComments();
+
                 await DisplayAlert("Successo", "Commento eliminato con successo!", "OK");
-                await LoadDashboardStats(); // Aggiorna le statistiche
+
+                // Aggiorna le statistiche del dashboard
+                await LoadDashboardStats();
 
                 Debug.WriteLine($"[ADMIN] ✅ Commento {comment.Id} eliminato con successo");
             }
@@ -627,11 +665,6 @@ public partial class AdminPage : ContentPage
         }
     }
 
-
-
-
-
-
     // ========== AZIONI RAPIDE ==========
 
     private async void OnRefreshStatsClicked(object sender, EventArgs e)
@@ -669,7 +702,6 @@ public partial class AdminPage : ContentPage
             await DisplayAlert("Errore", "Errore durante l'aggiornamento dei dati", "OK");
         }
     }
-
 
     private async void OnViewPostDetailsClicked(object sender, EventArgs e)
     {
@@ -718,8 +750,6 @@ public partial class AdminPage : ContentPage
         }
     }
 
-  
-
     // ========== GESTIONE NAVIGAZIONE ==========
 
     protected override bool OnBackButtonPressed()
@@ -747,5 +777,4 @@ public partial class AdminPage : ContentPage
         base.OnDisappearing();
         Debug.WriteLine("[ADMIN] AdminPage OnDisappearing");
     }
-
 }

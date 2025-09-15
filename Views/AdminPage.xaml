@@ -333,27 +333,17 @@
 
                                         <!-- Actions -->
                                         <Grid Grid.Row="3" ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8">
-                                            <Label Grid.Column="0" Text="⚠️ Il ban impedisce l'accesso alla piattaforma" FontSize="10" TextColor="{StaticResource WarningColor}" VerticalOptions="Center"/>
+                                            <Label Grid.Column="0" Text="⚠️ Le eliminazioni sono permanenti" FontSize="10" TextColor="{StaticResource ErrorColor}" VerticalOptions="Center"/>
                                             <Button Grid.Column="1"
-                                                Text="📝 Vedi Post"
-                                                Style="{StaticResource ActionButtonStyle}"
-                                                CommandParameter="{Binding .}"
-                                                Clicked="OnViewUserPostsClicked"/>
+                                                    Text="📝 Vedi Post"
+                                                    Style="{StaticResource ActionButtonStyle}"
+                                                    CommandParameter="{Binding .}"
+                                                    Clicked="OnViewCommentPostClicked"/>
                                             <Button Grid.Column="2"
-                                                Style="{StaticResource DeleteButtonStyle}"
-                                                CommandParameter="{Binding .}"
-                                                Clicked="OnToggleUserStatusClicked">                
-                                                <Button.Triggers>
-                                                    <DataTrigger TargetType="Button" Binding="{Binding IsActive}" Value="True">
-                                                        <Setter Property="Text" Value="🚫 Banna"/>
-                                                        <Setter Property="BackgroundColor" Value="{StaticResource ErrorColor}"/>
-                                                    </DataTrigger>
-                                                    <DataTrigger TargetType="Button" Binding="{Binding IsActive}" Value="False">
-                                                        <Setter Property="Text" Value="✅ Sbanna"/>
-                                                        <Setter Property="BackgroundColor" Value="{StaticResource SuccessColor}"/>
-                                                    </DataTrigger>
-                                                </Button.Triggers>
-                                            </Button>
+                                                    Text="🗑️"
+                                                    Style="{StaticResource DeleteButtonStyle}"
+                                                    CommandParameter="{Binding .}"
+                                                    Clicked="OnDeleteCommentClicked"/>
                                         </Grid>
                                     </Grid>
                                 </Frame>
