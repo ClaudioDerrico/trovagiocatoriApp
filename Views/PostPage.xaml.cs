@@ -1,73 +1,47 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Net.Http;
+﻿using System.Net.Http;
 using System.Text.Json;
-using System.Threading.Tasks;
 using Microsoft.Maui.Controls;
 using trovagiocatoriApp.Models;
-using System.Linq;
 
 namespace trovagiocatoriApp.Views
 {
     public partial class PostPage : ContentPage
     {
-        private readonly string SelectedProvince;
-        private readonly string SelectedSport;
+        private readonly string _selectedProvince;
+        private readonly string _selectedSport;
         private List<PostResponse> _allPosts = new List<PostResponse>();
         private List<PostResponse> _filteredPosts = new List<PostResponse>();
 
         public PostPage(string province, string sport)
         {
             InitializeComponent();
-            SelectedProvince = province;
-            SelectedSport = sport;
+            _selectedProvince = province;
+            _selectedSport = sport;
         }
 
         protected override async void OnAppearing()
         {
             base.OnAppearing();
-            TitleLabel.Text = $"{SelectedProvince} - {SelectedSport}";
+            TitleLabel.Text = $"{_selectedProvince} - {_selectedSport}";
             await LoadPostsAsync();
         }
 
+        // Carica tutti i post che corrispondono ai criteri di ricerca
         private async Task LoadPostsAsync()
         {
             try
             {
                 using var client = new HttpClient();
 
-                // Usa l'endpoint che include i partecipanti
-                var url = $"{ApiConfig.PythonApiUrl}/posts/search?provincia={Uri.EscapeDataString(SelectedProvince)}&sport={Uri.EscapeDataString(SelectedSport)}";
+                var url = $"{ApiConfig.PythonApiUrl}/posts/search?provincia={Uri.EscapeDataString(_selectedProvince)}&sport={Uri.EscapeDataString(_selectedSport)}";
                 var response = await client.GetAsync(url);
 
                 if (response.IsSuccessStatusCode)
                 {
                     var json = await response.Content.ReadAsStringAsync();
-
-                    // Deserializza come lista di JsonElement per gestire le proprietà aggiuntive
                     var jsonElements = JsonSerializer.Deserialize<List<JsonElement>>(json);
 
-                    _allPosts = jsonElements.Select(post => new PostResponse
-                    {
-                        id = GetIntProperty(post, "id"),
-                        titolo = GetStringProperty(post, "titolo"),
-                        provincia = GetStringProperty(post, "provincia"),
-                        citta = GetStringProperty(post, "citta"),
-                        sport = GetStringProperty(post, "sport"),
-                        data_partita = GetStringProperty(post, "data_partita"),
-                        ora_partita = GetStringProperty(post, "ora_partita"),
-                        commento = GetStringProperty(post, "commento"),
-                        autore_email = GetStringProperty(post, "autore_email"),
-                        campo_id = GetNullableIntProperty(post, "campo_id"),
-                        campo = GetCampoProperty(post),
-                        livello = GetStringProperty(post, "livello", "Intermedio"),
-                        numero_giocatori = GetIntProperty(post, "numero_giocatori", 1),
-
-                        // NUOVO: Proprietà per i partecipanti (se le hai aggiunte a PostResponse)
-                        partecipanti_iscritti = GetIntProperty(post, "partecipanti_iscritti", 0),
-                        posti_disponibili = GetIntProperty(post, "posti_disponibili", 1)
-                    }).ToList();
-
+                    _allPosts = ParsePostsFromJson(jsonElements);
                     _filteredPosts = new List<PostResponse>(_allPosts);
                     PostsCollectionView.ItemsSource = _filteredPosts;
                 }
@@ -83,7 +57,109 @@ namespace trovagiocatoriApp.Views
             }
         }
 
-        // Metodi helper per estrarre proprietà dal JsonElement
+        // Converte gli elementi JSON in oggetti PostResponse
+        private List<PostResponse> ParsePostsFromJson(List<JsonElement> jsonElements)
+        {
+            return jsonElements.Select(post => new PostResponse
+            {
+                id = GetIntProperty(post, "id"),
+                titolo = GetStringProperty(post, "titolo"),
+                provincia = GetStringProperty(post, "provincia"),
+                citta = GetStringProperty(post, "citta"),
+                sport = GetStringProperty(post, "sport"),
+                data_partita = GetStringProperty(post, "data_partita"),
+                ora_partita = GetStringProperty(post, "ora_partita"),
+                commento = GetStringProperty(post, "commento"),
+                autore_email = GetStringProperty(post, "autore_email"),
+                campo_id = GetNullableIntProperty(post, "campo_id"),
+                campo = GetCampoProperty(post),
+                livello = GetStringProperty(post, "livello", "Intermedio"),
+                numero_giocatori = GetIntProperty(post, "numero_giocatori", 1),
+                partecipanti_iscritti = GetIntProperty(post, "partecipanti_iscritti", 0),
+                posti_disponibili = GetIntProperty(post, "posti_disponibili", 1)
+            }).ToList();
+        }
+
+        // ========== EVENT HANDLERS ==========
+
+        // Mostra opzioni di filtro per livello
+        private async void OnFilterButtonClicked(object sender, EventArgs e)
+        {
+            string action = await DisplayActionSheet("Filtra per livello", "Annulla", null,
+                "Tutti i livelli", "🟢 Principiante", "🟡 Intermedio", "🔴 Avanzato");
+
+            if (action != null && action != "Annulla")
+            {
+                ApplyLevelFilter(action);
+            }
+        }
+
+        // Applica il filtro per livello selezionato
+        private void ApplyLevelFilter(string selectedFilter)
+        {
+            _filteredPosts = selectedFilter switch
+            {
+                "Tutti i livelli" => new List<PostResponse>(_allPosts),
+                "🟢 Principiante" => _allPosts.Where(p => p.livello == "Principiante").ToList(),
+                "🟡 Intermedio" => _allPosts.Where(p => p.livello == "Intermedio").ToList(),
+                "🔴 Avanzato" => _allPosts.Where(p => p.livello == "Avanzato").ToList(),
+                _ => new List<PostResponse>(_allPosts)
+            };
+
+            PostsCollectionView.ItemsSource = _filteredPosts;
+
+            // Aggiorna il titolo per mostrare il filtro applicato
+            var filterText = selectedFilter == "Tutti i livelli" ? "" : $" - {selectedFilter}";
+            TitleLabel.Text = $"{_selectedProvince} - {_selectedSport}{filterText}";
+        }
+
+        // Filtra i post in base al testo di ricerca
+        private void OnSearchTextChanged(object sender, TextChangedEventArgs e)
+        {
+            var searchText = e.NewTextValue?.ToLower() ?? "";
+
+            if (string.IsNullOrWhiteSpace(searchText))
+            {
+                PostsCollectionView.ItemsSource = _filteredPosts;
+            }
+            else
+            {
+                var searchResults = _filteredPosts.Where(p =>
+                    p.titolo.ToLower().Contains(searchText) ||
+                    p.commento.ToLower().Contains(searchText) ||
+                    p.citta.ToLower().Contains(searchText)
+                ).ToList();
+
+                PostsCollectionView.ItemsSource = searchResults;
+            }
+        }
+
+        // Gestisce il pull-to-refresh
+        private async void OnRefreshing(object sender, EventArgs e)
+        {
+            await LoadPostsAsync();
+            PostsRefreshView.IsRefreshing = false;
+        }
+
+        // Naviga alla pagina di creazione post
+        private async void OnAddPostClicked(object sender, EventArgs e)
+        {
+            await Navigation.PushAsync(new CreatePostPage());
+        }
+
+        // Gestisce la selezione di un post
+        private async void OnPostSelected(object sender, SelectionChangedEventArgs e)
+        {
+            if (e.CurrentSelection.FirstOrDefault() is PostResponse selectedPost)
+            {
+                PostsCollectionView.SelectedItem = null;
+                await Navigation.PushAsync(new PostDetailMainPage(selectedPost.id));
+            }
+        }
+
+        // ========== HELPER METHODS ==========
+
+        // Metodi helper per estrarre proprietà dal JsonElement in modo sicuro
         private string GetStringProperty(JsonElement element, string propertyName, string defaultValue = "")
         {
             try
@@ -147,84 +223,6 @@ namespace trovagiocatoriApp.Views
             catch
             {
                 return null;
-            }
-        }
-
-        private async void OnFilterButtonClicked(object sender, EventArgs e)
-        {
-            // Mostra un action sheet per filtrare per livello
-            string action = await DisplayActionSheet("Filtra per livello", "Annulla", null,
-                "Tutti i livelli", "🟢 Principiante", "🟡 Intermedio", "🔴 Avanzato");
-
-            if (action != null && action != "Annulla")
-            {
-                ApplyLevelFilter(action);
-            }
-        }
-
-        private void ApplyLevelFilter(string selectedFilter)
-        {
-            switch (selectedFilter)
-            {
-                case "Tutti i livelli":
-                    _filteredPosts = new List<PostResponse>(_allPosts);
-                    break;
-                case "🟢 Principiante":
-                    _filteredPosts = _allPosts.Where(p => p.livello == "Principiante").ToList();
-                    break;
-                case "🟡 Intermedio":
-                    _filteredPosts = _allPosts.Where(p => p.livello == "Intermedio").ToList();
-                    break;
-                case "🔴 Avanzato":
-                    _filteredPosts = _allPosts.Where(p => p.livello == "Avanzato").ToList();
-                    break;
-            }
-
-            PostsCollectionView.ItemsSource = _filteredPosts;
-
-            // Aggiorna il titolo per mostrare il filtro applicato
-            var filterText = selectedFilter == "Tutti i livelli" ? "" : $" - {selectedFilter}";
-            TitleLabel.Text = $"{SelectedProvince} - {SelectedSport}{filterText}";
-        }
-
-        private void OnSearchTextChanged(object sender, TextChangedEventArgs e)
-        {
-            var searchText = e.NewTextValue?.ToLower() ?? "";
-
-            if (string.IsNullOrWhiteSpace(searchText))
-            {
-                PostsCollectionView.ItemsSource = _filteredPosts;
-            }
-            else
-            {
-                var searchResults = _filteredPosts.Where(p =>
-                    p.titolo.ToLower().Contains(searchText) ||
-                    p.commento.ToLower().Contains(searchText) ||
-                    p.citta.ToLower().Contains(searchText)
-                ).ToList();
-
-                PostsCollectionView.ItemsSource = searchResults;
-            }
-        }
-
-        private async void OnRefreshing(object sender, EventArgs e)
-        {
-            // Aggiorna i dati
-            await LoadPostsAsync();
-            PostsRefreshView.IsRefreshing = false;
-        }
-
-        private async void OnAddPostClicked(object sender, EventArgs e)
-        {
-            await Navigation.PushAsync(new CreatePostPage());
-        }
-
-        private async void OnPostSelected(object sender, SelectionChangedEventArgs e)
-        {
-            if (e.CurrentSelection.FirstOrDefault() is PostResponse selectedPost)
-            {
-                PostsCollectionView.SelectedItem = null;
-                await Navigation.PushAsync(new PostDetailMainPage(selectedPost.id));
             }
         }
     }
