@@ -10,23 +10,12 @@ namespace trovagiocatoriApp.Views;
 public partial class HomePage : ContentPage
 {
     private readonly HttpClient _client = new HttpClient();
-    private bool _hasShownAdminWelcome = false; // NUOVO: Flag per evitare alert ripetuti
+    private bool _hasShownAdminWelcome = false;
 
     public HomePage()
     {
         InitializeComponent();
-
-        bool hasSession = Preferences.ContainsKey("session_id") &&
-                          !string.IsNullOrEmpty(Preferences.Get("session_id", ""));
-
-        if (hasSession)
-        {
-            BindingContext = new HomePageViewModel();
-        }
-        else
-        {
-            BindingContext = new NavigationPage(new LoginPage());
-        }
+        BindingContext = HasValidSession() ? new HomePageViewModel() : new NavigationPage(new LoginPage());
     }
 
     protected override async void OnAppearing()
@@ -34,26 +23,24 @@ public partial class HomePage : ContentPage
         base.OnAppearing();
         await LoadNotificationsSummary();
 
-        // MODIFICATO: Controlla admin solo una volta per sessione
         if (!_hasShownAdminWelcome)
         {
             await CheckAdminAccess();
         }
     }
 
-    // NUOVO: Carica il riassunto delle notifiche
+    // Verifica se esiste una sessione valida
+    private bool HasValidSession()
+    {
+        return Preferences.ContainsKey("session_id") && !string.IsNullOrEmpty(Preferences.Get("session_id", ""));
+    }
+
+    // Carica il riassunto delle notifiche non lette
     private async Task LoadNotificationsSummary()
     {
         try
         {
-            var request = new HttpRequestMessage(HttpMethod.Get, $"{ApiConfig.BaseUrl}/notifications/summary");
-
-            if (Preferences.ContainsKey("session_id"))
-            {
-                string sessionId = Preferences.Get("session_id", "");
-                request.Headers.Add("Cookie", $"session_id={sessionId}");
-            }
-
+            var request = CreateAuthenticatedRequest(HttpMethod.Get, "/notifications/summary");
             var response = await _client.SendAsync(request);
 
             if (response.IsSuccessStatusCode)
@@ -63,76 +50,112 @@ public partial class HomePage : ContentPage
 
                 if (result.ContainsKey("data") && result["data"] is JsonElement dataElement)
                 {
-                    var unreadCount = 0;
-                    if (dataElement.TryGetProperty("unread_count", out var countElement))
-                    {
-                        unreadCount = countElement.GetInt32();
-                    }
+                    var unreadCount = dataElement.TryGetProperty("unread_count", out var countElement)
+                        ? countElement.GetInt32() : 0;
 
-                    // Aggiorna UI badge notifiche
-                    MainThread.BeginInvokeOnMainThread(() =>
-                    {
-                        UpdateNotificationBadge(unreadCount);
-                    });
-
-                    Debug.WriteLine($"[NOTIFICATIONS] Caricato riassunto: {unreadCount} notifiche non lette");
+                    MainThread.BeginInvokeOnMainThread(() => UpdateNotificationBadge(unreadCount));
+                    Debug.WriteLine($"[NOTIFICATIONS] {unreadCount} notifiche non lette");
                 }
-            }
-            else
-            {
-                Debug.WriteLine($"[NOTIFICATIONS] Errore caricamento summary: {response.StatusCode}");
             }
         }
         catch (Exception ex)
         {
-            Debug.WriteLine($"[NOTIFICATIONS] Errore caricamento notifiche: {ex.Message}");
-            // Non mostrare errori all'utente per le notifiche, è un'operazione in background
+            Debug.WriteLine($"[NOTIFICATIONS] Errore: {ex.Message}");
         }
     }
 
-    // NUOVO: Aggiorna il badge delle notifiche
+    // Aggiorna il badge delle notifiche
     private void UpdateNotificationBadge(int unreadCount)
     {
-        try
+        if (NotificationBadge?.IsVisible != null && NotificationCountLabel != null)
         {
-            if (NotificationBadge != null && NotificationCountLabel != null)
+            if (unreadCount > 0)
             {
-                if (unreadCount > 0)
-                {
-                    NotificationBadge.IsVisible = true;
-                    NotificationCountLabel.Text = unreadCount > 99 ? "99+" : unreadCount.ToString();
-                    Debug.WriteLine($"[NOTIFICATIONS] Badge aggiornato: {unreadCount} notifiche");
-                }
-                else
-                {
-                    NotificationBadge.IsVisible = false;
-                    Debug.WriteLine("[NOTIFICATIONS] Badge nascosto: nessuna notifica non letta");
-                }
+                NotificationBadge.IsVisible = true;
+                NotificationCountLabel.Text = unreadCount > 99 ? "99+" : unreadCount.ToString();
             }
             else
             {
-                Debug.WriteLine("[NOTIFICATIONS] WARNING: NotificationBadge o NotificationCountLabel è null");
+                NotificationBadge.IsVisible = false;
+            }
+        }
+    }
+
+    // Controlla se l'utente è admin e mostra il messaggio di benvenuto
+    private async Task CheckAdminAccess()
+    {
+        try
+        {
+            var request = CreateAuthenticatedRequest(HttpMethod.Get, "/profile");
+            var response = await _client.SendAsync(request);
+
+            if (response.IsSuccessStatusCode)
+            {
+                var json = await response.Content.ReadAsStringAsync();
+                var user = JsonSerializer.Deserialize<Models.User>(json,
+                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+                if (user.IsAdmin && !_hasShownAdminWelcome)
+                {
+                    await ShowAdminWelcome();
+                    _hasShownAdminWelcome = true;
+                    Preferences.Set("admin_welcome_shown", true);
+                }
             }
         }
         catch (Exception ex)
         {
-            Debug.WriteLine($"[NOTIFICATIONS] Errore aggiornamento badge: {ex.Message}");
+            Debug.WriteLine($"Errore controllo admin: {ex.Message}");
         }
     }
 
-    // NUOVO: Navigazione alla pagina notifiche
+    // Mostra il messaggio di benvenuto per amministratori
+    private async Task ShowAdminWelcome()
+    {
+        await DisplayAlert("👑 Benvenuto Amministratore",
+            "Hai effettuato l'accesso come amministratore.\n\nPuoi accedere al pannello di gestione dal tuo profilo.",
+            "Capito");
+        Debug.WriteLine("[ADMIN] Welcome message mostrato");
+    }
+
+    // Crea una richiesta HTTP autenticata con cookie di sessione
+    private HttpRequestMessage CreateAuthenticatedRequest(HttpMethod method, string endpoint)
+    {
+        var request = new HttpRequestMessage(method, $"{ApiConfig.BaseUrl}{endpoint}");
+
+        if (Preferences.ContainsKey("session_id"))
+        {
+            string sessionId = Preferences.Get("session_id", "");
+            request.Headers.Add("Cookie", $"session_id={sessionId}");
+        }
+
+        return request;
+    }
+
+    // Forza l'aggiornamento delle notifiche (metodo pubblico per altre pagine)
+    public async Task RefreshNotifications()
+    {
+        await LoadNotificationsSummary();
+    }
+
+    // Resetta il flag di benvenuto admin (da chiamare al logout)
+    public static void ResetAdminWelcome()
+    {
+        Preferences.Remove("admin_welcome_shown");
+        Debug.WriteLine("[ADMIN] Flag welcome resettato");
+    }
+
+    protected override void OnNavigatedTo(NavigatedToEventArgs args)
+    {
+        base.OnNavigatedTo(args);
+        _hasShownAdminWelcome = Preferences.Get("admin_welcome_shown", false);
+    }
+
+    // ========== EVENT HANDLERS ==========
+
     private async void OnNotificationsPageTapped(object sender, EventArgs e)
     {
-        try
-        {
-            await Navigation.PushAsync(new NotificationsPage());
-            Debug.WriteLine("[NAVIGATION] Navigazione a NotificationsPage");
-        }
-        catch (Exception ex)
-        {
-            Debug.WriteLine($"[NAVIGATION] Errore navigazione notifiche: {ex.Message}");
-            await DisplayAlert("Errore", "Impossibile aprire le notifiche", "OK");
-        }
+        await SafeNavigate(() => new NotificationsPage());
     }
 
     private async void PostPageClicked(object sender, EventArgs e)
@@ -147,151 +170,42 @@ public partial class HomePage : ContentPage
             ErrorLabel.Text = "Compilare Regione, Provincia e Sport.";
             return;
         }
-        ErrorLabel.IsVisible = false;
 
-        try
-        {
-            await Navigation.PushAsync(new PostPage(province, sport));
-            Debug.WriteLine($"[NAVIGATION] Navigazione a PostPage: {province}, {sport}");
-        }
-        catch (Exception ex)
-        {
-            Debug.WriteLine($"[NAVIGATION] Errore navigazione PostPage: {ex.Message}");
-            await DisplayAlert("Errore", "Impossibile aprire la ricerca", "OK");
-        }
+        ErrorLabel.IsVisible = false;
+        await SafeNavigate(() => new PostPage(province, sport));
     }
 
     private async void OnCreatePostButtonClicked(object sender, EventArgs e)
     {
-        try
-        {
-            await Navigation.PushAsync(new CreatePostPage());
-            Debug.WriteLine("[NAVIGATION] Navigazione a CreatePostPage");
-        }
-        catch (Exception ex)
-        {
-            Debug.WriteLine($"[NAVIGATION] Errore navigazione CreatePostPage: {ex.Message}");
-            await DisplayAlert("Errore", "Impossibile aprire la creazione post", "OK");
-        }
+        await SafeNavigate(() => new CreatePostPage());
     }
 
     private async void OnAboutAppTapped(object sender, EventArgs e)
     {
-        try
-        {
-            await Navigation.PushAsync(new AboutAppPage());
-            Debug.WriteLine("[NAVIGATION] Navigazione a AboutAppPage");
-        }
-        catch (Exception ex)
-        {
-            Debug.WriteLine($"[NAVIGATION] Errore navigazione AboutAppPage: {ex.Message}");
-            await DisplayAlert("Errore", "Impossibile aprire le informazioni", "OK");
-        }
+        await SafeNavigate(() => new AboutAppPage());
     }
 
-    // Gestione navigazione alla pagina Amici
     private async void OnFriendsPageTapped(object sender, EventArgs e)
     {
-        try
-        {
-            await Navigation.PushAsync(new FriendsPage());
-            Debug.WriteLine("[NAVIGATION] Navigazione a FriendsPage");
-        }
-        catch (Exception ex)
-        {
-            Debug.WriteLine($"[NAVIGATION] Errore navigazione FriendsPage: {ex.Message}");
-            await DisplayAlert("Errore", "Impossibile aprire la pagina amici", "OK");
-        }
+        await SafeNavigate(() => new FriendsPage());
     }
 
     private async void ProfilePageTapped(object sender, EventArgs e)
     {
-        try
-        {
-            await Navigation.PushAsync(new ProfilePage());
-            Debug.WriteLine("[NAVIGATION] Navigazione a ProfilePage");
-        }
-        catch (Exception ex)
-        {
-            Debug.WriteLine($"[NAVIGATION] Errore navigazione ProfilePage: {ex.Message}");
-            await DisplayAlert("Errore", "Impossibile aprire il profilo", "OK");
-        }
+        await SafeNavigate(() => new ProfilePage());
     }
 
-    //  Metodo per forzare l'aggiornamento delle notifiche (può essere chiamato da altre pagine)
-    public async Task RefreshNotifications()
-    {
-        await LoadNotificationsSummary();
-    }
-
-    // MODIFICATO: Controllo admin con flag per evitare alert ripetuti
-    private async Task CheckAdminAccess()
+    // Metodo helper per navigazione sicura con gestione errori
+    private async Task SafeNavigate(Func<ContentPage> pageFactory)
     {
         try
         {
-            var request = new HttpRequestMessage(HttpMethod.Get, $"{ApiConfig.BaseUrl}/profile");
-
-            if (Preferences.ContainsKey("session_id"))
-            {
-                string sessionId = Preferences.Get("session_id", "");
-                request.Headers.Add("Cookie", $"session_id={sessionId}");
-            }
-
-            var response = await _client.SendAsync(request);
-            if (response.IsSuccessStatusCode)
-            {
-                var json = await response.Content.ReadAsStringAsync();
-                var user = JsonSerializer.Deserialize<Models.User>(json,
-                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-
-                // MODIFICATO: Controlla se è admin E se non abbiamo già mostrato il welcome
-                if (user.IsAdmin && !_hasShownAdminWelcome)
-                {
-                    await ShowAdminWelcome();
-                    _hasShownAdminWelcome = true; // Imposta il flag per non mostrarlo più
-
-                    // NUOVO: Salva in Preferences per ricordare tra sessioni app
-                    Preferences.Set("admin_welcome_shown", true);
-                }
-            }
+            await Navigation.PushAsync(pageFactory());
         }
         catch (Exception ex)
         {
-            Debug.WriteLine($"Errore controllo admin: {ex.Message}");
+            Debug.WriteLine($"[NAVIGATION] Errore: {ex.Message}");
+            await DisplayAlert("Errore", "Impossibile aprire la pagina richiesta", "OK");
         }
-    }
-
-    // MODIFICATO: Nome più appropriato e messaggio migliorato
-    private async Task ShowAdminWelcome()
-    {
-        // Mostra una notifica che l'utente ha privilegi admin
-        await DisplayAlert("👑 Benvenuto Amministratore",
-            "Hai effettuato l'accesso come amministratore.\n\nPuoi accedere al pannello di gestione dal tuo profilo.",
-            "Capito");
-
-        Debug.WriteLine("[ADMIN] Welcome message mostrato");
-    }
-
-    // NUOVO: Metodo per resettare il flag (da chiamare al logout)
-    public static void ResetAdminWelcome()
-    {
-        Preferences.Remove("admin_welcome_shown");
-        Debug.WriteLine("[ADMIN] Flag welcome resettato");
-    }
-
-    // NUOVO: Override per controllare al costruttore se abbiamo già mostrato il welcome
-    protected override void OnNavigatedTo(NavigatedToEventArgs args)
-    {
-        base.OnNavigatedTo(args);
-
-        // Controlla se abbiamo già mostrato il welcome in una sessione precedente
-        _hasShownAdminWelcome = Preferences.Get("admin_welcome_shown", false);
-    }
-
-    //  Metodo per gestire il cleanup quando la pagina viene nascosta
-    protected override void OnDisappearing()
-    {
-        base.OnDisappearing();
-        // Eventuale cleanup se necessario
     }
 }

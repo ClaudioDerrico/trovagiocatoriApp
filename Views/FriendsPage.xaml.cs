@@ -13,11 +13,7 @@ namespace trovagiocatoriApp.Views
 {
     public partial class FriendsPage : ContentPage, INotifyPropertyChanged
     {
-        // AGGIUNTO: HttpClient e URL base
         private static readonly HttpClient _sharedClient = CreateHttpClient();
-        private readonly string _apiBaseUrl = ApiConfig.BaseUrl;
-
-        // Stato dei tab
         private TabType _activeTab = TabType.Friends;
 
         // Collections per i diversi tipi di contenuto
@@ -26,29 +22,22 @@ namespace trovagiocatoriApp.Views
         public ObservableCollection<FriendRequest> ReceivedRequests { get; set; } = new ObservableCollection<FriendRequest>();
         public ObservableCollection<UserSearchResult> SearchResults { get; set; } = new ObservableCollection<UserSearchResult>();
 
-        // Enum per i tipi di tab
-        private enum TabType
-        {
-            Friends,
-            SentRequests,
-            ReceivedRequests
-        }
-
-        // AGGIUNTO: Crea HttpClient
-        private static HttpClient CreateHttpClient()
-        {
-            var handler = new HttpClientHandler
-            {
-                UseCookies = true
-            };
-            return new HttpClient(handler);
-        }
+        private enum TabType { Friends, SentRequests, ReceivedRequests }
 
         public FriendsPage()
         {
             InitializeComponent();
+            SetupCollectionViews();
+        }
 
-            // Imposta le ItemsSource
+        private static HttpClient CreateHttpClient()
+        {
+            return new HttpClient(new HttpClientHandler { UseCookies = true });
+        }
+
+        // Configura le ItemsSource delle CollectionView
+        private void SetupCollectionViews()
+        {
             FriendsCollectionView.ItemsSource = Friends;
             SentRequestsCollectionView.ItemsSource = SentRequests;
             ReceivedRequestsCollectionView.ItemsSource = ReceivedRequests;
@@ -58,30 +47,28 @@ namespace trovagiocatoriApp.Views
         protected override async void OnAppearing()
         {
             base.OnAppearing();
-
-            // Carica tutti i dati dal backend
-            await LoadFriendsFromBackend();
-            await LoadSentRequestsFromBackend();
-            await LoadReceivedRequestsFromBackend();
+            await LoadAllData();
             Debug.WriteLine("[FRIENDS PAGE] Dati aggiornati - OnAppearing completato");
         }
 
-     
+        // Carica tutti i dati necessari per la pagina
+        private async Task LoadAllData()
+        {
+            await Task.WhenAll(
+                LoadFriendsFromBackend(),
+                LoadSentRequestsFromBackend(),
+                LoadReceivedRequestsFromBackend()
+            );
+        }
 
         // ========== CARICAMENTO DATI DAL BACKEND ==========
 
+        // Carica la lista degli amici confermati
         private async Task LoadFriendsFromBackend()
         {
             try
             {
-                var request = new HttpRequestMessage(HttpMethod.Get, $"{_apiBaseUrl}/friends/list");
-
-                if (Preferences.ContainsKey("session_id"))
-                {
-                    string sessionId = Preferences.Get("session_id", "");
-                    request.Headers.Add("Cookie", $"session_id={sessionId}");
-                }
-
+                var request = CreateAuthenticatedRequest(HttpMethod.Get, "/friends/list");
                 var response = await _sharedClient.SendAsync(request);
 
                 if (response.IsSuccessStatusCode)
@@ -115,19 +102,12 @@ namespace trovagiocatoriApp.Views
             }
         }
 
+        // Carica le richieste di amicizia inviate
         private async Task LoadSentRequestsFromBackend()
         {
             try
             {
-                // CORREZIONE: Usa l'endpoint corretto
-                var request = new HttpRequestMessage(HttpMethod.Get, $"{_apiBaseUrl}/friends/sent-requests");
-
-                if (Preferences.ContainsKey("session_id"))
-                {
-                    string sessionId = Preferences.Get("session_id", "");
-                    request.Headers.Add("Cookie", $"session_id={sessionId}");
-                }
-
+                var request = CreateAuthenticatedRequest(HttpMethod.Get, "/friends/sent-requests");
                 var response = await _sharedClient.SendAsync(request);
 
                 if (response.IsSuccessStatusCode)
@@ -168,18 +148,12 @@ namespace trovagiocatoriApp.Views
             }
         }
 
+        // Carica le richieste di amicizia ricevute
         private async Task LoadReceivedRequestsFromBackend()
         {
             try
             {
-                var request = new HttpRequestMessage(HttpMethod.Get, $"{_apiBaseUrl}/friends/requests");
-
-                if (Preferences.ContainsKey("session_id"))
-                {
-                    string sessionId = Preferences.Get("session_id", "");
-                    request.Headers.Add("Cookie", $"session_id={sessionId}");
-                }
-
+                var request = CreateAuthenticatedRequest(HttpMethod.Get, "/friends/requests");
                 var response = await _sharedClient.SendAsync(request);
 
                 if (response.IsSuccessStatusCode)
@@ -219,31 +193,29 @@ namespace trovagiocatoriApp.Views
 
         private void OnFriendsTabClicked(object sender, EventArgs e)
         {
-            if (_activeTab != TabType.Friends)
-            {
-                _activeTab = TabType.Friends;
-                UpdateTabsUI();
-            }
+            SwitchToTab(TabType.Friends);
         }
 
         private void OnSentRequestsTabClicked(object sender, EventArgs e)
         {
-            if (_activeTab != TabType.SentRequests)
-            {
-                _activeTab = TabType.SentRequests;
-                UpdateTabsUI();
-            }
+            SwitchToTab(TabType.SentRequests);
         }
 
         private void OnReceivedRequestsTabClicked(object sender, EventArgs e)
         {
-            if (_activeTab != TabType.ReceivedRequests)
-            {
-                _activeTab = TabType.ReceivedRequests;
-                UpdateTabsUI();
-            }
+            SwitchToTab(TabType.ReceivedRequests);
         }
 
+        // Cambia il tab attivo e aggiorna l'UI
+        private void SwitchToTab(TabType newTab)
+        {
+            if (_activeTab == newTab) return;
+
+            _activeTab = newTab;
+            UpdateTabsUI();
+        }
+
+        // Aggiorna l'interfaccia dei tab
         private void UpdateTabsUI()
         {
             // Reset tutti i tab
@@ -281,6 +253,7 @@ namespace trovagiocatoriApp.Views
 
         // ========== GESTIONE RICERCA ==========
 
+        // Avvia la ricerca di nuovi utenti
         private async void OnSearchFriendsClicked(object sender, EventArgs e)
         {
             var searchText = SearchFriendsEntry.Text?.Trim();
@@ -300,6 +273,7 @@ namespace trovagiocatoriApp.Views
             await SearchUsers(searchText);
         }
 
+        // Esegue la ricerca di utenti nel database
         private async Task SearchUsers(string searchText)
         {
             try
@@ -307,15 +281,8 @@ namespace trovagiocatoriApp.Views
                 SearchButton.IsEnabled = false;
                 SearchButton.Text = "Ricerca...";
 
-                // IMPLEMENTATO: Chiamata API per la ricerca utenti
-                var request = new HttpRequestMessage(HttpMethod.Get, $"{_apiBaseUrl}/friends/search?q={Uri.EscapeDataString(searchText)}");
-
-                if (Preferences.ContainsKey("session_id"))
-                {
-                    string sessionId = Preferences.Get("session_id", "");
-                    request.Headers.Add("Cookie", $"session_id={sessionId}");
-                }
-
+                var request = CreateAuthenticatedRequest(HttpMethod.Get,
+                    $"/friends/search?q={Uri.EscapeDataString(searchText)}");
                 var response = await _sharedClient.SendAsync(request);
 
                 if (response.IsSuccessStatusCode)
@@ -363,6 +330,7 @@ namespace trovagiocatoriApp.Views
 
         // ========== GESTIONE AZIONI AMICI ==========
 
+        // Invia una richiesta di amicizia
         private async void OnAddFriendClicked(object sender, EventArgs e)
         {
             if (sender is Button button && button.CommandParameter is UserSearchResult user)
@@ -375,80 +343,319 @@ namespace trovagiocatoriApp.Views
 
                 if (confirm)
                 {
-                    try
-                    {
-                        button.IsEnabled = false;
-                        button.Text = "Invio...";
-
-                        var request = new HttpRequestMessage(HttpMethod.Post, $"{_apiBaseUrl}/friends/request");
-
-                        if (Preferences.ContainsKey("session_id"))
-                        {
-                            string sessionId = Preferences.Get("session_id", "");
-                            request.Headers.Add("Cookie", $"session_id={sessionId}");
-                        }
-
-                        var payload = new { target_email = user.Email };
-                        var json = JsonSerializer.Serialize(payload);
-                        request.Content = new StringContent(json, Encoding.UTF8, "application/json");
-
-                        var response = await _sharedClient.SendAsync(request);
-
-                        if (response.IsSuccessStatusCode)
-                        {
-                            // Rimuovi l'utente dai risultati di ricerca
-                            SearchResults.Remove(user);
-
-                            // IMPORTANTE: Ricarica le richieste inviate per mostrare la nuova richiesta
-                            await LoadSentRequestsFromBackend();
-
-                            await DisplayAlert("Successo", $"Richiesta di amicizia inviata a {user.Username}!", "OK");
-
-                            Debug.WriteLine($"[FRIENDS] ✅ Richiesta inviata a {user.Email}");
-                        }
-                        else
-                        {
-                            var errorContent = await response.Content.ReadAsStringAsync();
-                            Debug.WriteLine($"[FRIENDS] Errore invio richiesta: {errorContent}");
-
-                            // Controlla se l'errore è dovuto a una richiesta già esistente
-                            if (errorContent.Contains("già inviata") || errorContent.Contains("already sent"))
-                            {
-                                SearchResults.Remove(user);
-                                await LoadSentRequestsFromBackend(); // Ricarica per essere sicuri
-                                await DisplayAlert("Informazione", "Richiesta di amicizia già inviata precedentemente!", "OK");
-                            }
-                            else
-                            {
-                                await DisplayAlert("Errore", $"Errore nell'invio della richiesta: {errorContent}", "OK");
-                                button.IsEnabled = true;
-                                button.Text = "Aggiungi";
-                            }
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        Debug.WriteLine($"[FRIENDS] Eccezione invio richiesta: {ex.Message}");
-                        await DisplayAlert("Errore", $"Errore nell'invio della richiesta: {ex.Message}", "OK");
-                        button.IsEnabled = true;
-                        button.Text = "Aggiungi";
-                    }
+                    await SendFriendRequest(button, user);
                 }
             }
         }
 
+        // Invia la richiesta di amicizia tramite API
+        private async Task SendFriendRequest(Button button, UserSearchResult user)
+        {
+            try
+            {
+                button.IsEnabled = false;
+                button.Text = "Invio...";
+
+                var request = CreateAuthenticatedRequest(HttpMethod.Post, "/friends/request");
+                var payload = new { target_email = user.Email };
+                var json = JsonSerializer.Serialize(payload);
+                request.Content = new StringContent(json, Encoding.UTF8, "application/json");
+
+                var response = await _sharedClient.SendAsync(request);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    SearchResults.Remove(user);
+                    await LoadSentRequestsFromBackend();
+                    await DisplayAlert("Successo", $"Richiesta di amicizia inviata a {user.Username}!", "OK");
+                    Debug.WriteLine($"[FRIENDS] ✅ Richiesta inviata a {user.Email}");
+                }
+                else
+                {
+                    await HandleFriendRequestError(response, button, user);
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[FRIENDS] Eccezione invio richiesta: {ex.Message}");
+                await DisplayAlert("Errore", $"Errore nell'invio della richiesta: {ex.Message}", "OK");
+                button.IsEnabled = true;
+                button.Text = "Aggiungi";
+            }
+        }
+
+        // Gestisce gli errori nella richiesta di amicizia
+        private async Task HandleFriendRequestError(HttpResponseMessage response, Button button, UserSearchResult user)
+        {
+            var errorContent = await response.Content.ReadAsStringAsync();
+            Debug.WriteLine($"[FRIENDS] Errore invio richiesta: {errorContent}");
+
+            if (errorContent.Contains("già inviata") || errorContent.Contains("already sent"))
+            {
+                SearchResults.Remove(user);
+                await LoadSentRequestsFromBackend();
+                await DisplayAlert("Informazione", "Richiesta di amicizia già inviata precedentemente!", "OK");
+            }
+            else
+            {
+                await DisplayAlert("Errore", $"Errore nell'invio della richiesta: {errorContent}", "OK");
+                button.IsEnabled = true;
+                button.Text = "Aggiungi";
+            }
+        }
+
+        // Avvia una chat diretta con un amico
+        private async void OnMessageFriendClicked(object sender, EventArgs e)
+        {
+            if (sender is Button button && button.CommandParameter is FriendInfo friend)
+            {
+                try
+                {
+                    string currentUserEmail = await GetCurrentUserEmailAsync();
+
+                    if (string.IsNullOrEmpty(currentUserEmail))
+                    {
+                        await DisplayAlert("Errore", "Impossibile identificare l'utente corrente", "OK");
+                        return;
+                    }
+
+                    // Crea un post fittizio per la chat diretta tra amici
+                    var directChatPost = new PostResponse
+                    {
+                        id = -1,
+                        titolo = $"Chat Diretta con {friend.Username}",
+                        autore_email = friend.Email,
+                        sport = "Chat",
+                        citta = "Chat Diretta",
+                        provincia = "",
+                        data_partita = DateTime.Now.ToString("dd/MM/yyyy"),
+                        ora_partita = DateTime.Now.ToString("HH:mm"),
+                        commento = "Chat privata tra amici"
+                    };
+
+                    var chatPage = new ChatPage(directChatPost, currentUserEmail, friend.Email, false);
+                    await Navigation.PushAsync(chatPage);
+
+                    Debug.WriteLine($"[FRIENDS CHAT] Apertura chat tra {currentUserEmail} e {friend.Email}");
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine($"[FRIENDS CHAT] Errore: {ex.Message}");
+                    await DisplayAlert("Errore", "Impossibile aprire la chat. Riprova più tardi.", "OK");
+                }
+            }
+        }
+
+        // Mostra le opzioni per un amico (rimuovere, ecc.)
+        private async void OnFriendOptionsClicked(object sender, EventArgs e)
+        {
+            if (sender is Button button && button.CommandParameter is FriendInfo friend)
+            {
+                var action = await DisplayActionSheet(
+                    $"Opzioni per {friend.Username}",
+                    "Annulla",
+                    null,
+                    "Rimuovi amicizia");
+
+                if (action == "Rimuovi amicizia")
+                {
+                    await RemoveFriend(friend);
+                }
+            }
+        }
+
+        // Rimuove un amico dalla lista
+        private async Task RemoveFriend(FriendInfo friend)
+        {
+            var confirm = await DisplayAlert(
+                "Rimuovi amicizia",
+                $"Sei sicuro di voler rimuovere {friend.Username} dai tuoi amici?",
+                "Sì",
+                "No");
+
+            if (!confirm) return;
+
+            try
+            {
+                var request = CreateAuthenticatedRequest(HttpMethod.Delete, "/friends/remove");
+                var payload = new { target_email = friend.Email };
+                var json = JsonSerializer.Serialize(payload);
+                request.Content = new StringContent(json, Encoding.UTF8, "application/json");
+
+                var response = await _sharedClient.SendAsync(request);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    Friends.Remove(friend);
+                    await DisplayAlert("Amicizia rimossa", $"Hai rimosso {friend.Username} dai tuoi amici.", "OK");
+                }
+                else
+                {
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    await DisplayAlert("Errore", $"Errore nella rimozione dell'amicizia: {errorContent}", "OK");
+                }
+            }
+            catch (Exception ex)
+            {
+                await DisplayAlert("Errore", $"Errore nella rimozione dell'amicizia: {ex.Message}", "OK");
+            }
+        }
+
+        // ========== GESTIONE RICHIESTE ==========
+
+        // Annulla una richiesta di amicizia inviata
+        private async void OnCancelRequestClicked(object sender, EventArgs e)
+        {
+            if (sender is Button button && button.CommandParameter is FriendRequest request)
+            {
+                var confirm = await DisplayAlert(
+                    "Annulla richiesta",
+                    $"Vuoi annullare la richiesta inviata a {request.Username}?",
+                    "Sì",
+                    "No");
+
+                if (confirm)
+                {
+                    await CancelFriendRequest(request);
+                }
+            }
+        }
+
+        // Esegue l'annullamento della richiesta tramite API
+        private async Task CancelFriendRequest(FriendRequest request)
+        {
+            try
+            {
+                var httpRequest = CreateAuthenticatedRequest(HttpMethod.Post,
+                    $"/friends/cancel?request_id={request.RequestId}");
+                var response = await _sharedClient.SendAsync(httpRequest);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    SentRequests.Remove(request);
+                    await DisplayAlert("Richiesta annullata", $"Richiesta a {request.Username} annullata.", "OK");
+                    Debug.WriteLine($"[FRIENDS] ✅ Richiesta annullata a {request.Email}");
+                }
+                else
+                {
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    Debug.WriteLine($"[FRIENDS] Errore annullamento: {errorContent}");
+                    await DisplayAlert("Errore", $"Errore nell'annullamento della richiesta: {errorContent}", "OK");
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[FRIENDS] Eccezione annullamento: {ex.Message}");
+                await DisplayAlert("Errore", $"Errore nell'annullamento della richiesta: {ex.Message}", "OK");
+            }
+        }
+
+        // Accetta una richiesta di amicizia ricevuta
+        private async void OnAcceptRequestClicked(object sender, EventArgs e)
+        {
+            if (sender is Button button && button.CommandParameter is FriendRequest request)
+            {
+                await AcceptFriendRequest(button, request);
+            }
+        }
+
+        // Esegue l'accettazione della richiesta tramite API
+        private async Task AcceptFriendRequest(Button button, FriendRequest request)
+        {
+            try
+            {
+                button.IsEnabled = false;
+                button.Text = "Accetto...";
+
+                var httpRequest = CreateAuthenticatedRequest(HttpMethod.Post,
+                    $"/friends/accept?request_id={request.RequestId}");
+                var response = await _sharedClient.SendAsync(httpRequest);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    ReceivedRequests.Remove(request);
+                    await LoadFriendsFromBackend();
+                    await LoadReceivedRequestsFromBackend();
+                    await DisplayAlert("Amicizia accettata", $"Ora sei amico di {request.Username}!", "OK");
+                    Debug.WriteLine($"[FRIENDS] ✅ Richiesta accettata da {request.Email}");
+                }
+                else
+                {
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    Debug.WriteLine($"[FRIENDS] Errore accettazione: {errorContent}");
+                    await DisplayAlert("Errore", $"Errore nell'accettazione della richiesta: {errorContent}", "OK");
+                    button.IsEnabled = true;
+                    button.Text = "Accetta";
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[FRIENDS] Eccezione accettazione: {ex.Message}");
+                await DisplayAlert("Errore", $"Errore nell'accettazione della richiesta: {ex.Message}", "OK");
+                button.IsEnabled = true;
+                button.Text = "Accetta";
+            }
+        }
+
+        // Rifiuta una richiesta di amicizia ricevuta
+        private async void OnRejectRequestClicked(object sender, EventArgs e)
+        {
+            if (sender is Button button && button.CommandParameter is FriendRequest request)
+            {
+                var confirm = await DisplayAlert(
+                    "Rifiuta richiesta",
+                    $"Vuoi rifiutare la richiesta di amicizia di {request.Username}?",
+                    "Sì",
+                    "No");
+
+                if (confirm)
+                {
+                    await RejectFriendRequest(button, request);
+                }
+            }
+        }
+
+        // Esegue il rifiuto della richiesta tramite API
+        private async Task RejectFriendRequest(Button button, FriendRequest request)
+        {
+            try
+            {
+                button.IsEnabled = false;
+                button.Text = "Rifiuto...";
+
+                var httpRequest = CreateAuthenticatedRequest(HttpMethod.Post,
+                    $"/friends/reject?request_id={request.RequestId}");
+                var response = await _sharedClient.SendAsync(httpRequest);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    ReceivedRequests.Remove(request);
+                    await DisplayAlert("Richiesta rifiutata", $"Richiesta di {request.Username} rifiutata.", "OK");
+                }
+                else
+                {
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    await DisplayAlert("Errore", $"Errore nel rifiuto della richiesta: {errorContent}", "OK");
+                    button.IsEnabled = true;
+                    button.Text = "Rifiuta";
+                }
+            }
+            catch (Exception ex)
+            {
+                await DisplayAlert("Errore", $"Errore nel rifiuto della richiesta: {ex.Message}", "OK");
+                button.IsEnabled = true;
+                button.Text = "Rifiuta";
+            }
+        }
+
+        // ========== HELPER METHODS ==========
+
+        // Ottiene l'email dell'utente corrente
         private async Task<string> GetCurrentUserEmailAsync()
         {
             try
             {
-                var request = new HttpRequestMessage(HttpMethod.Get, $"{_apiBaseUrl}/api/user");
-
-                if (Preferences.ContainsKey("session_id"))
-                {
-                    string sessionId = Preferences.Get("session_id", "");
-                    request.Headers.Add("Cookie", $"session_id={sessionId}");
-                }
-
+                var request = CreateAuthenticatedRequest(HttpMethod.Get, "/api/user");
                 var response = await _sharedClient.SendAsync(request);
 
                 if (response.IsSuccessStatusCode)
@@ -471,269 +678,21 @@ namespace trovagiocatoriApp.Views
             }
         }
 
-        private async void OnMessageFriendClicked(object sender, EventArgs e)
+        // Crea una richiesta HTTP autenticata con cookie di sessione
+        private HttpRequestMessage CreateAuthenticatedRequest(HttpMethod method, string endpoint)
         {
-            if (sender is Button button && button.CommandParameter is FriendInfo friend)
+            var request = new HttpRequestMessage(method, $"{ApiConfig.BaseUrl}{endpoint}");
+
+            if (Preferences.ContainsKey("session_id"))
             {
-                try
-                {
-                    // Ottieni l'email dell'utente corrente
-                    string currentUserEmail = await GetCurrentUserEmailAsync();
-
-                    if (string.IsNullOrEmpty(currentUserEmail))
-                    {
-                        await DisplayAlert("Errore", "Impossibile identificare l'utente corrente", "OK");
-                        return;
-                    }
-
-                    // Crea un post fittizio per la chat diretta tra amici
-                    var directChatPost = new PostResponse
-                    {
-                        id = -1, // ID speciale per chat diretta
-                        titolo = $"Chat Diretta con {friend.Username}",
-                        autore_email = friend.Email,
-                        sport = "Chat",
-                        citta = "Chat Diretta",
-                        provincia = "",
-                        data_partita = DateTime.Now.ToString("dd/MM/yyyy"),
-                        ora_partita = DateTime.Now.ToString("HH:mm"),
-                        commento = "Chat privata tra amici"
-                    };
-
-                    // Apri la pagina di chat
-                    var chatPage = new ChatPage(
-                        directChatPost,
-                        currentUserEmail,
-                        friend.Email,
-                        false // Non è l'autore del post (è una chat diretta)
-                    );
-
-                    await Navigation.PushAsync(chatPage);
-
-                    Debug.WriteLine($"[FRIENDS CHAT] Apertura chat tra {currentUserEmail} e {friend.Email}");
-                }
-                catch (Exception ex)
-                {
-                    Debug.WriteLine($"[FRIENDS CHAT] Errore: {ex.Message}");
-                    await DisplayAlert("Errore", "Impossibile aprire la chat. Riprova più tardi.", "OK");
-                }
+                string sessionId = Preferences.Get("session_id", "");
+                request.Headers.Add("Cookie", $"session_id={sessionId}");
             }
+
+            return request;
         }
 
-        private async void OnFriendOptionsClicked(object sender, EventArgs e)
-        {
-            if (sender is Button button && button.CommandParameter is FriendInfo friend)
-            {
-                var action = await DisplayActionSheet(
-                    $"Opzioni per {friend.Username}",
-                    "Annulla",
-                    null,
-                    "Rimuovi amicizia"); // RIMOSSO "Visualizza profilo"
-
-                switch (action)
-                {
-                    case "Rimuovi amicizia":
-                        var confirm = await DisplayAlert(
-                            "Rimuovi amicizia",
-                            $"Sei sicuro di voler rimuovere {friend.Username} dai tuoi amici?",
-                            "Sì",
-                            "No");
-
-                        if (confirm)
-                        {
-                            try
-                            {
-                                var request = new HttpRequestMessage(HttpMethod.Delete, $"{_apiBaseUrl}/friends/remove");
-
-                                if (Preferences.ContainsKey("session_id"))
-                                {
-                                    string sessionId = Preferences.Get("session_id", "");
-                                    request.Headers.Add("Cookie", $"session_id={sessionId}");
-                                }
-
-                                var payload = new { target_email = friend.Email };
-                                var json = JsonSerializer.Serialize(payload);
-                                request.Content = new StringContent(json, Encoding.UTF8, "application/json");
-
-                                var response = await _sharedClient.SendAsync(request);
-
-                                if (response.IsSuccessStatusCode)
-                                {
-                                    Friends.Remove(friend);
-                                    await DisplayAlert("Amicizia rimossa", $"Hai rimosso {friend.Username} dai tuoi amici.", "OK");
-                                }
-                                else
-                                {
-                                    var errorContent = await response.Content.ReadAsStringAsync();
-                                    await DisplayAlert("Errore", $"Errore nella rimozione dell'amicizia: {errorContent}", "OK");
-                                }
-                            }
-                            catch (Exception ex)
-                            {
-                                await DisplayAlert("Errore", $"Errore nella rimozione dell'amicizia: {ex.Message}", "OK");
-                            }
-                        }
-                        break;
-                }
-            }
-        }
-
-
-        // ========== GESTIONE RICHIESTE ==========
-
-        private async void OnCancelRequestClicked(object sender, EventArgs e)
-        {
-            if (sender is Button button && button.CommandParameter is FriendRequest request)
-            {
-                var confirm = await DisplayAlert(
-                    "Annulla richiesta",
-                    $"Vuoi annullare la richiesta inviata a {request.Username}?",
-                    "Sì",
-                    "No");
-
-                if (confirm)
-                {
-                    try
-                    {
-                        var httpRequest = new HttpRequestMessage(HttpMethod.Post, $"{_apiBaseUrl}/friends/cancel?request_id={request.RequestId}");
-
-                        if (Preferences.ContainsKey("session_id"))
-                        {
-                            string sessionId = Preferences.Get("session_id", "");
-                            httpRequest.Headers.Add("Cookie", $"session_id={sessionId}");
-                        }
-
-                        var response = await _sharedClient.SendAsync(httpRequest);
-
-                        if (response.IsSuccessStatusCode)
-                        {
-                            // Rimuovi dalle richieste inviate
-                            SentRequests.Remove(request);
-
-                            await DisplayAlert("Richiesta annullata", $"Richiesta a {request.Username} annullata.", "OK");
-
-                            Debug.WriteLine($"[FRIENDS] ✅ Richiesta annullata a {request.Email}");
-                        }
-                        else
-                        {
-                            var errorContent = await response.Content.ReadAsStringAsync();
-                            Debug.WriteLine($"[FRIENDS] Errore annullamento: {errorContent}");
-                            await DisplayAlert("Errore", $"Errore nell'annullamento della richiesta: {errorContent}", "OK");
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        Debug.WriteLine($"[FRIENDS] Eccezione annullamento: {ex.Message}");
-                        await DisplayAlert("Errore", $"Errore nell'annullamento della richiesta: {ex.Message}", "OK");
-                    }
-                }
-            }
-        }
-
-        private async void OnAcceptRequestClicked(object sender, EventArgs e)
-        {
-            if (sender is Button button && button.CommandParameter is FriendRequest request)
-            {
-                try
-                {
-                    button.IsEnabled = false;
-                    button.Text = "Accetto...";
-
-                    var httpRequest = new HttpRequestMessage(HttpMethod.Post, $"{_apiBaseUrl}/friends/accept?request_id={request.RequestId}");
-
-                    if (Preferences.ContainsKey("session_id"))
-                    {
-                        string sessionId = Preferences.Get("session_id", "");
-                        httpRequest.Headers.Add("Cookie", $"session_id={sessionId}");
-                    }
-
-                    var response = await _sharedClient.SendAsync(httpRequest);
-
-                    if (response.IsSuccessStatusCode)
-                    {
-                        // Rimuovi dalle richieste ricevute
-                        ReceivedRequests.Remove(request);
-
-                        // IMPORTANTE: Ricarica sia gli amici che le richieste per aggiornare tutto
-                        await LoadFriendsFromBackend();
-                        await LoadReceivedRequestsFromBackend(); // Per sicurezza
-
-                        await DisplayAlert("Amicizia accettata", $"Ora sei amico di {request.Username}!", "OK");
-
-                        Debug.WriteLine($"[FRIENDS] ✅ Richiesta accettata da {request.Email}");
-                    }
-                    else
-                    {
-                        var errorContent = await response.Content.ReadAsStringAsync();
-                        Debug.WriteLine($"[FRIENDS] Errore accettazione: {errorContent}");
-                        await DisplayAlert("Errore", $"Errore nell'accettazione della richiesta: {errorContent}", "OK");
-                        button.IsEnabled = true;
-                        button.Text = "Accetta";
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Debug.WriteLine($"[FRIENDS] Eccezione accettazione: {ex.Message}");
-                    await DisplayAlert("Errore", $"Errore nell'accettazione della richiesta: {ex.Message}", "OK");
-                    button.IsEnabled = true;
-                    button.Text = "Accetta";
-                }
-            }
-        }
-
-        private async void OnRejectRequestClicked(object sender, EventArgs e)
-        {
-            if (sender is Button button && button.CommandParameter is FriendRequest request)
-            {
-                var confirm = await DisplayAlert(
-                    "Rifiuta richiesta",
-                    $"Vuoi rifiutare la richiesta di amicizia di {request.Username}?",
-                    "Sì",
-                    "No");
-
-                if (confirm)
-                {
-                    try
-                    {
-                        button.IsEnabled = false;
-                        button.Text = "Rifiuto...";
-
-                        // IMPLEMENTATO: Chiamata API per rifiutare richiesta
-                        var httpRequest = new HttpRequestMessage(HttpMethod.Post, $"{_apiBaseUrl}/friends/reject?request_id={request.RequestId}");
-
-                        if (Preferences.ContainsKey("session_id"))
-                        {
-                            string sessionId = Preferences.Get("session_id", "");
-                            httpRequest.Headers.Add("Cookie", $"session_id={sessionId}");
-                        }
-
-                        var response = await _sharedClient.SendAsync(httpRequest);
-
-                        if (response.IsSuccessStatusCode)
-                        {
-                            ReceivedRequests.Remove(request);
-                            await DisplayAlert("Richiesta rifiutata", $"Richiesta di {request.Username} rifiutata.", "OK");
-                        }
-                        else
-                        {
-                            var errorContent = await response.Content.ReadAsStringAsync();
-                            await DisplayAlert("Errore", $"Errore nel rifiuto della richiesta: {errorContent}", "OK");
-                            button.IsEnabled = true;
-                            button.Text = "Rifiuta";
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        await DisplayAlert("Errore", $"Errore nel rifiuto della richiesta: {ex.Message}", "OK");
-                        button.IsEnabled = true;
-                        button.Text = "Rifiuta";
-                    }
-                }
-            }
-        }
-
-        // ========== METODI HELPER ==========
-
+        // Metodi helper per parsing JSON sicuro
         private string GetStringProperty(JsonElement element, string propertyName, string defaultValue = "")
         {
             try
@@ -771,5 +730,4 @@ namespace trovagiocatoriApp.Views
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
     }
-
 }

@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Net.Http;
@@ -9,44 +7,31 @@ using Microsoft.Maui.Controls;
 using Microsoft.Maui.Storage;
 using trovagiocatoriApp.Models;
 
-
-
 namespace trovagiocatoriApp.Views
 {
     public partial class ProfilePage : ContentPage
     {
         private readonly HttpClient _client = new HttpClient();
-        private readonly string apiBaseUrl = ApiConfig.BaseUrl;
-        private readonly string pythonApiBaseUrl = ApiConfig.PythonApiUrl;
-
-        // Stato dei tab
         private TabType _activeTab = TabType.MyPosts;
-
-        // Flag per tipo utente
         private bool _isAdmin = false;
 
-        // Liste per i diversi contenuti (solo per utenti normali)
+        // Collections per utenti normali
         public ObservableCollection<PostResponse> FavoritePosts { get; set; } = new ObservableCollection<PostResponse>();
         public ObservableCollection<PostResponse> CalendarEvents { get; set; } = new ObservableCollection<PostResponse>();
         public ObservableCollection<PostResponse> MyPosts { get; set; } = new ObservableCollection<PostResponse>();
-
-        // Collection per gli inviti eventi
         public ObservableCollection<EventInviteInfo> EventInvites { get; set; } = new ObservableCollection<EventInviteInfo>();
 
-
-        // Enum per i tipi di tab
-        private enum TabType
-        {
-            MyPosts,
-            MyEvents,
-            Favorites
-        }
+        private enum TabType { MyPosts, MyEvents, Favorites }
 
         public ProfilePage()
         {
             InitializeComponent();
+            SetupCollectionViews();
+        }
 
-            // Imposta le CollectionView per utenti normali
+        // Configura le ItemsSource delle CollectionView
+        private void SetupCollectionViews()
+        {
             FavoritesCollectionView.ItemsSource = FavoritePosts;
             CalendarEventsCollectionView.ItemsSource = CalendarEvents;
             MyPostsCollectionView.ItemsSource = MyPosts;
@@ -56,24 +41,19 @@ namespace trovagiocatoriApp.Views
         {
             base.OnAppearing();
             LoadProfile();
-            CheckAndSetupUserType();
+            await CheckAndSetupUserType();
         }
 
         // ========== SETUP TIPO UTENTE ==========
 
+        // Verifica se l'utente è admin e configura l'interfaccia appropriata
         private async Task CheckAndSetupUserType()
         {
             try
             {
-                var request = new HttpRequestMessage(HttpMethod.Get, $"{apiBaseUrl}/profile");
-
-                if (Preferences.ContainsKey("session_id"))
-                {
-                    string sessionId = Preferences.Get("session_id", "");
-                    request.Headers.Add("Cookie", $"session_id={sessionId}");
-                }
-
+                var request = CreateAuthenticatedRequest(HttpMethod.Get, "/profile");
                 var response = await _client.SendAsync(request);
+
                 if (response.IsSuccessStatusCode)
                 {
                     var json = await response.Content.ReadAsStringAsync();
@@ -95,68 +75,44 @@ namespace trovagiocatoriApp.Views
                 }
                 else
                 {
-                    // Default: tratta come utente normale
                     await SetupUserProfile();
                 }
             }
             catch (Exception ex)
             {
                 Debug.WriteLine($"[PROFILE] Errore setup tipo utente: {ex.Message}");
-                // Fallback: setup utente normale
                 await SetupUserProfile();
             }
         }
 
+        // Configura il profilo per utenti normali
         private async Task SetupUserProfile()
         {
-            // Carica tutti i dati per utenti normali
-            await LoadMyPosts();
-            await LoadCalendarEvents();
-            await LoadFavorites();
-
-            // Mantieni l'interfaccia tab normale (è già così di default)
+            await Task.WhenAll(
+                LoadMyPosts(),
+                LoadCalendarEvents(),
+                LoadFavorites()
+            );
             Debug.WriteLine("[PROFILE] Setup utente normale completato");
         }
 
+        // Configura il profilo per amministratori
         private async Task SetupAdminProfile()
         {
             MainThread.BeginInvokeOnMainThread(() =>
             {
                 try
                 {
-                    // 1. NASCONDI COMPLETAMENTE IL FRAME CON LE INFORMAZIONI UTENTE
-                    if (UserInfoFrame != null)
-                    {
-                        UserInfoFrame.IsVisible = false;
-                        Debug.WriteLine("[PROFILE] ✅ Frame informazioni utente completamente nascosto per admin");
-                    }
+                    // Nascondi le sezioni utente normale
+                    HideUserSections();
 
-                    // 2. NASCONDI I TAB UTENTE NORMALI
-                    if (MyPostsTabButton != null) MyPostsTabButton.IsVisible = false;
-                    if (MyEventsTabButton != null) MyEventsTabButton.IsVisible = false;
-                    if (FavoritesTabButton != null) FavoritesTabButton.IsVisible = false;
-                    if (TabIndicator != null) TabIndicator.IsVisible = false;
-
-                 
+                    // Sostituisci il contenuto con interfaccia admin
                     if (Content is Grid mainGrid)
                     {
-                       
-                        // 3. SOSTITUISCI IL CONTENUTO CON INTERFACCIA ADMIN
-                        var contentScrollView = mainGrid.Children.OfType<ScrollView>().FirstOrDefault(s => Grid.GetRow(s) == 2);
-                        if (contentScrollView != null)
-                        {
-                            contentScrollView.Content = CreateAdminContent();
-                        }
-
-                        // 4. MODIFICA I PULSANTI IN BASSO
-                        var bottomGrid = mainGrid.Children.OfType<Grid>().LastOrDefault();
-                        if (bottomGrid != null)
-                        {
-                            SetupAdminButtons(bottomGrid);
-                        }
+                        ReplaceContentWithAdminInterface(mainGrid);
                     }
 
-                    Debug.WriteLine("[PROFILE] ✅ Interfaccia admin configurata con massimo spazio disponibile");
+                    Debug.WriteLine("[PROFILE] ✅ Interfaccia admin configurata");
                 }
                 catch (Exception ex)
                 {
@@ -165,8 +121,35 @@ namespace trovagiocatoriApp.Views
             });
         }
 
+        // Nasconde le sezioni specifiche per utenti normali
+        private void HideUserSections()
+        {
+            // Nascondi i tab utente normali se esistono
+            if (MyPostsTabButton != null) MyPostsTabButton.IsVisible = false;
+            if (MyEventsTabButton != null) MyEventsTabButton.IsVisible = false;
+            if (FavoritesTabButton != null) FavoritesTabButton.IsVisible = false;
+            if (TabIndicator != null) TabIndicator.IsVisible = false;
+        }
+
+        // Sostituisce il contenuto con l'interfaccia admin
+        private void ReplaceContentWithAdminInterface(Grid mainGrid)
+        {
+            var contentScrollView = mainGrid.Children.OfType<ScrollView>().FirstOrDefault(s => Grid.GetRow(s) == 2);
+            if (contentScrollView != null)
+            {
+                contentScrollView.Content = CreateAdminContent();
+            }
+
+            var bottomGrid = mainGrid.Children.OfType<Grid>().LastOrDefault();
+            if (bottomGrid != null)
+            {
+                SetupAdminButtons(bottomGrid);
+            }
+        }
+
         // ========== INTERFACCIA ADMIN ==========
 
+        // Crea il contenuto dell'interfaccia amministratore
         private View CreateAdminContent()
         {
             var adminStack = new VerticalStackLayout
@@ -175,7 +158,15 @@ namespace trovagiocatoriApp.Views
                 Padding = new Thickness(16)
             };
 
-            // CARD BENVENUTO ADMIN
+            adminStack.Children.Add(CreateWelcomeCard());
+            adminStack.Children.Add(CreateQuickAccessCard());
+
+            return adminStack;
+        }
+
+        // Crea la card di benvenuto per l'admin
+        private Frame CreateWelcomeCard()
+        {
             var welcomeFrame = new Frame
             {
                 BackgroundColor = Color.FromArgb("#FFFFFF"),
@@ -205,8 +196,17 @@ namespace trovagiocatoriApp.Views
                 HorizontalTextAlignment = TextAlignment.Center
             });
 
-            // PULSANTE PRINCIPALE ADMIN
-            var adminPanelButton = new Button
+            var adminPanelButton = CreateMainAdminButton();
+            welcomeContent.Children.Add(adminPanelButton);
+
+            welcomeFrame.Content = welcomeContent;
+            return welcomeFrame;
+        }
+
+        // Crea il pulsante principale per il pannello admin
+        private Button CreateMainAdminButton()
+        {
+            var button = new Button
             {
                 Text = "🚀 APRI PANNELLO GESTIONE",
                 BackgroundColor = Color.FromArgb("#DC2626"),
@@ -218,7 +218,7 @@ namespace trovagiocatoriApp.Views
                 Margin = new Thickness(0, 16, 0, 0)
             };
 
-            adminPanelButton.Clicked += async (s, e) =>
+            button.Clicked += async (s, e) =>
             {
                 try
                 {
@@ -231,11 +231,12 @@ namespace trovagiocatoriApp.Views
                 }
             };
 
-            welcomeContent.Children.Add(adminPanelButton);
-            welcomeFrame.Content = welcomeContent;
-            adminStack.Children.Add(welcomeFrame);
+            return button;
+        }
 
-            // CARD ACCESSI RAPIDI
+        // Crea la card con accessi rapidi
+        private Frame CreateQuickAccessCard()
+        {
             var quickAccessFrame = new Frame
             {
                 BackgroundColor = Color.FromArgb("#FFFFFF"),
@@ -255,8 +256,17 @@ namespace trovagiocatoriApp.Views
                 HorizontalOptions = LayoutOptions.Start
             });
 
-            // GRIGLIA PULSANTI RAPIDI
-            var quickButtonsGrid = new Grid
+            var quickButtonsGrid = CreateQuickButtonsGrid();
+            quickAccessContent.Children.Add(quickButtonsGrid);
+
+            quickAccessFrame.Content = quickAccessContent;
+            return quickAccessFrame;
+        }
+
+        // Crea la griglia con i pulsanti di accesso rapido
+        private Grid CreateQuickButtonsGrid()
+        {
+            var grid = new Grid
             {
                 ColumnDefinitions =
                 {
@@ -272,33 +282,25 @@ namespace trovagiocatoriApp.Views
                 RowSpacing = 12
             };
 
-            // Pulsanti di accesso rapido
-            var postsButton = CreateQuickButton("📝", "Gestisci Post", "#6366F1");
-            var commentsButton = CreateQuickButton("💬", "Commenti", "#10B981");
-            var usersButton = CreateQuickButton("👥", "Utenti", "#F59E0B");
-            var statsButton = CreateQuickButton("📊", "Statistiche", "#DC2626");
+            var buttons = new[]
+            {
+                CreateQuickButton("📝", "Gestisci Post", "#6366F1"),
+                CreateQuickButton("💬", "Commenti", "#10B981"),
+                CreateQuickButton("👥", "Utenti", "#F59E0B"),
+                CreateQuickButton("📊", "Statistiche", "#DC2626")
+            };
 
-            Grid.SetColumn(postsButton, 0);
-            Grid.SetRow(postsButton, 0);
-            Grid.SetColumn(commentsButton, 1);
-            Grid.SetRow(commentsButton, 0);
-            Grid.SetColumn(usersButton, 0);
-            Grid.SetRow(usersButton, 1);
-            Grid.SetColumn(statsButton, 1);
-            Grid.SetRow(statsButton, 1);
+            for (int i = 0; i < buttons.Length; i++)
+            {
+                Grid.SetColumn(buttons[i], i % 2);
+                Grid.SetRow(buttons[i], i / 2);
+                grid.Children.Add(buttons[i]);
+            }
 
-            quickButtonsGrid.Children.Add(postsButton);
-            quickButtonsGrid.Children.Add(commentsButton);
-            quickButtonsGrid.Children.Add(usersButton);
-            quickButtonsGrid.Children.Add(statsButton);
-
-            quickAccessContent.Children.Add(quickButtonsGrid);
-            quickAccessFrame.Content = quickAccessContent;
-            adminStack.Children.Add(quickAccessFrame);
-
-            return adminStack;
+            return grid;
         }
 
+        // Crea un pulsante di accesso rapido
         private Button CreateQuickButton(string icon, string text, string colorHex)
         {
             var button = new Button
@@ -328,12 +330,11 @@ namespace trovagiocatoriApp.Views
             return button;
         }
 
+        // Configura i pulsanti per l'admin (solo logout)
         private void SetupAdminButtons(Grid bottomGrid)
         {
             bottomGrid.Children.Clear();
             bottomGrid.ColumnDefinitions.Clear();
-
-            // Solo logout per admin
             bottomGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
 
             var logoutButton = new Button
@@ -349,89 +350,39 @@ namespace trovagiocatoriApp.Views
             };
 
             logoutButton.Clicked += OnAdminLogoutClicked;
-
             Grid.SetColumn(logoutButton, 0);
             bottomGrid.Children.Add(logoutButton);
         }
 
-        private async void OnAdminLogoutClicked(object sender, EventArgs e)
-        {
-            try
-            {
-                var confirm = await DisplayAlert(
-                    "Logout Amministratore",
-                    "Sei sicuro di voler effettuare il logout dal pannello amministratore?",
-                    "Logout",
-                    "Annulla"
-                );
+        // ========== CARICAMENTO PROFILO ==========
 
-                if (!confirm) return;
-
-                // Pulisci i dati di sessione
-                Preferences.Clear();
-                HomePage.ResetAdminWelcome();
-
-                Debug.WriteLine($"[PROFILE] Admin logout completato");
-
-                // Torna alla pagina di login
-                Application.Current.MainPage = new NavigationPage(new LoginPage());
-
-                await DisplayAlert("Logout Completato", "Sei stato disconnesso con successo.", "OK");
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine($"[PROFILE] Errore durante logout admin: {ex.Message}");
-                await DisplayAlert("Errore", "Errore durante il logout", "OK");
-            }
-        }
-
-        // ========== CARICAMENTO PROFILO (COMUNE) ==========
-
+        // Carica i dati del profilo utente
         private async void LoadProfile()
         {
             Debug.WriteLine("LoadProfile called");
             try
             {
-                var request = new HttpRequestMessage(HttpMethod.Get, $"{apiBaseUrl}/profile");
-
-                if (Preferences.ContainsKey("session_id"))
-                {
-                    string sessionId = Preferences.Get("session_id", "");
-                    request.Headers.Add("Cookie", $"session_id={sessionId}");
-                }
-
+                var request = CreateAuthenticatedRequest(HttpMethod.Get, "/profile");
                 var response = await _client.SendAsync(request);
 
                 if (response.IsSuccessStatusCode)
                 {
                     var jsonResponse = await response.Content.ReadAsStringAsync();
-                    Debug.WriteLine($"jsonResponse: {jsonResponse}");
-                    var userProfile = JsonSerializer.Deserialize<User>(jsonResponse, new JsonSerializerOptions
-                    {
-                        PropertyNameCaseInsensitive = true
-                    });
+                    var userProfile = JsonSerializer.Deserialize<User>(jsonResponse,
+                        new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
 
                     if (userProfile != null)
                     {
+                        UpdateProfileUI(userProfile);
                         Debug.WriteLine($"Profilo Utente Caricato: {userProfile.Username}");
-                        UsernameLabel.Text = userProfile.Username;
-                        NameLabel.Text = userProfile.Nome;
-                        SurnameLabel.Text = userProfile.Cognome;
-                        EmailLabel.Text = userProfile.Email;
-
-                        ProfileImage.Source = !string.IsNullOrEmpty(userProfile.ProfilePic)
-                            ? $"{apiBaseUrl}/images/{userProfile.ProfilePic}"
-                            : "default_images.jpg";
                     }
                     else
                     {
-                        Debug.WriteLine("Errore: userProfile è null.");
                         await DisplayAlert("Errore", "Profilo utente non valido.", "OK");
                     }
                 }
                 else
                 {
-                    Debug.WriteLine($"Errore: Stato della risposta {response.StatusCode}");
                     await DisplayAlert("Errore", "Impossibile caricare il profilo.", "OK");
                 }
             }
@@ -442,44 +393,293 @@ namespace trovagiocatoriApp.Views
             }
         }
 
-        // ========== GESTIONE TAB (SOLO PER UTENTI NORMALI) ==========
+        // Aggiorna l'interfaccia con i dati del profilo
+        private void UpdateProfileUI(User userProfile)
+        {
+            UsernameLabel.Text = userProfile.Username;
+            NameLabel.Text = userProfile.Nome;
+            SurnameLabel.Text = userProfile.Cognome;
+            EmailLabel.Text = userProfile.Email;
+
+            ProfileImage.Source = !string.IsNullOrEmpty(userProfile.ProfilePic)
+                ? $"{ApiConfig.BaseUrl}/images/{userProfile.ProfilePic}"
+                : "default_images.jpg";
+        }
+
+        // ========== CARICAMENTO DATI UTENTE NORMALE ==========
+
+        // Carica i post creati dall'utente
+        private async Task LoadMyPosts()
+        {
+            if (_isAdmin) return;
+
+            try
+            {
+                var request = CreateAuthenticatedRequest(HttpMethod.Get, "/posts/by-user", ApiConfig.PythonApiUrl);
+                var response = await _client.SendAsync(request);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var jsonResponse = await response.Content.ReadAsStringAsync();
+                    var jsonElements = JsonSerializer.Deserialize<List<JsonElement>>(jsonResponse);
+
+                    MyPosts.Clear();
+                    foreach (var element in jsonElements ?? new List<JsonElement>())
+                    {
+                        var post = ParsePostFromJson(element);
+                        MyPosts.Add(post);
+                    }
+
+                    Debug.WriteLine($"[MY_POSTS] Caricati {MyPosts.Count} post dell'utente");
+                }
+                else
+                {
+                    MyPosts.Clear();
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[MY_POSTS] Errore: {ex.Message}");
+                MyPosts.Clear();
+            }
+        }
+
+        // Carica gli eventi del calendario (partecipazioni + inviti)
+        private async Task LoadCalendarEvents()
+        {
+            if (_isAdmin) return;
+
+            try
+            {
+                await LoadUserParticipations();
+                await LoadEventInvites();
+                Debug.WriteLine($"[CALENDAR] Caricati {CalendarEvents.Count} eventi totali");
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[CALENDAR] Errore: {ex.Message}");
+            }
+        }
+
+        // Carica le partecipazioni dell'utente
+        private async Task LoadUserParticipations()
+        {
+            try
+            {
+                var request = CreateAuthenticatedRequest(HttpMethod.Get, "/user/participations");
+                var response = await _client.SendAsync(request);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var jsonResponse = await response.Content.ReadAsStringAsync();
+                    var result = JsonSerializer.Deserialize<Dictionary<string, object>>(jsonResponse,
+                        new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+                    if (result.ContainsKey("participations") && result["participations"] is JsonElement participationsElement)
+                    {
+                        var participationIds = participationsElement.EnumerateArray()
+                            .Select(x => x.GetInt32())
+                            .ToList();
+
+                        CalendarEvents.Clear();
+                        var loadTasks = participationIds.Select(LoadCalendarEventDetails);
+                        await Task.WhenAll(loadTasks);
+
+                        // Ordina eventi: futuri prima, poi passati
+                        var orderedEvents = CalendarEvents
+                            .OrderBy(e => GetEventDateTime(e))
+                            .ToList();
+
+                        CalendarEvents.Clear();
+                        foreach (var eventItem in orderedEvents)
+                        {
+                            CalendarEvents.Add(eventItem);
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[CALENDAR] Errore partecipazioni: {ex.Message}");
+            }
+        }
+
+        // Carica gli inviti agli eventi
+        private async Task LoadEventInvites()
+        {
+            try
+            {
+                var request = CreateAuthenticatedRequest(HttpMethod.Get, "/events/invites");
+                var response = await _client.SendAsync(request);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var jsonResponse = await response.Content.ReadAsStringAsync();
+                    var result = JsonSerializer.Deserialize<Dictionary<string, object>>(jsonResponse,
+                        new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+                    if (result.ContainsKey("invites") && result["invites"] is JsonElement invitesElement)
+                    {
+                        EventInvites.Clear();
+                        foreach (var inviteElement in invitesElement.EnumerateArray())
+                        {
+                            var invite = ParseEventInviteFromJson(inviteElement);
+                            EventInvites.Add(invite);
+                            await LoadInviteEventDetails(invite);
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[INVITES] Errore: {ex.Message}");
+            }
+        }
+
+        // Carica i dettagli di un evento dal calendario
+        private async Task LoadCalendarEventDetails(int postId)
+        {
+            try
+            {
+                var response = await _client.GetAsync($"{ApiConfig.PythonApiUrl}/posts/{postId}");
+                if (response.IsSuccessStatusCode)
+                {
+                    var jsonResponse = await response.Content.ReadAsStringAsync();
+                    var post = JsonSerializer.Deserialize<PostResponse>(jsonResponse,
+                        new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+                    if (post != null)
+                    {
+                        MainThread.BeginInvokeOnMainThread(() => CalendarEvents.Add(post));
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[CALENDAR] Errore dettagli evento {postId}: {ex.Message}");
+            }
+        }
+
+        // Carica i dettagli di un evento da invito
+        private async Task LoadInviteEventDetails(EventInviteInfo invite)
+        {
+            try
+            {
+                var response = await _client.GetAsync($"{ApiConfig.PythonApiUrl}/posts/{invite.PostID}");
+                if (response.IsSuccessStatusCode)
+                {
+                    var jsonResponse = await response.Content.ReadAsStringAsync();
+                    var post = JsonSerializer.Deserialize<PostResponse>(jsonResponse,
+                        new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+                    if (post != null)
+                    {
+                        var invitePost = CreateInvitePost(post, invite);
+                        MainThread.BeginInvokeOnMainThread(() => CalendarEvents.Insert(0, invitePost));
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[INVITES] Errore dettagli invito {invite.PostID}: {ex.Message}");
+            }
+        }
+
+        // Carica i post preferiti
+        private async Task LoadFavorites()
+        {
+            if (_isAdmin) return;
+
+            try
+            {
+                var request = CreateAuthenticatedRequest(HttpMethod.Get, "/favorites");
+                var response = await _client.SendAsync(request);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var jsonResponse = await response.Content.ReadAsStringAsync();
+                    var result = JsonSerializer.Deserialize<Dictionary<string, object>>(jsonResponse,
+                        new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+                    if (result.ContainsKey("favorites") && result["favorites"] is JsonElement favoritesElement)
+                    {
+                        var favoriteIds = favoritesElement.EnumerateArray()
+                            .Select(x => x.GetInt32())
+                            .ToList();
+
+                        FavoritePosts.Clear();
+                        foreach (var postId in favoriteIds)
+                        {
+                            await LoadFavoritePostDetails(postId);
+                        }
+
+                        Debug.WriteLine($"Caricati {favoriteIds.Count} preferiti");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Errore caricamento preferiti: {ex.Message}");
+            }
+        }
+
+        // Carica i dettagli di un post preferito
+        private async Task LoadFavoritePostDetails(int postId)
+        {
+            try
+            {
+                var response = await _client.GetAsync($"{ApiConfig.PythonApiUrl}/posts/{postId}");
+                if (response.IsSuccessStatusCode)
+                {
+                    var jsonResponse = await response.Content.ReadAsStringAsync();
+                    var post = JsonSerializer.Deserialize<PostResponse>(jsonResponse,
+                        new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+                    if (post != null)
+                    {
+                        MainThread.BeginInvokeOnMainThread(() => FavoritePosts.Add(post));
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Errore dettagli preferito {postId}: {ex.Message}");
+            }
+        }
+
+        // ========== GESTIONE TAB (SOLO UTENTI NORMALI) ==========
 
         private void OnMyPostsTabClicked(object sender, EventArgs e)
         {
-            if (_isAdmin) return; // Admin non usa i tab
-
-            if (_activeTab != TabType.MyPosts)
-            {
-                _activeTab = TabType.MyPosts;
-                UpdateTabsUI();
-            }
+            if (_isAdmin) return;
+            SwitchToTab(TabType.MyPosts);
         }
 
         private void OnMyEventsTabClicked(object sender, EventArgs e)
         {
-            if (_isAdmin) return; // Admin non usa i tab
-
-            if (_activeTab != TabType.MyEvents)
-            {
-                _activeTab = TabType.MyEvents;
-                UpdateTabsUI();
-            }
+            if (_isAdmin) return;
+            SwitchToTab(TabType.MyEvents);
         }
 
         private void OnFavoritesTabClicked(object sender, EventArgs e)
         {
-            if (_isAdmin) return; // Admin non usa i tab
-
-            if (_activeTab != TabType.Favorites)
-            {
-                _activeTab = TabType.Favorites;
-                UpdateTabsUI();
-            }
+            if (_isAdmin) return;
+            SwitchToTab(TabType.Favorites);
         }
 
+        // Cambia il tab attivo e aggiorna l'UI
+        private void SwitchToTab(TabType newTab)
+        {
+            if (_activeTab == newTab) return;
+
+            _activeTab = newTab;
+            UpdateTabsUI();
+        }
+
+        // Aggiorna l'interfaccia dei tab
         private void UpdateTabsUI()
         {
-            if (_isAdmin) return; // Admin non usa i tab
+            if (_isAdmin) return;
 
             // Reset tutti i tab
             MyPostsTabButton.Style = (Style)Resources["TabButtonStyle"];
@@ -514,371 +714,7 @@ namespace trovagiocatoriApp.Views
             }
         }
 
-        // ========== CARICAMENTO DATI (SOLO UTENTI NORMALI) ==========
-
-        private async Task LoadMyPosts()
-        {
-            if (_isAdmin) return; // Admin non ha "i miei post" 
-
-            try
-            {
-                Debug.WriteLine("[MY_POSTS] Inizio caricamento i miei post");
-
-                var request = new HttpRequestMessage(HttpMethod.Get, $"{pythonApiBaseUrl}/posts/by-user");
-
-                if (Preferences.ContainsKey("session_id"))
-                {
-                    string sessionId = Preferences.Get("session_id", "");
-                    request.Headers.Add("Cookie", $"session_id={sessionId}");
-                }
-
-                var response = await _client.SendAsync(request);
-
-                if (response.IsSuccessStatusCode)
-                {
-                    var jsonResponse = await response.Content.ReadAsStringAsync();
-                    Debug.WriteLine($"[MY_POSTS] Risposta API: {jsonResponse}");
-
-                    var jsonElements = JsonSerializer.Deserialize<List<JsonElement>>(jsonResponse);
-
-                    MyPosts.Clear();
-
-                    foreach (var element in jsonElements ?? new List<JsonElement>())
-                    {
-                        var post = new PostResponse
-                        {
-                            id = GetIntProperty(element, "id"),
-                            titolo = GetStringProperty(element, "titolo"),
-                            provincia = GetStringProperty(element, "provincia"),
-                            citta = GetStringProperty(element, "citta"),
-                            sport = GetStringProperty(element, "sport"),
-                            data_partita = GetStringProperty(element, "data_partita"),
-                            ora_partita = GetStringProperty(element, "ora_partita"),
-                            commento = GetStringProperty(element, "commento"),
-                            autore_email = GetStringProperty(element, "autore_email"),
-                            campo_id = GetNullableIntProperty(element, "campo_id"),
-                            campo = GetCampoProperty(element),
-                            livello = GetStringProperty(element, "livello", "Intermedio"),
-                            numero_giocatori = GetIntProperty(element, "numero_giocatori", 1),
-                            partecipanti_iscritti = GetIntProperty(element, "partecipanti_iscritti", 0),
-                            posti_disponibili = GetIntProperty(element, "posti_disponibili", 1)
-                        };
-
-                        MyPosts.Add(post);
-                    }
-
-                    Debug.WriteLine($"[MY_POSTS] Caricati {MyPosts.Count} post dell'utente");
-                }
-                else
-                {
-                    Debug.WriteLine($"[MY_POSTS] Errore nel caricamento post: {response.StatusCode}");
-                    MyPosts.Clear();
-                }
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine($"[MY_POSTS] Eccezione durante il caricamento post: {ex.Message}");
-                MyPosts.Clear();
-            }
-        }
-
-        private async Task LoadCalendarEvents()
-        {
-            if (_isAdmin) return; // Admin non ha eventi calendario
-
-            try
-            {
-                Debug.WriteLine("[CALENDAR] Inizio caricamento eventi calendario e inviti");
-                await LoadUserParticipations();
-                await LoadEventInvites();
-                Debug.WriteLine($"[CALENDAR] Caricati {CalendarEvents.Count} eventi totali nel calendario");
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine($"[CALENDAR] Eccezione durante il caricamento eventi: {ex.Message}");
-            }
-        }
-
-        private async Task LoadUserParticipations()
-        {
-            try
-            {
-                var request = new HttpRequestMessage(HttpMethod.Get, $"{apiBaseUrl}/user/participations");
-
-                if (Preferences.ContainsKey("session_id"))
-                {
-                    string sessionId = Preferences.Get("session_id", "");
-                    request.Headers.Add("Cookie", $"session_id={sessionId}");
-                }
-
-                var response = await _client.SendAsync(request);
-
-                if (response.IsSuccessStatusCode)
-                {
-                    var jsonResponse = await response.Content.ReadAsStringAsync();
-                    Debug.WriteLine($"[CALENDAR] Risposta partecipazioni: {jsonResponse}");
-
-                    var result = JsonSerializer.Deserialize<Dictionary<string, object>>(jsonResponse,
-                        new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-
-                    if (result.ContainsKey("participations") && result["participations"] is JsonElement participationsElement)
-                    {
-                        var participationIds = participationsElement.EnumerateArray()
-                            .Select(x => x.GetInt32())
-                            .ToList();
-
-                        Debug.WriteLine($"[CALENDAR] Trovate {participationIds.Count} partecipazioni");
-
-                        CalendarEvents.Clear();
-
-                        var loadTasks = participationIds.Select(LoadCalendarEventDetails);
-                        await Task.WhenAll(loadTasks);
-
-                        // Ordina gli eventi per data
-                        var futureEvents = CalendarEvents.Where(e =>
-                        {
-                            if (DateTime.TryParse(e.data_partita, out DateTime dataPartita))
-                            {
-                                return dataPartita >= DateTime.Today;
-                            }
-                            return false;
-                        })
-                        .OrderBy(e => DateTime.TryParse(e.data_partita, out DateTime d1) ? d1 : DateTime.MinValue)
-                        .ThenBy(e => TimeSpan.TryParse(e.ora_partita, out TimeSpan t1) ? t1 : TimeSpan.Zero)
-                        .ToList();
-
-                        var pastEvents = CalendarEvents.Where(e =>
-                        {
-                            if (DateTime.TryParse(e.data_partita, out DateTime dataPartita))
-                            {
-                                return dataPartita < DateTime.Today;
-                            }
-                            return true;
-                        })
-                        .OrderByDescending(e => DateTime.TryParse(e.data_partita, out DateTime d2) ? d2 : DateTime.MinValue)
-                        .ThenByDescending(e => TimeSpan.TryParse(e.ora_partita, out TimeSpan t2) ? t2 : TimeSpan.Zero)
-                        .ToList();
-
-                        CalendarEvents.Clear();
-
-                        foreach (var eventItem in futureEvents.Concat(pastEvents))
-                        {
-                            CalendarEvents.Add(eventItem);
-                        }
-
-                        Debug.WriteLine($"[CALENDAR] Caricati e ordinati {CalendarEvents.Count} eventi nel calendario");
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine($"[CALENDAR] Errore caricamento partecipazioni: {ex.Message}");
-            }
-        }
-
-        private async Task LoadCalendarEventDetails(int postId)
-        {
-            try
-            {
-                var response = await _client.GetAsync($"{pythonApiBaseUrl}/posts/{postId}");
-
-                if (response.IsSuccessStatusCode)
-                {
-                    var jsonResponse = await response.Content.ReadAsStringAsync();
-                    var post = JsonSerializer.Deserialize<PostResponse>(jsonResponse,
-                        new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-
-                    if (post != null)
-                    {
-                        MainThread.BeginInvokeOnMainThread(() =>
-                        {
-                            CalendarEvents.Add(post);
-                        });
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine($"[CALENDAR] Errore caricamento dettagli evento {postId}: {ex.Message}");
-            }
-        }
-
-        private async Task LoadEventInvites()
-        {
-            try
-            {
-                var request = new HttpRequestMessage(HttpMethod.Get, $"{apiBaseUrl}/events/invites");
-
-                if (Preferences.ContainsKey("session_id"))
-                {
-                    string sessionId = Preferences.Get("session_id", "");
-                    request.Headers.Add("Cookie", $"session_id={sessionId}");
-                }
-
-                var response = await _client.SendAsync(request);
-
-                if (response.IsSuccessStatusCode)
-                {
-                    var jsonResponse = await response.Content.ReadAsStringAsync();
-                    Debug.WriteLine($"[INVITES] Risposta inviti: {jsonResponse}");
-
-                    var result = JsonSerializer.Deserialize<Dictionary<string, object>>(jsonResponse,
-                        new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-
-                    if (result.ContainsKey("invites") && result["invites"] is JsonElement invitesElement)
-                    {
-                        EventInvites.Clear();
-
-                        foreach (var inviteElement in invitesElement.EnumerateArray())
-                        {
-                            var invite = new EventInviteInfo
-                            {
-                                InviteID = GetLongProperty(inviteElement, "invite_id"),
-                                PostID = GetIntProperty(inviteElement, "post_id"),
-                                Message = GetStringProperty(inviteElement, "message"),
-                                CreatedAt = GetStringProperty(inviteElement, "created_at"),
-                                Status = GetStringProperty(inviteElement, "status"),
-                                SenderUsername = GetStringProperty(inviteElement, "sender_username"),
-                                SenderNome = GetStringProperty(inviteElement, "sender_nome"),
-                                SenderCognome = GetStringProperty(inviteElement, "sender_cognome"),
-                                SenderEmail = GetStringProperty(inviteElement, "sender_email"),
-                                SenderProfilePicture = GetStringProperty(inviteElement, "sender_profile_picture")
-                            };
-
-                            EventInvites.Add(invite);
-                            await LoadInviteEventDetails(invite);
-                        }
-
-                        Debug.WriteLine($"[INVITES] Caricati {EventInvites.Count} inviti eventi");
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine($"[INVITES] Errore caricamento inviti: {ex.Message}");
-            }
-        }
-
-        private async Task LoadInviteEventDetails(EventInviteInfo invite)
-        {
-            try
-            {
-                var response = await _client.GetAsync($"{pythonApiBaseUrl}/posts/{invite.PostID}");
-
-                if (response.IsSuccessStatusCode)
-                {
-                    var jsonResponse = await response.Content.ReadAsStringAsync();
-                    var post = JsonSerializer.Deserialize<PostResponse>(jsonResponse,
-                        new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-
-                    if (post != null)
-                    {
-                        var invitePost = new PostResponse
-                        {
-                            id = post.id,
-                            titolo = $"📩 INVITO: {post.titolo}",
-                            provincia = post.provincia,
-                            citta = post.citta,
-                            sport = post.sport,
-                            data_partita = post.data_partita,
-                            ora_partita = post.ora_partita,
-                            commento = $"Invito da {invite.SenderUsername}: {invite.Message}",
-                            autore_email = post.autore_email,
-                            campo_id = post.campo_id,
-                            campo = post.campo,
-                            livello = post.livello,
-                            numero_giocatori = post.numero_giocatori,
-                            IsInvite = true,
-                            InviteID = invite.InviteID
-                        };
-
-                        MainThread.BeginInvokeOnMainThread(() =>
-                        {
-                            CalendarEvents.Insert(0, invitePost);
-                        });
-
-                        Debug.WriteLine($"[INVITES] Aggiunto invito evento: {post.titolo} da {invite.SenderUsername}");
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine($"[INVITES] Errore caricamento dettagli invito evento {invite.PostID}: {ex.Message}");
-            }
-        }
-
-        private async Task LoadFavorites()
-        {
-            if (_isAdmin) return; // Admin non ha preferiti
-
-            try
-            {
-                var request = new HttpRequestMessage(HttpMethod.Get, $"{apiBaseUrl}/favorites");
-
-                if (Preferences.ContainsKey("session_id"))
-                {
-                    string sessionId = Preferences.Get("session_id", "");
-                    request.Headers.Add("Cookie", $"session_id={sessionId}");
-                }
-
-                var response = await _client.SendAsync(request);
-
-                if (response.IsSuccessStatusCode)
-                {
-                    var jsonResponse = await response.Content.ReadAsStringAsync();
-                    var result = JsonSerializer.Deserialize<Dictionary<string, object>>(jsonResponse,
-                        new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-
-                    if (result.ContainsKey("favorites") && result["favorites"] is JsonElement favoritesElement)
-                    {
-                        var favoriteIds = favoritesElement.EnumerateArray()
-                            .Select(x => x.GetInt32())
-                            .ToList();
-
-                        Debug.WriteLine($"Caricati {favoriteIds.Count} preferiti");
-
-                        FavoritePosts.Clear();
-                        foreach (var postId in favoriteIds)
-                        {
-                            await LoadFavoritePostDetails(postId);
-                        }
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine($"Errore caricamento preferiti: {ex.Message}");
-            }
-        }
-
-        private async Task LoadFavoritePostDetails(int postId)
-        {
-            try
-            {
-                var response = await _client.GetAsync($"{pythonApiBaseUrl}/posts/{postId}");
-
-                if (response.IsSuccessStatusCode)
-                {
-                    var jsonResponse = await response.Content.ReadAsStringAsync();
-                    var post = JsonSerializer.Deserialize<PostResponse>(jsonResponse,
-                        new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-
-                    if (post != null)
-                    {
-                        MainThread.BeginInvokeOnMainThread(() =>
-                        {
-                            FavoritePosts.Add(post);
-                        });
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine($"Errore caricamento dettagli preferito {postId}: {ex.Message}");
-            }
-        }
-
-        // ========== GESTIONE EVENTI UI ==========
+        // ========== EVENT HANDLERS ==========
 
         private async void OnMyPostSelected(object sender, SelectionChangedEventArgs e)
         {
@@ -907,43 +743,13 @@ namespace trovagiocatoriApp.Views
             }
         }
 
-        // ========== GESTIONE INVITI EVENTI ==========
-
         private async void OnAcceptInviteClicked(object sender, EventArgs e)
         {
             if (sender is Button button && button.CommandParameter is PostResponse invitePost)
             {
-                try
-                {
-                    var request = new HttpRequestMessage(HttpMethod.Post,
-                        $"{apiBaseUrl}/events/invite/accept?invite_id={invitePost.InviteID}");
-
-                    if (Preferences.ContainsKey("session_id"))
-                    {
-                        string sessionId = Preferences.Get("session_id", "");
-                        request.Headers.Add("Cookie", $"session_id={sessionId}");
-                    }
-
-                    var response = await _client.SendAsync(request);
-
-                    if (response.IsSuccessStatusCode)
-                    {
-                        await DisplayAlert("Successo", "Invito accettato! Sei ora iscritto all'evento.", "OK");
-
-                        // Rimuovi l'invito dalla lista e ricarica i dati
-                        CalendarEvents.Remove(invitePost);
-                        await LoadCalendarEvents();
-                    }
-                    else
-                    {
-                        await DisplayAlert("Errore", "Impossibile accettare l'invito.", "OK");
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Debug.WriteLine($"[INVITES] Errore accettazione invito: {ex.Message}");
-                    await DisplayAlert("Errore", "Errore durante l'accettazione dell'invito.", "OK");
-                }
+                await HandleInviteAction(invitePost.InviteID, "accept", "Invito accettato! Sei ora iscritto all'evento.");
+                CalendarEvents.Remove(invitePost);
+                await LoadCalendarEvents();
             }
         }
 
@@ -951,40 +757,10 @@ namespace trovagiocatoriApp.Views
         {
             if (sender is Button button && button.CommandParameter is PostResponse invitePost)
             {
-                try
-                {
-                    var request = new HttpRequestMessage(HttpMethod.Post,
-                        $"{apiBaseUrl}/events/invite/reject?invite_id={invitePost.InviteID}");
-
-                    if (Preferences.ContainsKey("session_id"))
-                    {
-                        string sessionId = Preferences.Get("session_id", "");
-                        request.Headers.Add("Cookie", $"session_id={sessionId}");
-                    }
-
-                    var response = await _client.SendAsync(request);
-
-                    if (response.IsSuccessStatusCode)
-                    {
-                        await DisplayAlert("Invito Rifiutato", "L'invito è stato rifiutato.", "OK");
-
-                        // Rimuovi l'invito dalla lista
-                        CalendarEvents.Remove(invitePost);
-                    }
-                    else
-                    {
-                        await DisplayAlert("Errore", "Impossibile rifiutare l'invito.", "OK");
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Debug.WriteLine($"[INVITES] Errore rifiuto invito: {ex.Message}");
-                    await DisplayAlert("Errore", "Errore durante il rifiuto dell'invito.", "OK");
-                }
+                await HandleInviteAction(invitePost.InviteID, "reject", "L'invito è stato rifiutato.");
+                CalendarEvents.Remove(invitePost);
             }
         }
-
-        // ========== GESTIONE PULSANTI PROFILO ==========
 
         private async void OnNavigateToChangePassword(object sender, EventArgs e)
         {
@@ -1001,38 +777,58 @@ namespace trovagiocatoriApp.Views
 
         private async void OnLogoutButtonClicked(object sender, EventArgs e)
         {
+            await HandleLogout("Logout", "Sei sicuro di voler effettuare il logout?");
+        }
+
+        private async void OnAdminLogoutClicked(object sender, EventArgs e)
+        {
+            await HandleLogout("Logout Amministratore", "Sei sicuro di voler effettuare il logout dal pannello amministratore?");
+        }
+
+        // ========== HELPER METHODS ==========
+
+        // Gestisce le azioni sugli inviti (accetta/rifiuta)
+        private async Task HandleInviteAction(long inviteId, string action, string successMessage)
+        {
             try
             {
-                var confirm = await DisplayAlert(
-                    "Logout",
-                    "Sei sicuro di voler effettuare il logout?",
-                    "Logout",
-                    "Annulla"
-                );
+                var request = CreateAuthenticatedRequest(HttpMethod.Post, $"/events/invite/{action}?invite_id={inviteId}");
+                var response = await _client.SendAsync(request);
 
+                if (response.IsSuccessStatusCode)
+                {
+                    await DisplayAlert("Successo", successMessage, "OK");
+                }
+                else
+                {
+                    await DisplayAlert("Errore", $"Impossibile {action} l'invito.", "OK");
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[INVITES] Errore {action} invito: {ex.Message}");
+                await DisplayAlert("Errore", $"Errore durante {action} dell'invito.", "OK");
+            }
+        }
+
+        // Gestisce il processo di logout
+        private async Task HandleLogout(string title, string message)
+        {
+            try
+            {
+                var confirm = await DisplayAlert(title, message, "Logout", "Annulla");
                 if (!confirm) return;
 
-                // Effettua il logout chiamando il server
-                var request = new HttpRequestMessage(HttpMethod.Post, $"{apiBaseUrl}/logout");
+                var request = CreateAuthenticatedRequest(HttpMethod.Post, "/logout");
+                await _client.SendAsync(request);
 
-                if (Preferences.ContainsKey("session_id"))
-                {
-                    string sessionId = Preferences.Get("session_id", "");
-                    request.Headers.Add("Cookie", $"session_id={sessionId}");
-                }
-
-                await _client.SendAsync(request); // Non importa se fallisce
-
-                // Pulisci i dati di sessione
                 Preferences.Clear();
                 HomePage.ResetAdminWelcome();
 
-                Debug.WriteLine($"[PROFILE] Logout completato");
-
-                // Torna alla pagina di login
                 Application.Current.MainPage = new NavigationPage(new LoginPage());
-
                 await DisplayAlert("Logout Completato", "Sei stato disconnesso con successo.", "OK");
+
+                Debug.WriteLine($"[PROFILE] Logout completato");
             }
             catch (Exception ex)
             {
@@ -1041,7 +837,95 @@ namespace trovagiocatoriApp.Views
             }
         }
 
-        // ========== HELPER METHODS ==========
+        // Crea una richiesta HTTP autenticata
+        private HttpRequestMessage CreateAuthenticatedRequest(HttpMethod method, string endpoint, string baseUrl = null)
+        {
+            var url = baseUrl ?? ApiConfig.BaseUrl;
+            var request = new HttpRequestMessage(method, $"{url}{endpoint}");
+
+            if (Preferences.ContainsKey("session_id"))
+            {
+                string sessionId = Preferences.Get("session_id", "");
+                request.Headers.Add("Cookie", $"session_id={sessionId}");
+            }
+
+            return request;
+        }
+
+        // Parsing helper methods
+        private PostResponse ParsePostFromJson(JsonElement element)
+        {
+            return new PostResponse
+            {
+                id = GetIntProperty(element, "id"),
+                titolo = GetStringProperty(element, "titolo"),
+                provincia = GetStringProperty(element, "provincia"),
+                citta = GetStringProperty(element, "citta"),
+                sport = GetStringProperty(element, "sport"),
+                data_partita = GetStringProperty(element, "data_partita"),
+                ora_partita = GetStringProperty(element, "ora_partita"),
+                commento = GetStringProperty(element, "commento"),
+                autore_email = GetStringProperty(element, "autore_email"),
+                campo_id = GetNullableIntProperty(element, "campo_id"),
+                campo = GetCampoProperty(element),
+                livello = GetStringProperty(element, "livello", "Intermedio"),
+                numero_giocatori = GetIntProperty(element, "numero_giocatori", 1),
+                partecipanti_iscritti = GetIntProperty(element, "partecipanti_iscritti", 0),
+                posti_disponibili = GetIntProperty(element, "posti_disponibili", 1)
+            };
+        }
+
+        private EventInviteInfo ParseEventInviteFromJson(JsonElement inviteElement)
+        {
+            return new EventInviteInfo
+            {
+                InviteID = GetLongProperty(inviteElement, "invite_id"),
+                PostID = GetIntProperty(inviteElement, "post_id"),
+                Message = GetStringProperty(inviteElement, "message"),
+                CreatedAt = GetStringProperty(inviteElement, "created_at"),
+                Status = GetStringProperty(inviteElement, "status"),
+                SenderUsername = GetStringProperty(inviteElement, "sender_username"),
+                SenderNome = GetStringProperty(inviteElement, "sender_nome"),
+                SenderCognome = GetStringProperty(inviteElement, "sender_cognome"),
+                SenderEmail = GetStringProperty(inviteElement, "sender_email"),
+                SenderProfilePicture = GetStringProperty(inviteElement, "sender_profile_picture")
+            };
+        }
+
+        private PostResponse CreateInvitePost(PostResponse post, EventInviteInfo invite)
+        {
+            return new PostResponse
+            {
+                id = post.id,
+                titolo = $"📩 INVITO: {post.titolo}",
+                provincia = post.provincia,
+                citta = post.citta,
+                sport = post.sport,
+                data_partita = post.data_partita,
+                ora_partita = post.ora_partita,
+                commento = $"Invito da {invite.SenderUsername}: {invite.Message}",
+                autore_email = post.autore_email,
+                campo_id = post.campo_id,
+                campo = post.campo,
+                livello = post.livello,
+                numero_giocatori = post.numero_giocatori,
+                IsInvite = true,
+                InviteID = invite.InviteID
+            };
+        }
+
+        private DateTime GetEventDateTime(PostResponse eventPost)
+        {
+            if (DateTime.TryParse(eventPost.data_partita, out DateTime dataPartita))
+            {
+                if (TimeSpan.TryParse(eventPost.ora_partita, out TimeSpan oraPartita))
+                {
+                    return dataPartita.Add(oraPartita);
+                }
+                return dataPartita;
+            }
+            return DateTime.MinValue;
+        }
 
         private string GetStringProperty(JsonElement element, string propertyName, string defaultValue = "")
         {
@@ -1118,9 +1002,5 @@ namespace trovagiocatoriApp.Views
                 return null;
             }
         }
-
-    
-
-
     }
-}                        
+}

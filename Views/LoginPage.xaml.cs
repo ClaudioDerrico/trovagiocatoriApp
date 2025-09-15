@@ -2,7 +2,6 @@
 using System.Text;
 using Microsoft.Maui.Storage;
 using System.Diagnostics;
-using Microsoft.Maui.Devices;
 using trovagiocatoriApp.Models;
 
 namespace trovagiocatoriApp.Views
@@ -14,19 +13,15 @@ namespace trovagiocatoriApp.Views
         public LoginPage()
         {
             InitializeComponent();
-
-            // Pulisci sessioni residue al caricamento della pagina di login
             ClearPreviousSessions();
         }
 
-        // Pulisce sessioni precedenti e flag
+        // Pulisce sessioni precedenti e flag al caricamento della pagina di login
         private void ClearPreviousSessions()
         {
             try
             {
-                // Pulisci tutte le preferences
                 Preferences.Clear();
-
                 Debug.WriteLine("[LOGIN] Sessioni precedenti pulite");
             }
             catch (Exception ex)
@@ -35,6 +30,7 @@ namespace trovagiocatoriApp.Views
             }
         }
 
+        // Attiva/disattiva la visibilità della password
         private void OnTogglePasswordVisibility(object sender, EventArgs e)
         {
             isPasswordVisible = !isPasswordVisible;
@@ -43,14 +39,11 @@ namespace trovagiocatoriApp.Views
             button.Source = isPasswordVisible ? "eye_close.png" : "eye_open.png";
         }
 
+        // Gestisce il processo di login
         private async void OnLoginClicked(object sender, EventArgs e)
         {
             var loginButton = sender as Button;
-            if (loginButton != null)
-            {
-                loginButton.IsEnabled = false;
-                loginButton.Text = "Accesso in corso...";
-            }
+            SetButtonLoadingState(loginButton, true);
 
             try
             {
@@ -76,42 +69,22 @@ namespace trovagiocatoriApp.Views
                 var responseJson = await response.Content.ReadAsStringAsync();
 
                 Debug.WriteLine($"[LOGIN] Response status: {response.StatusCode}");
-                Debug.WriteLine($"[LOGIN] Response body: {responseJson}");
 
                 if (response.IsSuccessStatusCode)
                 {
-                    // Login riuscito
                     await HandleSuccessfulLogin(response);
                 }
                 else if (response.StatusCode == System.Net.HttpStatusCode.Forbidden)
                 {
-                    // Utente bannato (403 Forbidden)
                     await HandleBannedUser(responseJson);
                 }
                 else if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
                 {
-                    // Credenziali errate
                     await DisplayAlert("Errore Login", "Credenziali non valide. Controlla email/username e password.", "OK");
                 }
                 else
                 {
-                    // Altri errori
-                    var errorMessage = "Errore durante il login. Riprova più tardi.";
-                    try
-                    {
-                        var errorResponse = JsonSerializer.Deserialize<LoginResponse>(responseJson,
-                            new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-                        if (!string.IsNullOrEmpty(errorResponse?.Error))
-                        {
-                            errorMessage = errorResponse.Error;
-                        }
-                    }
-                    catch
-                    {
-                        // Usa il messaggio di default se la deserializzazione fallisce
-                    }
-
-                    await DisplayAlert("Errore Login", errorMessage, "OK");
+                    await HandleLoginError(responseJson);
                 }
             }
             catch (Exception ex)
@@ -121,19 +94,25 @@ namespace trovagiocatoriApp.Views
             }
             finally
             {
-                if (loginButton != null)
-                {
-                    loginButton.IsEnabled = true;
-                    loginButton.Text = "ACCEDI";
-                }
+                SetButtonLoadingState(loginButton, false);
             }
         }
 
+        // Imposta lo stato di caricamento del pulsante
+        private void SetButtonLoadingState(Button button, bool isLoading)
+        {
+            if (button != null)
+            {
+                button.IsEnabled = !isLoading;
+                button.Text = isLoading ? "Accesso in corso..." : "ACCEDI";
+            }
+        }
+
+        // Gestisce il login riuscito salvando la sessione
         private async Task HandleSuccessfulLogin(HttpResponseMessage response)
         {
             try
             {
-                // Pulisci sessioni precedenti
                 Preferences.Clear();
 
                 // Salva il cookie di sessione
@@ -152,13 +131,11 @@ namespace trovagiocatoriApp.Views
 
                 await DisplayAlert("Login", "Login eseguito con successo!", "OK");
 
-                // Crea la nuova Shell e riconfigura
+                // Configura la nuova Shell
                 MainThread.BeginInvokeOnMainThread(async () =>
                 {
                     var appShell = new AppShell();
                     Application.Current.MainPage = appShell;
-
-                    // Aspetta un attimo per la configurazione
                     await Task.Delay(500);
                 });
             }
@@ -169,6 +146,7 @@ namespace trovagiocatoriApp.Views
             }
         }
 
+        // Gestisce il caso di utente bannato
         private async Task HandleBannedUser(string responseJson)
         {
             try
@@ -182,7 +160,6 @@ namespace trovagiocatoriApp.Views
                 }
                 else
                 {
-                    // Fallback se non ci sono info sul ban
                     await DisplayAlert("Account Sospeso",
                         "Il tuo account è stato sospeso. Contatta l'amministratore per maggiori informazioni.",
                         "OK");
@@ -197,6 +174,28 @@ namespace trovagiocatoriApp.Views
             }
         }
 
+        // Gestisce errori generici di login
+        private async Task HandleLoginError(string responseJson)
+        {
+            var errorMessage = "Errore durante il login. Riprova più tardi.";
+            try
+            {
+                var errorResponse = JsonSerializer.Deserialize<LoginResponse>(responseJson,
+                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                if (!string.IsNullOrEmpty(errorResponse?.Error))
+                {
+                    errorMessage = errorResponse.Error;
+                }
+            }
+            catch
+            {
+                // Usa il messaggio di default se la deserializzazione fallisce
+            }
+
+            await DisplayAlert("Errore Login", errorMessage, "OK");
+        }
+
+        // Mostra il dialog dettagliato per utenti bannati
         private async Task ShowBanDialog(BanInfo banInfo, string errorMessage)
         {
             try
@@ -221,12 +220,11 @@ namespace trovagiocatoriApp.Views
                 message.AppendLine();
                 message.AppendLine("📧 Per richiedere la revoca del ban, contatta l'amministratore del sito.");
 
-                // Mostra dialog per contattare admin
                 bool contactAdmin = await DisplayAlert(
                     title,
                     message.ToString(),
-                    "Contatta Admin",  // Pulsante per contattare admin
-                    "OK"              // Pulsante per chiudere
+                    "Contatta Admin",
+                    "OK"
                 );
 
                 if (contactAdmin)
@@ -243,7 +241,7 @@ namespace trovagiocatoriApp.Views
             }
         }
 
-
+        // Gestisce le opzioni per contattare l'amministratore
         private async Task HandleContactAdmin()
         {
             try
@@ -273,6 +271,7 @@ namespace trovagiocatoriApp.Views
             }
         }
 
+        // Apre l'app email con messaggio precompilato
         private async Task OpenEmailApp()
         {
             try
@@ -293,6 +292,7 @@ namespace trovagiocatoriApp.Views
             }
         }
 
+        // Copia l'email dell'amministratore negli appunti
         private async Task CopyAdminEmail()
         {
             try
@@ -307,6 +307,7 @@ namespace trovagiocatoriApp.Views
             }
         }
 
+        // Naviga alla pagina di registrazione
         private async void OnRegisterNowClicked(object sender, EventArgs e)
         {
             await Navigation.PushAsync(new RegisterPage());

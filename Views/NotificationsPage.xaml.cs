@@ -1,5 +1,4 @@
-﻿// Views/NotificationsPage.xaml.cs - VERSIONE CORRETTA
-using System.Text.Json;
+﻿using System.Text.Json;
 using Microsoft.Maui.Storage;
 using System.Diagnostics;
 using trovagiocatoriApp.Models;
@@ -9,7 +8,6 @@ namespace trovagiocatoriApp.Views
     public partial class NotificationsPage : ContentPage
     {
         private readonly HttpClient _client = new HttpClient();
-        private readonly string _apiBaseUrl = ApiConfig.BaseUrl;
 
         public NotificationsPage()
         {
@@ -22,24 +20,14 @@ namespace trovagiocatoriApp.Views
             await LoadNotifications();
         }
 
+        // Carica tutte le notifiche dell'utente
         private async Task LoadNotifications()
         {
             try
             {
-                LoadingIndicator.IsVisible = true;
-                LoadingIndicator.IsRunning = true;
+                ShowLoadingState(true);
 
-                // NASCONDE l'empty state durante il caricamento
-                EmptyStateLayout.IsVisible = false;
-
-                var request = new HttpRequestMessage(HttpMethod.Get, $"{_apiBaseUrl}/notifications?limit=50");
-
-                if (Preferences.ContainsKey("session_id"))
-                {
-                    string sessionId = Preferences.Get("session_id", "");
-                    request.Headers.Add("Cookie", $"session_id={sessionId}");
-                }
-
+                var request = CreateAuthenticatedRequest(HttpMethod.Get, "/notifications?limit=50");
                 var response = await _client.SendAsync(request);
 
                 if (response.IsSuccessStatusCode)
@@ -47,40 +35,8 @@ namespace trovagiocatoriApp.Views
                     var json = await response.Content.ReadAsStringAsync();
                     Debug.WriteLine($"[NOTIFICATIONS] Risposta API: {json}");
 
-                    // GESTIONE PIÙ ROBUSTA del JSON
-                    var notifications = new List<NotificationItem>();
+                    var notifications = ParseNotificationsFromJson(json);
 
-                    if (!string.IsNullOrEmpty(json))
-                    {
-                        try
-                        {
-                            var result = JsonSerializer.Deserialize<Dictionary<string, object>>(json);
-
-                            if (result != null && result.ContainsKey("data") && result["data"] is JsonElement dataElement)
-                            {
-                                if (dataElement.TryGetProperty("notifications", out var notificationsElement))
-                                {
-                                    notifications = ParseNotifications(notificationsElement);
-                                    Debug.WriteLine($"[NOTIFICATIONS] Trovate {notifications.Count} notifiche");
-                                }
-                                else
-                                {
-                                    Debug.WriteLine("[NOTIFICATIONS] Proprietà 'notifications' non trovata nel JSON");
-                                }
-                            }
-                            else
-                            {
-                                Debug.WriteLine("[NOTIFICATIONS] Struttura JSON non riconosciuta");
-                            }
-                        }
-                        catch (JsonException jsonEx)
-                        {
-                            Debug.WriteLine($"[NOTIFICATIONS] Errore parsing JSON: {jsonEx.Message}");
-                            Debug.WriteLine($"[NOTIFICATIONS] JSON ricevuto: {json}");
-                        }
-                    }
-
-                    // AGGIORNA UI sempre, anche se notifications è vuota
                     MainThread.BeginInvokeOnMainThread(() =>
                     {
                         DisplayNotifications(notifications);
@@ -90,10 +46,6 @@ namespace trovagiocatoriApp.Views
                 else
                 {
                     Debug.WriteLine($"[NOTIFICATIONS] Errore HTTP: {response.StatusCode}");
-                    var errorContent = await response.Content.ReadAsStringAsync();
-                    Debug.WriteLine($"[NOTIFICATIONS] Contenuto errore: {errorContent}");
-
-                    // MOSTRA empty state anche per errori HTTP
                     MainThread.BeginInvokeOnMainThread(() =>
                     {
                         DisplayNotifications(new List<NotificationItem>());
@@ -103,72 +55,89 @@ namespace trovagiocatoriApp.Views
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"[NOTIFICATIONS] Errore caricamento notifiche: {ex.Message}");
-                Debug.WriteLine($"[NOTIFICATIONS] StackTrace: {ex.StackTrace}");
-
-                // GESTIONE ERRORE: mostra empty state invece di alert
+                Debug.WriteLine($"[NOTIFICATIONS] Errore caricamento: {ex.Message}");
                 MainThread.BeginInvokeOnMainThread(() =>
                 {
                     DisplayNotifications(new List<NotificationItem>());
                     UpdateSummary(new List<NotificationItem>());
-
-                    // OPZIONALE: Mostra un messaggio di errore discreto
                     NotificationsSummaryLabel.Text = "Errore nel caricamento";
                 });
             }
             finally
             {
-                LoadingIndicator.IsVisible = false;
-                LoadingIndicator.IsRunning = false;
+                ShowLoadingState(false);
             }
         }
 
-        private List<NotificationItem> ParseNotifications(JsonElement notificationsElement)
+        // Mostra/nasconde lo stato di caricamento
+        private void ShowLoadingState(bool isLoading)
+        {
+            LoadingIndicator.IsVisible = isLoading;
+            LoadingIndicator.IsRunning = isLoading;
+            EmptyStateLayout.IsVisible = false;
+        }
+
+        // Estrae le notifiche dal JSON ricevuto dal server
+        private List<NotificationItem> ParseNotificationsFromJson(string json)
         {
             var notifications = new List<NotificationItem>();
 
+            if (string.IsNullOrEmpty(json)) return notifications;
+
             try
             {
-                // GESTISCE sia array che oggetti vuoti
-                if (notificationsElement.ValueKind == JsonValueKind.Array)
-                {
-                    foreach (var notifElement in notificationsElement.EnumerateArray())
-                    {
-                        try
-                        {
-                            var notification = new NotificationItem
-                            {
-                                Id = GetLongProperty(notifElement, "id"),
-                                Type = GetStringProperty(notifElement, "type"),
-                                Title = GetStringProperty(notifElement, "title"),
-                                Message = GetStringProperty(notifElement, "message"),
-                                Status = GetStringProperty(notifElement, "status"),
-                                CreatedAt = GetStringProperty(notifElement, "created_at"),
-                                SenderInfo = ParseSenderInfo(notifElement)
-                            };
+                var result = JsonSerializer.Deserialize<Dictionary<string, object>>(json);
 
-                            notifications.Add(notification);
-                        }
-                        catch (Exception ex)
-                        {
-                            Debug.WriteLine($"[NOTIFICATIONS] Errore parsing singola notifica: {ex.Message}");
-                            // Continua con le altre notifiche
-                        }
-                    }
-                }
-                else
+                if (result?.ContainsKey("data") == true &&
+                    result["data"] is JsonElement dataElement &&
+                    dataElement.TryGetProperty("notifications", out var notificationsElement))
                 {
-                    Debug.WriteLine($"[NOTIFICATIONS] Tipo JSON non aspettato: {notificationsElement.ValueKind}");
+                    notifications = ParseNotificationElements(notificationsElement);
+                    Debug.WriteLine($"[NOTIFICATIONS] Trovate {notifications.Count} notifiche");
                 }
             }
-            catch (Exception ex)
+            catch (JsonException jsonEx)
             {
-                Debug.WriteLine($"[NOTIFICATIONS] Errore durante il parsing delle notifiche: {ex.Message}");
+                Debug.WriteLine($"[NOTIFICATIONS] Errore parsing JSON: {jsonEx.Message}");
             }
 
             return notifications;
         }
 
+        // Converte gli elementi JSON in oggetti NotificationItem
+        private List<NotificationItem> ParseNotificationElements(JsonElement notificationsElement)
+        {
+            var notifications = new List<NotificationItem>();
+
+            if (notificationsElement.ValueKind != JsonValueKind.Array) return notifications;
+
+            foreach (var notifElement in notificationsElement.EnumerateArray())
+            {
+                try
+                {
+                    var notification = new NotificationItem
+                    {
+                        Id = GetLongProperty(notifElement, "id"),
+                        Type = GetStringProperty(notifElement, "type"),
+                        Title = GetStringProperty(notifElement, "title"),
+                        Message = GetStringProperty(notifElement, "message"),
+                        Status = GetStringProperty(notifElement, "status"),
+                        CreatedAt = GetStringProperty(notifElement, "created_at"),
+                        SenderInfo = ParseSenderInfo(notifElement)
+                    };
+
+                    notifications.Add(notification);
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine($"[NOTIFICATIONS] Errore parsing singola notifica: {ex.Message}");
+                }
+            }
+
+            return notifications;
+        }
+
+        // Estrae le informazioni del mittente dalla notifica
         private SenderInfo ParseSenderInfo(JsonElement notifElement)
         {
             try
@@ -192,6 +161,7 @@ namespace trovagiocatoriApp.Views
             return null;
         }
 
+        // Mostra le notifiche nell'interfaccia utente
         private void DisplayNotifications(List<NotificationItem> notifications)
         {
             NotificationsContainer.Clear();
@@ -220,6 +190,7 @@ namespace trovagiocatoriApp.Views
             }
         }
 
+        // Crea la view per una singola notifica
         private Frame CreateNotificationView(NotificationItem notification)
         {
             var isUnread = notification.Status == "unread";
@@ -232,6 +203,15 @@ namespace trovagiocatoriApp.Views
             tapGesture.Tapped += async (s, e) => await OnNotificationTapped(notification);
             frame.GestureRecognizers.Add(tapGesture);
 
+            var grid = CreateNotificationGrid(notification, isUnread);
+            frame.Content = grid;
+
+            return frame;
+        }
+
+        // Crea la griglia del contenuto della notifica
+        private Grid CreateNotificationGrid(NotificationItem notification, bool isUnread)
+        {
             var grid = new Grid
             {
                 ColumnDefinitions =
@@ -250,6 +230,13 @@ namespace trovagiocatoriApp.Views
                 ColumnSpacing = 12
             };
 
+            AddNotificationElements(grid, notification, isUnread);
+            return grid;
+        }
+
+        // Aggiunge tutti gli elementi alla griglia della notifica
+        private void AddNotificationElements(Grid grid, NotificationItem notification, bool isUnread)
+        {
             // Icona tipo notifica
             var iconLabel = new Label
             {
@@ -274,21 +261,7 @@ namespace trovagiocatoriApp.Views
             // Badge non letto
             if (isUnread)
             {
-                var unreadBadge = new Frame
-                {
-                    BackgroundColor = Color.FromArgb("#EF4444"),
-                    CornerRadius = 6,
-                    Padding = new Thickness(6, 2),
-                    HasShadow = false,
-                    VerticalOptions = LayoutOptions.Start,
-                    Content = new Label
-                    {
-                        Text = "NUOVO",
-                        TextColor = Colors.White,
-                        FontSize = 10,
-                        FontAttributes = FontAttributes.Bold
-                    }
-                };
+                var unreadBadge = CreateUnreadBadge();
                 Grid.SetColumn(unreadBadge, 2);
                 Grid.SetRow(unreadBadge, 0);
                 grid.Children.Add(unreadBadge);
@@ -325,11 +298,29 @@ namespace trovagiocatoriApp.Views
             grid.Children.Add(titleLabel);
             grid.Children.Add(messageLabel);
             grid.Children.Add(detailsLabel);
-
-            frame.Content = grid;
-            return frame;
         }
 
+        // Crea il badge per le notifiche non lette
+        private Frame CreateUnreadBadge()
+        {
+            return new Frame
+            {
+                BackgroundColor = Color.FromArgb("#EF4444"),
+                CornerRadius = 6,
+                Padding = new Thickness(6, 2),
+                HasShadow = false,
+                VerticalOptions = LayoutOptions.Start,
+                Content = new Label
+                {
+                    Text = "NUOVO",
+                    TextColor = Colors.White,
+                    FontSize = 10,
+                    FontAttributes = FontAttributes.Bold
+                }
+            };
+        }
+
+        // Restituisce l'icona appropriata per il tipo di notifica
         private string GetNotificationIcon(string type)
         {
             return type switch
@@ -341,6 +332,7 @@ namespace trovagiocatoriApp.Views
             };
         }
 
+        // Formatta la data/ora in modo user-friendly
         private string FormatDateTime(string dateTimeString)
         {
             if (DateTime.TryParse(dateTimeString, out DateTime dateTime))
@@ -358,6 +350,7 @@ namespace trovagiocatoriApp.Views
             return dateTimeString;
         }
 
+        // Gestisce il tap su una notifica
         private async Task OnNotificationTapped(NotificationItem notification)
         {
             try
@@ -368,7 +361,7 @@ namespace trovagiocatoriApp.Views
                     await MarkNotificationAsRead(notification.Id);
                 }
 
-                // Naviga alla sezione appropriata in base al tipo
+                // Naviga alla sezione appropriata
                 await NavigateToRelevantSection(notification);
             }
             catch (Exception ex)
@@ -377,6 +370,7 @@ namespace trovagiocatoriApp.Views
             }
         }
 
+        // Naviga alla sezione appropriata in base al tipo di notifica
         private async Task NavigateToRelevantSection(NotificationItem notification)
         {
             try
@@ -387,7 +381,7 @@ namespace trovagiocatoriApp.Views
                         await Navigation.PushAsync(new FriendsPage());
                         break;
                     case "event_invite":
-                        await Navigation.PushAsync(new ProfilePage()); // Tab "I Miei Eventi"
+                        await Navigation.PushAsync(new ProfilePage());
                         break;
                     default:
                         break;
@@ -399,18 +393,12 @@ namespace trovagiocatoriApp.Views
             }
         }
 
+        // Segna una notifica come letta
         private async Task MarkNotificationAsRead(long notificationId)
         {
             try
             {
-                var request = new HttpRequestMessage(HttpMethod.Post, $"{_apiBaseUrl}/notifications/read?id={notificationId}");
-
-                if (Preferences.ContainsKey("session_id"))
-                {
-                    string sessionId = Preferences.Get("session_id", "");
-                    request.Headers.Add("Cookie", $"session_id={sessionId}");
-                }
-
+                var request = CreateAuthenticatedRequest(HttpMethod.Post, $"/notifications/read?id={notificationId}");
                 await _client.SendAsync(request);
             }
             catch (Exception ex)
@@ -419,23 +407,17 @@ namespace trovagiocatoriApp.Views
             }
         }
 
+        // Segna tutte le notifiche come lette
         private async void OnMarkAllReadClicked(object sender, EventArgs e)
         {
             try
             {
-                var request = new HttpRequestMessage(HttpMethod.Post, $"{_apiBaseUrl}/notifications/read-all");
-
-                if (Preferences.ContainsKey("session_id"))
-                {
-                    string sessionId = Preferences.Get("session_id", "");
-                    request.Headers.Add("Cookie", $"session_id={sessionId}");
-                }
-
+                var request = CreateAuthenticatedRequest(HttpMethod.Post, "/notifications/read-all");
                 var response = await _client.SendAsync(request);
 
                 if (response.IsSuccessStatusCode)
                 {
-                    await LoadNotifications(); // Ricarica
+                    await LoadNotifications();
                     await DisplayAlert("Successo", "Tutte le notifiche sono state segnate come lette", "OK");
                 }
             }
@@ -446,6 +428,7 @@ namespace trovagiocatoriApp.Views
             }
         }
 
+        // Aggiorna il riassunto delle notifiche
         private void UpdateSummary(List<NotificationItem> notifications)
         {
             try
@@ -468,18 +451,36 @@ namespace trovagiocatoriApp.Views
             }
         }
 
+        // Gestisce il pull-to-refresh
         private async void OnRefreshing(object sender, EventArgs e)
         {
             await LoadNotifications();
             NotificationsRefreshView.IsRefreshing = false;
         }
 
+        // Gestisce il pulsante indietro
         private async void OnBackButtonClicked(object sender, EventArgs e)
         {
             await Navigation.PopAsync();
         }
 
-        // Helper methods SICURI
+        // ========== HELPER METHODS ==========
+
+        // Crea una richiesta HTTP autenticata
+        private HttpRequestMessage CreateAuthenticatedRequest(HttpMethod method, string endpoint)
+        {
+            var request = new HttpRequestMessage(method, $"{ApiConfig.BaseUrl}{endpoint}");
+
+            if (Preferences.ContainsKey("session_id"))
+            {
+                string sessionId = Preferences.Get("session_id", "");
+                request.Headers.Add("Cookie", $"session_id={sessionId}");
+            }
+
+            return request;
+        }
+
+        // Metodi helper per parsing JSON sicuro
         private string GetStringProperty(JsonElement element, string propertyName, string defaultValue = "")
         {
             try
@@ -508,6 +509,4 @@ namespace trovagiocatoriApp.Views
             }
         }
     }
-
-
 }

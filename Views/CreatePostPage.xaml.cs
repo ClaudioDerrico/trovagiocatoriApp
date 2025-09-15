@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.ObjectModel;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net;
+﻿using System.Collections.ObjectModel;
 using System.Net.Http;
 using System.Text;
 using System.Text.Json;
@@ -17,47 +13,34 @@ namespace trovagiocatoriApp.Views
     public partial class CreatePostPage : ContentPage, INotifyPropertyChanged
     {
         private readonly HttpClient _httpClient = new HttpClient();
-        private readonly string _pythonApiUrl = ApiConfig.PythonApiUrl;
 
         // Proprietà per date
         public DateTime CurrentDate { get; set; }
         public DateTime MaxDate { get; set; }
 
-        // Lista di sport predefiniti
+        // Liste di opzioni
         public List<string> SportOptions { get; set; }
-
-        // NUOVA: Lista livelli
         public List<string> LivelloOptions { get; set; }
+        public List<string> ProvinceOptions { get; set; }
+
+        // Proprietà per livello selezionato
         private string _selectedLivello = "Intermedio";
         public string SelectedLivello
         {
             get => _selectedLivello;
-            set
-            {
-                _selectedLivello = value;
-                OnPropertyChanged();
-            }
+            set { _selectedLivello = value; OnPropertyChanged(); }
         }
 
-        // NUOVO: Numero giocatori
+        // Proprietà per numero giocatori
         private int _numeroGiocatori = 1;
         public int NumeroGiocatori
         {
             get => _numeroGiocatori;
-            set
-            {
-                _numeroGiocatori = value;
-                OnPropertyChanged();
-            }
+            set { _numeroGiocatori = value; OnPropertyChanged(); }
         }
 
-        // Lista completa delle province italiane
-        public List<string> ProvinceOptions { get; set; }
-
-        // Lista filtrata in base al testo inserito nella Entry per provincia
+        // Collezioni per campi sportivi
         public ObservableCollection<string> FilteredProvinces { get; set; } = new ObservableCollection<string>();
-
-        // Lista dei campi sportivi
         public ObservableCollection<SportField> SportFields { get; set; } = new ObservableCollection<SportField>();
         public ObservableCollection<SportField> FilteredSportFields { get; set; } = new ObservableCollection<SportField>();
 
@@ -66,34 +49,32 @@ namespace trovagiocatoriApp.Views
         public SportField SelectedSportField
         {
             get => _selectedSportField;
-            set
-            {
-                _selectedSportField = value;
-                OnPropertyChanged();
-                UpdateFormWithSelectedField();
-            }
+            set { _selectedSportField = value; OnPropertyChanged(); UpdateFormWithSelectedField(); }
         }
 
         public CreatePostPage()
         {
             InitializeComponent();
+            InitializeData();
+            BindingContext = this;
+            _ = LoadSportFields();
+        }
 
-            // Inizializza le date
+        // Inizializza date e opzioni
+        private void InitializeData()
+        {
             CurrentDate = DateTime.Now;
             MaxDate = CurrentDate.AddMonths(1);
 
-            SportOptions = new List<string>
-            {
-                "Calcio", "Tennis", "Pallavolo", "Basket", "Padel"
-            };
+            SportOptions = new List<string> { "Calcio", "Tennis", "Pallavolo", "Basket", "Padel" };
+            LivelloOptions = new List<string> { "Principiante", "Intermedio", "Avanzato" };
+            ProvinceOptions = InitializeProvinces();
+        }
 
-            // NUOVO: Inizializza le opzioni livello
-            LivelloOptions = new List<string>
-            {
-                "Principiante", "Intermedio", "Avanzato"
-            };
-
-            ProvinceOptions = new List<string>
+        // Inizializza la lista delle province italiane
+        private List<string> InitializeProvinces()
+        {
+            return new List<string>
             {
                 "Agrigento", "Alessandria", "Ancona", "Aosta", "Arezzo", "Ascoli Piceno", "Asti", "Avellino",
                 "Bari", "Barletta-Andria-Trani", "Belluno", "Benevento", "Bergamo", "Biella", "Bologna", "Bolzano",
@@ -109,12 +90,6 @@ namespace trovagiocatoriApp.Views
                 "Sud Sardegna", "Taranto", "Teramo", "Terni", "Torino", "Trapani", "Trento", "Treviso",
                 "Trieste", "Udine", "Varese", "Venezia", "Verbano-Cusio-Ossola", "Vercelli", "Verona", "Vibo Valentia", "Vicenza", "Viterbo"
             };
-
-            // Imposta il BindingContext
-            BindingContext = this;
-
-            // Carica i campi sportivi
-            _ = LoadSportFields();
         }
 
         protected override async void OnAppearing()
@@ -123,11 +98,12 @@ namespace trovagiocatoriApp.Views
             await LoadSportFields();
         }
 
+        // Carica tutti i campi sportivi disponibili
         private async Task LoadSportFields()
         {
             try
             {
-                var response = await _httpClient.GetAsync($"{_pythonApiUrl}/fields/");
+                var response = await _httpClient.GetAsync($"{ApiConfig.PythonApiUrl}/fields/");
                 if (response.IsSuccessStatusCode)
                 {
                     var json = await response.Content.ReadAsStringAsync();
@@ -140,7 +116,6 @@ namespace trovagiocatoriApp.Views
                         SportFields.Add(field);
                     }
 
-                    // Inizialmente mostra tutti i campi
                     UpdateFilteredSportFields();
                 }
             }
@@ -150,19 +125,18 @@ namespace trovagiocatoriApp.Views
             }
         }
 
+        // Filtra i campi sportivi in base a provincia e sport
         private void UpdateFilteredSportFields(string provinciaFilter = null, string sportFilter = null)
         {
             FilteredSportFields.Clear();
 
             var fieldsToShow = SportFields.AsEnumerable();
 
-            // Filtra per provincia se specificata
             if (!string.IsNullOrEmpty(provinciaFilter))
             {
                 fieldsToShow = fieldsToShow.Where(f => f.Provincia.Equals(provinciaFilter, StringComparison.OrdinalIgnoreCase));
             }
 
-            // Filtra per sport se specificato
             if (!string.IsNullOrEmpty(sportFilter))
             {
                 fieldsToShow = fieldsToShow.Where(f => f.SupportsSport(sportFilter));
@@ -174,6 +148,7 @@ namespace trovagiocatoriApp.Views
             }
         }
 
+        // Aggiorna il form quando viene selezionato un campo
         private void UpdateFormWithSelectedField()
         {
             if (SelectedSportField != null)
@@ -183,71 +158,59 @@ namespace trovagiocatoriApp.Views
             }
         }
 
-        // Aggiorna il contatore dei caratteri per il titolo
+        // ========== EVENT HANDLERS ==========
+
+        // Aggiorna contatore caratteri titolo
         private void OnTitoloTextChanged(object sender, TextChangedEventArgs e)
         {
             UpdateCharacterCount(TitoloEntry.Text, CaratteriRimanenti, 50);
         }
 
-        // Aggiorna il contatore dei caratteri per la città
+        // Aggiorna contatore caratteri città
         private void OnCittaTextChanged(object sender, TextChangedEventArgs e)
         {
             UpdateCharacterCount(CittaEntry.Text, CaratteriRimanentiCitta, 35);
         }
 
-        // Aggiorna il contatore dei caratteri per il commento
+        // Aggiorna contatore caratteri commento
         private void OnCommentoTextChanged(object sender, TextChangedEventArgs e)
         {
-            var remainingChars = 155 - CommentoEditor.Text.Length;
+            var remainingChars = 155 - (CommentoEditor.Text?.Length ?? 0);
             CharCountLabel.Text = $"Caratteri rimanenti: {remainingChars}";
         }
 
-        // NUOVO: Gestione cambio numero giocatori
+        // Gestisce il cambio del numero di giocatori
         private void OnNumeroGiocatoriChanged(object sender, ValueChangedEventArgs e)
         {
             var valore = (int)e.NewValue;
             NumeroGiocatori = valore;
 
-            // Aggiorna il testo del label
-            if (valore == 1)
-                NumeroGiocatoriLabel.Text = "1 giocatore";
-            else
-                NumeroGiocatoriLabel.Text = $"{valore} giocatori";
+            NumeroGiocatoriLabel.Text = valore == 1 ? "1 giocatore" : $"{valore} giocatori";
         }
 
-        // Metodo di supporto per aggiornare il contatore dei caratteri
-        private void UpdateCharacterCount(string text, Label label, int maxLength)
-        {
-            var remainingChars = maxLength - text.Length;
-            label.Text = $"Caratteri rimanenti: {remainingChars}";
-        }
-
-        // Gestione della modifica del testo nella Entry per la provincia
+        // Gestisce il cambio di testo nella provincia
         private void ProvinciaEntry_TextChanged(object sender, TextChangedEventArgs e)
         {
             var text = ProvinciaEntry.Text?.ToLower() ?? "";
 
             // Filtra le province che contengono il testo inserito
-            var filtered = ProvinceOptions
-                .Where(p => p.ToLower().Contains(text))
-                .ToList();
+            var filtered = ProvinceOptions.Where(p => p.ToLower().Contains(text)).ToList();
 
-            // Aggiorna l'ObservableCollection
             FilteredProvinces.Clear();
             foreach (var prov in filtered)
             {
                 FilteredProvinces.Add(prov);
             }
 
-            // Mostra la ListView solo se ci sono suggerimenti e l'utente ha digitato almeno 1 carattere
+            // Mostra suggerimenti se ci sono risultati e almeno 1 carattere
             ProvinceSuggestionsList.IsVisible = !string.IsNullOrWhiteSpace(text) && FilteredProvinces.Any();
 
-            // Filtra anche i campi sportivi in base alla provincia e allo sport selezionato
+            // Filtra anche i campi sportivi
             var selectedSport = SportPicker.SelectedItem?.ToString();
             UpdateFilteredSportFields(text, selectedSport);
         }
 
-        // Gestione della selezione di un suggerimento dalla ListView
+        // Gestisce la selezione di una provincia dai suggerimenti
         private void ProvinceSuggestionsList_ItemSelected(object sender, SelectedItemChangedEventArgs e)
         {
             if (e.SelectedItem is string selectedProvince)
@@ -259,7 +222,7 @@ namespace trovagiocatoriApp.Views
             }
         }
 
-        // Gestione cambio sport nel picker
+        // Gestisce il cambio sport nel picker
         private void OnSportPickerSelectedIndexChanged(object sender, EventArgs e)
         {
             var selectedSport = SportPicker.SelectedItem?.ToString();
@@ -267,63 +230,26 @@ namespace trovagiocatoriApp.Views
             UpdateFilteredSportFields(selectedProvince, selectedSport);
         }
 
-        // Gestione selezione campo sportivo
+        // Gestisce la selezione di un campo sportivo
         private void OnSportFieldSelected(object sender, SelectionChangedEventArgs e)
         {
             if (e.CurrentSelection.FirstOrDefault() is SportField selectedField)
             {
                 SelectedSportField = selectedField;
-                // Deseleziona per evitare evidenziazione permanente
                 ((CollectionView)sender).SelectedItem = null;
             }
         }
 
+        // Gestisce la creazione del post
         private async void OnCreatePostClicked(object sender, EventArgs e)
         {
-            // Validazione dei campi obbligatori
-            if (string.IsNullOrWhiteSpace(TitoloEntry.Text) ||
-                string.IsNullOrWhiteSpace(ProvinciaEntry.Text) ||
-                string.IsNullOrWhiteSpace(CittaEntry.Text) ||
-                SportPicker.SelectedItem == null ||
-                LivelloPicker.SelectedItem == null ||  // NUOVA VALIDAZIONE
-                string.IsNullOrWhiteSpace(CommentoEditor.Text))
+            if (!ValidateForm())
             {
-                await DisplayAlert("Errore", "Tutti i campi sono obbligatori", "OK");
                 return;
             }
-
-            if (!ProvinceOptions.Contains(ProvinciaEntry.Text))
-            {
-                await DisplayAlert("Errore", "Seleziona una provincia valida dalla lista", "OK");
-                return;
-            }
-
-            if (SportPicker.SelectedItem == null)
-            {
-                await DisplayAlert("Errore", "Seleziona uno sport dalla lista", "OK");
-                return;
-            }
-
-            var formattedTime = OraPartitaPicker.Time.ToString(@"hh\:mm");
-
-            // Costruzione dell'oggetto post con il livello e numero giocatori
-            var post = new
-            {
-                titolo = TitoloEntry.Text,
-                provincia = ProvinciaEntry.Text,
-                citta = CittaEntry.Text,
-                sport = SportPicker.SelectedItem.ToString(),
-                data_partita = DataPartitaPicker.Date.ToString("dd-MM-yyyy"),
-                ora_partita = formattedTime,
-                commento = CommentoEditor.Text,
-                campo_id = SelectedSportField?.Id,
-                livello = LivelloPicker.SelectedItem?.ToString() ?? "Intermedio",  // NUOVO CAMPO
-                numero_giocatori = NumeroGiocatori  // NUOVO CAMPO
-            };
 
             try
             {
-                // Recupera il cookie di sessione
                 var sessionCookie = Preferences.Get("session_id", string.Empty);
                 if (string.IsNullOrEmpty(sessionCookie))
                 {
@@ -331,26 +257,14 @@ namespace trovagiocatoriApp.Views
                     return;
                 }
 
-                // Crea la richiesta HTTP
-                var request = new HttpRequestMessage(HttpMethod.Post, $"{_pythonApiUrl}/posts/");
-
-                // Aggiungi il cookie di sessione
-                request.Headers.Add("Cookie", $"session_id={sessionCookie}");
-
-                // Aggiungi il contenuto JSON
-                var json = JsonSerializer.Serialize(post);
-                request.Content = new StringContent(json, Encoding.UTF8, "application/json");
+                var post = CreatePostObject();
+                var request = CreatePostRequest(post, sessionCookie);
 
                 var response = await _httpClient.SendAsync(request);
 
                 if (response.IsSuccessStatusCode)
                 {
-                    var giocatoriText = NumeroGiocatori == 1 ? "1 giocatore" : $"{NumeroGiocatori} giocatori";
-                    var successMessage = SelectedSportField != null
-                        ? $"Il tuo post è stato creato!\n\nCampo selezionato: {SelectedSportField.Nome}\nLivello: {post.livello}\nCerchi: {giocatoriText}"
-                        : $"Il tuo post è stato creato!\n\nLivello: {post.livello}\nCerchi: {giocatoriText}";
-
-                    await DisplayAlert("Post creato", successMessage, "OK");
+                    await ShowSuccessMessage(post);
                     await Shell.Current.GoToAsync("//HomePage");
                 }
                 else
@@ -365,6 +279,82 @@ namespace trovagiocatoriApp.Views
             }
         }
 
+        // ========== HELPER METHODS ==========
+
+        // Aggiorna il contatore caratteri per un campo di testo
+        private void UpdateCharacterCount(string text, Label label, int maxLength)
+        {
+            var remainingChars = maxLength - (text?.Length ?? 0);
+            label.Text = $"Caratteri rimanenti: {remainingChars}";
+        }
+
+        // Valida tutti i campi del form
+        private bool ValidateForm()
+        {
+            if (string.IsNullOrWhiteSpace(TitoloEntry.Text) ||
+                string.IsNullOrWhiteSpace(ProvinciaEntry.Text) ||
+                string.IsNullOrWhiteSpace(CittaEntry.Text) ||
+                SportPicker.SelectedItem == null ||
+                LivelloPicker.SelectedItem == null ||
+                string.IsNullOrWhiteSpace(CommentoEditor.Text))
+            {
+                DisplayAlert("Errore", "Tutti i campi sono obbligatori", "OK");
+                return false;
+            }
+
+            if (!ProvinceOptions.Contains(ProvinciaEntry.Text))
+            {
+                DisplayAlert("Errore", "Seleziona una provincia valida dalla lista", "OK");
+                return false;
+            }
+
+            return true;
+        }
+
+        // Crea l'oggetto post con tutti i dati
+        private object CreatePostObject()
+        {
+            var formattedTime = OraPartitaPicker.Time.ToString(@"hh\:mm");
+
+            return new
+            {
+                titolo = TitoloEntry.Text,
+                provincia = ProvinciaEntry.Text,
+                citta = CittaEntry.Text,
+                sport = SportPicker.SelectedItem.ToString(),
+                data_partita = DataPartitaPicker.Date.ToString("dd-MM-yyyy"),
+                ora_partita = formattedTime,
+                commento = CommentoEditor.Text,
+                campo_id = SelectedSportField?.Id,
+                livello = LivelloPicker.SelectedItem?.ToString() ?? "Intermedio",
+                numero_giocatori = NumeroGiocatori
+            };
+        }
+
+        // Crea la richiesta HTTP per creare il post
+        private HttpRequestMessage CreatePostRequest(object post, string sessionCookie)
+        {
+            var request = new HttpRequestMessage(HttpMethod.Post, $"{ApiConfig.PythonApiUrl}/posts/");
+            request.Headers.Add("Cookie", $"session_id={sessionCookie}");
+
+            var json = JsonSerializer.Serialize(post);
+            request.Content = new StringContent(json, Encoding.UTF8, "application/json");
+
+            return request;
+        }
+
+        // Mostra il messaggio di successo dopo la creazione
+        private async Task ShowSuccessMessage(object post)
+        {
+            var giocatoriText = NumeroGiocatori == 1 ? "1 giocatore" : $"{NumeroGiocatori} giocatori";
+            var successMessage = SelectedSportField != null
+                ? $"Il tuo post è stato creato!\n\nCampo selezionato: {SelectedSportField.Nome}\nLivello: {((dynamic)post).livello}\nCerchi: {giocatoriText}"
+                : $"Il tuo post è stato creato!\n\nLivello: {((dynamic)post).livello}\nCerchi: {giocatoriText}";
+
+            await DisplayAlert("Post creato", successMessage, "OK");
+        }
+
+        // Implementazione INotifyPropertyChanged
         public new event PropertyChangedEventHandler PropertyChanged;
 
         protected override void OnPropertyChanged([CallerMemberName] string propertyName = null)
