@@ -278,11 +278,29 @@
                             </DataTemplate>
                         </CollectionView.ItemTemplate>
                         <CollectionView.EmptyView>
-                            <VerticalStackLayout Spacing="10" HorizontalOptions="Center" Padding="20">
-                                <Label Text="📝" FontSize="40" HorizontalOptions="Center" Opacity="0.5"/>
-                                <Label Text="Non hai ancora creato eventi" HorizontalOptions="Center" FontSize="16" TextColor="#888"/>
-                                <Label Text="Crea il tuo primo evento per iniziare!" HorizontalOptions="Center" FontSize="14" TextColor="#AAA" HorizontalTextAlignment="Center"/>
-                            </VerticalStackLayout>
+                            <Grid RowDefinitions="Auto,Auto,Auto" 
+                                  RowSpacing="12" 
+                                  HorizontalOptions="Center" 
+                                  VerticalOptions="Center" 
+                                  Padding="32">
+                                <Label Grid.Row="0" 
+                                       Text="📝" 
+                                       FontSize="40" 
+                                       HorizontalOptions="Center" 
+                                       Opacity="0.5"/>
+                                <Label Grid.Row="1" 
+                                       Text="Non hai ancora creato eventi" 
+                                       FontSize="16" 
+                                       TextColor="#888"
+                                       HorizontalOptions="Center"
+                                       HorizontalTextAlignment="Center"/>
+                                <Label Grid.Row="2" 
+                                       Text="Crea il tuo primo evento per iniziare!" 
+                                       FontSize="14" 
+                                       TextColor="#AAA"
+                                       HorizontalOptions="Center"
+                                       HorizontalTextAlignment="Center"/>
+                            </Grid>
                         </CollectionView.EmptyView>
                     </CollectionView>
                 </VerticalStackLayout>
@@ -402,11 +420,29 @@
                             </DataTemplate>
                         </CollectionView.ItemTemplate>
                         <CollectionView.EmptyView>
-                            <VerticalStackLayout Spacing="10" HorizontalOptions="Center" Padding="20">
-                                <Label Text="📅" FontSize="40" HorizontalOptions="Center" Opacity="0.5"/>
-                                <Label Text="Nessun evento in programma" HorizontalOptions="Center" FontSize="16" TextColor="#888"/>
-                                <Label Text="Iscriviti agli eventi per vederli qui!" HorizontalOptions="Center" FontSize="14" TextColor="#AAA" HorizontalTextAlignment="Center"/>
-                            </VerticalStackLayout>
+                            <Grid RowDefinitions="Auto,Auto,Auto" 
+                                  RowSpacing="12" 
+                                  HorizontalOptions="Center" 
+                                  VerticalOptions="Center" 
+                                  Padding="32">
+                                <Label Grid.Row="0" 
+                                   Text="📅" 
+                                   FontSize="40" 
+                                   HorizontalOptions="Center" 
+                                   Opacity="0.5"/>
+                                <Label Grid.Row="1" 
+                                   Text="Nessun evento in programma" 
+                                   FontSize="16" 
+                                   TextColor="#888"
+                                   HorizontalOptions="Center"
+                                   HorizontalTextAlignment="Center"/>
+                                <Label Grid.Row="2" 
+                                   Text="Iscriviti agli eventi per vederli qui!" 
+                                   FontSize="14" 
+                                   TextColor="#AAA"
+                                   HorizontalOptions="Center"
+                                   HorizontalTextAlignment="Center"/>
+                            </Grid>
                         </CollectionView.EmptyView>
                     </CollectionView>
                 </VerticalStackLayout>
@@ -452,11 +488,29 @@
                             </DataTemplate>
                         </CollectionView.ItemTemplate>
                         <CollectionView.EmptyView>
-                            <VerticalStackLayout Spacing="10" HorizontalOptions="Center" Padding="20">
-                                <Label Text="❤️" FontSize="40" HorizontalOptions="Center" Opacity="0.5"/>
-                                <Label Text="Nessun evento nei preferiti" HorizontalOptions="Center" FontSize="16" TextColor="#888"/>
-                                <Label Text="Aggiungi eventi ai preferiti per vederli qui!" HorizontalOptions="Center" FontSize="14" TextColor="#AAA" HorizontalTextAlignment="Center"/>
-                            </VerticalStackLayout>
+                            <Grid RowDefinitions="Auto,Auto,Auto" 
+                                  RowSpacing="12" 
+                                  HorizontalOptions="Center" 
+                                  VerticalOptions="Center" 
+                                  Padding="32">
+                                <Label Grid.Row="0" 
+                                   Text="❤️" 
+                                   FontSize="40" 
+                                   HorizontalOptions="Center" 
+                                   Opacity="0.5"/>
+                                <Label Grid.Row="1" 
+                                   Text="Nessun evento nei preferiti" 
+                                   FontSize="16" 
+                                   TextColor="#888"
+                                   HorizontalOptions="Center"
+                                   HorizontalTextAlignment="Center"/>
+                                <Label Grid.Row="2" 
+                                   Text="Aggiungi eventi ai preferiti per vederli qui!" 
+                                   FontSize="14" 
+                                   TextColor="#AAA"
+                                   HorizontalOptions="Center"
+                                   HorizontalTextAlignment="Center"/>
+                            </Grid>
                         </CollectionView.EmptyView>
                     </CollectionView>
                 </VerticalStackLayout>

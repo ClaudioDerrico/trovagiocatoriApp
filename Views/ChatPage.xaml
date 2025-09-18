@@ -107,35 +107,50 @@
                 <StackLayout x:Name="MessagesContainer" Spacing="0">
                     <!-- I messaggi verranno aggiunti dinamicamente qui -->
 
-                    <!-- Placeholder per quando non ci sono messaggi -->
-                    <StackLayout x:Name="EmptyStateContainer" 
-                               IsVisible="True"
-                               VerticalOptions="CenterAndExpand" 
-                               HorizontalOptions="Center"
-                               Padding="40">
-                        <Frame BackgroundColor="White"
+                    <!-- Placeholder per quando non ci sono messaggi - CORRETTO -->
+                    <Grid x:Name="EmptyStateContainer" 
+                          IsVisible="True"
+                          RowDefinitions="Auto,Auto,Auto"
+                          RowSpacing="16"
+                          VerticalOptions="CenterAndExpand" 
+                          HorizontalOptions="Center"
+                          Padding="40">
+
+                        <Frame Grid.Row="0"
+                               BackgroundColor="White"
                                Opacity="0.9"
                                CornerRadius="20"
                                Padding="30"
-                               HasShadow="True">
-                            <StackLayout Spacing="16">
-                                <Label Text="💬" 
+                               HasShadow="True"
+                               HorizontalOptions="Center">
+
+                            <Grid RowDefinitions="Auto,Auto,Auto" 
+                                  RowSpacing="16"
+                                  HorizontalOptions="Center">
+
+                                <Label Grid.Row="0" 
+                                       Text="💬" 
                                        FontSize="48" 
-                                       HorizontalOptions="Center"/>
-                                <Label Text="Inizia una conversazione" 
+                                       HorizontalOptions="Center"
+                                       HorizontalTextAlignment="Center"/>
+
+                                <Label Grid.Row="1" 
+                                       Text="Inizia una conversazione" 
                                        FontSize="18" 
                                        FontAttributes="Bold"
                                        TextColor="#333333"
                                        HorizontalOptions="Center"
                                        HorizontalTextAlignment="Center"/>
-                                <Label Text="I tuoi messaggi appariranno qui"
+
+                                <Label Grid.Row="2" 
+                                       Text="I tuoi messaggi appariranno qui"
                                        FontSize="14"
                                        TextColor="#666666"
                                        HorizontalOptions="Center"
                                        HorizontalTextAlignment="Center"/>
-                            </StackLayout>
+                            </Grid>
                         </Frame>
-                    </StackLayout>
+                    </Grid>
                 </StackLayout>
             </ScrollView>
         </Grid>

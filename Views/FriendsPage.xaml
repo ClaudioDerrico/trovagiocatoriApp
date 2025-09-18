@@ -314,19 +314,19 @@
                             </DataTemplate>
                         </CollectionView.ItemTemplate>
                         <CollectionView.EmptyView>
-                            <VerticalStackLayout Spacing="16" HorizontalOptions="Center" Padding="32">
-                                <Label Text="AMICI" FontSize="36" HorizontalOptions="Center" Opacity="0.5"/>
-                                <Label Text="Nessun amico ancora"
-                                       HorizontalOptions="Center"
-                                       FontSize="18"
-                                       FontAttributes="Bold"
-                                       TextColor="{StaticResource TextSecondary}"/>
-                                <Label Text="Usa la barra di ricerca sopra per trovare e aggiungere amici!"
-                                       HorizontalOptions="Center"
-                                       FontSize="14"
-                                       TextColor="{StaticResource TextSecondary}"
-                                       HorizontalTextAlignment="Center"/>
-                            </VerticalStackLayout>
+                            <Grid RowDefinitions="Auto,Auto,Auto" RowSpacing="16" HorizontalOptions="Center" Padding="32">
+                                <Label Grid.Row="0" Text="👥" FontSize="36" HorizontalOptions="Center" Opacity="0.5"/>
+                                <Label Grid.Row="1" Text="Nessun amico ancora"
+                                   HorizontalOptions="Center"
+                                   FontSize="18"
+                                   FontAttributes="Bold"
+                                   TextColor="{StaticResource TextSecondary}"/>
+                                 <Label Grid.Row="2" Text="Usa la barra di ricerca sopra per trovare e aggiungere amici!"
+                                        HorizontalOptions="Center"
+                                        FontSize="14"
+                                        TextColor="{StaticResource TextSecondary}"
+                                        HorizontalTextAlignment="Center"/>
+                            </Grid>
                         </CollectionView.EmptyView>
                     </CollectionView>
                 </VerticalStackLayout>
@@ -382,19 +382,20 @@
                             </DataTemplate>
                         </CollectionView.ItemTemplate>
                         <CollectionView.EmptyView>
-                            <VerticalStackLayout Spacing="16" HorizontalOptions="Center" Padding="32">
-                                <Label Text="INVIATE" FontSize="36" HorizontalOptions="Center" Opacity="0.5"/>
-                                <Label Text="Nessuna richiesta inviata"
+                            <Grid RowDefinitions="Auto,Auto,Auto" RowSpacing="16" HorizontalOptions="Center" Padding="32">
+
+                                <Label Grid.Row="0" Text="INVIATE" FontSize="36" HorizontalOptions="Center" Opacity="0.5"/>
+                                <Label Grid.Row="1" Text="Nessuna richiesta inviata"
                                        HorizontalOptions="Center"
                                        FontSize="18"
                                        FontAttributes="Bold"
                                        TextColor="{StaticResource TextSecondary}"/>
-                                <Label Text="Le richieste di amicizia che invii appariranno qui"
+                                <Label Grid.Row="2" Text="Le richieste di amicizia che invii appariranno qui"
                                        HorizontalOptions="Center"
                                        FontSize="14"
                                        TextColor="{StaticResource TextSecondary}"
                                        HorizontalTextAlignment="Center"/>
-                            </VerticalStackLayout>
+                            </Grid>
                         </CollectionView.EmptyView>
                     </CollectionView>
                 </VerticalStackLayout>
@@ -458,19 +459,20 @@
                             </DataTemplate>
                         </CollectionView.ItemTemplate>
                         <CollectionView.EmptyView>
-                            <VerticalStackLayout Spacing="16" HorizontalOptions="Center" Padding="32">
-                                <Label Text="RICEVUTE" FontSize="36" HorizontalOptions="Center" Opacity="0.5"/>
-                                <Label Text="Nessuna richiesta ricevuta"
+                            <Grid RowDefinitions="Auto,Auto,Auto" RowSpacing="16" HorizontalOptions="Center" Padding="32">
+
+                                <Label Grid.Row="0" Text="RICEVUTE" FontSize="36" HorizontalOptions="Center" Opacity="0.5"/>
+                                <Label Grid.Row="1" Text="Nessuna richiesta ricevuta"
                                        HorizontalOptions="Center"
                                        FontSize="18"
                                        FontAttributes="Bold"
                                        TextColor="{StaticResource TextSecondary}"/>
-                                <Label Text="Le richieste di amicizia che ricevi appariranno qui"
+                                <Label Grid.Row="2" Text="Le richieste di amicizia che ricevi appariranno qui"
                                        HorizontalOptions="Center"
                                        FontSize="14"
                                        TextColor="{StaticResource TextSecondary}"
                                        HorizontalTextAlignment="Center"/>
-                            </VerticalStackLayout>
+                            </Grid>
                         </CollectionView.EmptyView>
                     </CollectionView>
                 </VerticalStackLayout>
