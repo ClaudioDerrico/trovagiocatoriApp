@@ -186,7 +186,7 @@
                             <Frame BackgroundColor="#FEF3C7" BorderColor="{StaticResource WarningColor}" CornerRadius="8" Padding="12" HasShadow="False">
                                 <HorizontalStackLayout Spacing="8">
                                     <Label Text="⚠️" FontSize="16" VerticalOptions="Center"/>
-                                    <Label Text="Utilizza le schede sopra per gestire i contenuti della piattaforma. Tutte le azioni sono registrate e reversibili tramite backup."
+                                    <Label Text="Utilizza le schede sopra per gestire i contenuti."
                                            FontSize="13"
                                            TextColor="#92400E"
                                            LineBreakMode="WordWrap"
