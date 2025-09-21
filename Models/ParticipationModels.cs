@@ -24,7 +24,7 @@ namespace trovagiocatoriApp.Models
         public string email { get; set; }
         public string profile_picture { get; set; }
         public DateTime registered_at { get; set; }
-        public bool IsOrganizer { get; set; } // AGGIUNTO
+        public bool IsOrganizer { get; set; } 
 
         // Proprietà computed per il display name
         public string DisplayName =>

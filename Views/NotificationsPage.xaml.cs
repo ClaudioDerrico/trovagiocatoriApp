@@ -26,7 +26,7 @@ namespace trovagiocatoriApp.Views
             try
             {
                 ShowLoadingState(true);
-
+                //max 50 notifiche per richiesta
                 var request = CreateAuthenticatedRequest(HttpMethod.Get, "/notifications?limit=50");
                 var response = await _client.SendAsync(request);
 
@@ -305,7 +305,7 @@ namespace trovagiocatoriApp.Views
         {
             return new Frame
             {
-                BackgroundColor = Color.FromArgb("#EF4444"),
+                BackgroundColor = Color.FromArgb("#EF4444"), // Rosso
                 CornerRadius = 6,
                 Padding = new Thickness(6, 2),
                 HasShadow = false,

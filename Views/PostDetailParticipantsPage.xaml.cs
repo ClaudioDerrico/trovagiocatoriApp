@@ -24,7 +24,7 @@ namespace trovagiocatoriApp.Views
         private readonly string _pythonApiBaseUrl = ApiConfig.PythonApiUrl;
 
         // Stato dei tab
-        private bool _isParticipantsTabActive = true;
+        private bool _isParticipantsTabActive = true; 
 
         // Dati partecipanti
         private int _participantsCount = 0;
@@ -54,11 +54,11 @@ namespace trovagiocatoriApp.Views
             // Imposta le informazioni dell'evento nell'header
             UpdateEventHeader();
 
-            // Mostra info chat per organizzatore
+            // Mostra info chat per organizzatore       
             OrganizerChatInfo.IsVisible = _isPostAuthor;
 
-            // Se richiesto, inizia con la tab chat
-            if (startWithChat)
+           
+            if (startWithChat) 
             {
                 _isParticipantsTabActive = false;
                 UpdateTabsUI();
@@ -101,7 +101,8 @@ namespace trovagiocatoriApp.Views
                 if (response.IsSuccessStatusCode)
                 {
                     var json = await response.Content.ReadAsStringAsync();
-                    var userData = JsonSerializer.Deserialize<Dictionary<string, object>>(json);
+                    var userData = JsonSerializer.Deserialize<Dictionary<string, object>>(json); //string: nome del campo json, es:"nome"
+                    //object: valore del campo json es: ""Mario"
 
                     if (userData.ContainsKey("email"))
                     {
@@ -144,7 +145,7 @@ namespace trovagiocatoriApp.Views
         }
 
         private void UpdateTabsUI()
-        {
+        { //se isParticipantsTabActive è true, attiva il tab Partecipanti, altrimenti attiva il tab Chat
             if (_isParticipantsTabActive)
             {
                 // Attiva tab Partecipanti
@@ -208,7 +209,8 @@ namespace trovagiocatoriApp.Views
                     Participants.Clear();
                     foreach (var participant in participantsData.participants ?? new List<ParticipantInfo>())
                     {
-                        // Aggiungi flag per identificare l'organizzatore
+                        // flag per identificare l'organizzatore
+                        // Se organizzatore, IsOrganizer = true
                         participant.IsOrganizer = participant.email.Equals(_postAuthorEmail, StringComparison.OrdinalIgnoreCase);
                         Participants.Add(participant);
                     }
@@ -228,16 +230,16 @@ namespace trovagiocatoriApp.Views
             }
         }
 
-        private void UpdateParticipantsUI()
+        private void UpdateParticipantsUI() // Aggiorna la UI in base al ruolo dell'utente
         {
             // Forza l'aggiornamento del binding context per far scattare i trigger XAML
             OnPropertyChanged(nameof(IsPostAuthor));
         }
 
-        // ========== GESTIONE CHAT PRIVATA ==========
 
-        private async void OnChatWithParticipantClicked(object sender, EventArgs e)
-        {
+        // ========== GESTIONE CHAT PRIVATA ==========
+                private async void OnChatWithParticipantClicked(object sender, EventArgs e)
+                {
             if (sender is ImageButton button && button.CommandParameter is ParticipantInfo participant)
             {
                 Debug.WriteLine($"[CHAT] Organizzatore {_currentUserEmail} vuole chattare con {participant.email}");
@@ -338,7 +340,7 @@ namespace trovagiocatoriApp.Views
                     var comments = JsonSerializer.Deserialize<List<Comment>>(json,
                         new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
 
-                    Comments.Clear();
+                    Comments.Clear(); // Pulisce la collezione prima di ricaricare
                     foreach (var comment in comments ?? new List<Comment>())
                     {
                         comment.autore_username = await GetUsernameByEmail(comment.autore_email);

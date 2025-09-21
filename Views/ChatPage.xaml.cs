@@ -276,7 +276,7 @@ namespace trovagiocatoriApp.Views
                     _isTyping = false;
                 }
 
-                //  Non aggiungiamo più manualmente il messaggio alla UI
+                
                 // Il messaggio arriverà dal server tramite new_private_message
                 await _chatService.SendMessageAsync(_recipientEmail, messageToSend);
 

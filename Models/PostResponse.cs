@@ -26,7 +26,7 @@ namespace trovagiocatoriApp.Models
         public int partecipanti_iscritti { get; set; } = 0;
         public int posti_disponibili { get; set; } = 1;
 
-        // NUOVO: Proprietà per lo stato "completo/aperto"
+        //  Proprietà per lo stato "completo/aperto"
         public bool is_full { get; set; } = false;
         public bool IsInvite { get; set; } = false;
         public long InviteID { get; set; }

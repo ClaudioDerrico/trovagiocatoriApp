@@ -123,7 +123,7 @@ namespace trovagiocatoriApp.Services
                 try
                 {
                     var historyJson = response.GetValue<JsonElement>();
-                    var messagesArray = historyJson.GetProperty("messages").EnumerateArray();
+                    var messagesArray = historyJson.GetProperty("messages").EnumerateArray(); //Restituisce un enumerable di JsonElement, che posso ciclare con foreach.
 
                     var historyMessages = new List<LiveChatMessage>();
                     foreach (var messageElement in messagesArray)
@@ -146,7 +146,7 @@ namespace trovagiocatoriApp.Services
                 }
             });
 
-            // CORREZIONE: TUTTI i messaggi vengono gestiti qui (sia nostri che ricevuti)
+            //  TUTTI i messaggi vengono gestiti qui (sia nostri che ricevuti)
             _socket.On("new_private_message", response =>
             {
                 try
@@ -160,7 +160,7 @@ namespace trovagiocatoriApp.Services
                     MainThread.BeginInvokeOnMainThread(() =>
                     {
                         // Trova la chat room corretta
-                        var chatKey = GetChatKey(message.SenderEmail, message.RecipientEmail);
+                        var chatKey = GetChatKey(message.SenderEmail, message.RecipientEmail); 
                         if (!ChatMessages.ContainsKey(chatKey))
                         {
                             ChatMessages[chatKey] = new ObservableCollection<LiveChatMessage>();
@@ -287,7 +287,7 @@ namespace trovagiocatoriApp.Services
             }
         }
 
-        // CORREZIONE: Invia messaggio e ASPETTA la conferma dal server
+        //  Invia messaggio e ASPETTA la conferma dal server
         public async Task SendMessageAsync(string recipientEmail, string message)
         {
             if (!_isConnected)
@@ -384,7 +384,7 @@ namespace trovagiocatoriApp.Services
                 Debug.WriteLine("[CHAT] Socket disconnesso manualmente");
             }
         }
-
+        // Ottiene i messaggi per una chat specifica
         public ObservableCollection<LiveChatMessage> GetMessagesForChat(string otherUserEmail)
         {
             var chatKey = GetChatKey(_currentUserEmail, otherUserEmail);

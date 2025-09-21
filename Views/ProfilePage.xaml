@@ -10,7 +10,7 @@
         <ResourceDictionary>
             <converters:IsNotNullConverter x:Key="IsNotNullConverter"/>
             <converters:AvailabilityColorConverter x:Key="AvailabilityColorConverter"/>
-            <!-- NUOVO: Converter per invertire boolean -->
+            <!-- Converter per invertire boolean -->
             <converters:InvertBooleanConverter x:Key="InvertBooleanConverter"/>
 
             <!-- Colori del tema -->
@@ -366,7 +366,7 @@
                                             <Label Text="{Binding provincia}" FontSize="13" TextColor="#666"/>
                                         </HorizontalStackLayout>
 
-                                        <!-- NUOVO: Badge speciale per inviti -->
+                                        <!-- Badge speciale per inviti -->
                                         <Frame Grid.Row="3" CornerRadius="8" Padding="8,4" HasShadow="False" Margin="0,4,0,0" IsVisible="{Binding IsInvite}">
                                             <Frame.Triggers>
                                                 <DataTrigger TargetType="Frame" Binding="{Binding IsInvite}" Value="True">
@@ -392,7 +392,7 @@
                                             </HorizontalStackLayout>
                                         </HorizontalStackLayout>
 
-                                        <!-- NUOVO: Pulsanti azione per inviti -->
+                                        <!-- Pulsanti azione per inviti -->
                                         <Grid Grid.Row="4" ColumnDefinitions="*,*" ColumnSpacing="8" Margin="0,8,0,0" IsVisible="{Binding IsInvite}">
                                             <Button Grid.Column="0"
                                                     Text="✅ Accetta"

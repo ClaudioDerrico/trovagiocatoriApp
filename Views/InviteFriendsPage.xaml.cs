@@ -14,7 +14,7 @@ namespace trovagiocatoriApp.Views
     {
         private readonly int _postId;
         private readonly PostResponse _currentPost;
-        private readonly List<FriendInfo> _allFriends; // Mantenuto per fallback
+        private readonly List<FriendInfo> _allFriends; 
         private static readonly HttpClient _sharedClient = CreateHttpClient();
         private readonly string _apiBaseUrl = ApiConfig.BaseUrl;
 
@@ -37,7 +37,7 @@ namespace trovagiocatoriApp.Views
             // Inizializza UI
             UpdateEventInfo();
 
-            // NUOVO: Carica solo gli amici disponibili per l'invito
+            // Carica solo gli amici disponibili per l'invito
             _ = LoadAvailableFriendsAsync();
         }
 
@@ -67,11 +67,11 @@ namespace trovagiocatoriApp.Views
 
             // Aggiorna il pulsante di fine
             FinishButton.Text = _selectedCount > 0
-                ? $"✅ Invia {_selectedCount} Inviti"
-                : "✅ Termina Inviti";
+                ? $"Invia {_selectedCount} Inviti"
+                : "Termina Inviti";
         }
 
-        // NUOVO: Carica solo gli amici disponibili per essere invitati
+        // Carica solo gli amici disponibili per essere invitati
         private async Task LoadAvailableFriendsAsync()
         {
             try
@@ -111,12 +111,12 @@ namespace trovagiocatoriApp.Views
                             Friends.Add(friend);
                         }
 
-                        Debug.WriteLine($"[INVITE] ✅ Caricati {Friends.Count} amici disponibili per l'invito");
+                        Debug.WriteLine($"[INVITE] Caricati {Friends.Count} amici disponibili per l'invito");
                     }
                 }
                 else
                 {
-                    Debug.WriteLine($"[INVITE] ⚠️ Errore nel caricamento amici disponibili: {response.StatusCode}");
+                    Debug.WriteLine($"[INVITE] Errore nel caricamento amici disponibili: {response.StatusCode}");
                     await UseFallbackFriendsList();
                 }
 
@@ -125,7 +125,7 @@ namespace trovagiocatoriApp.Views
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"[INVITE] ❌ Eccezione durante caricamento amici disponibili: {ex.Message}");
+                Debug.WriteLine($"[INVITE] Eccezione durante caricamento amici disponibili: {ex.Message}");
                 await UseFallbackFriendsList();
 
                 MainThread.BeginInvokeOnMainThread(() => UpdateStatistics());
@@ -178,7 +178,7 @@ namespace trovagiocatoriApp.Views
             }
         }
 
-        // MODIFICATO: Ora il pulsante "Invita" seleziona/deseleziona l'amico
+        //  Ora il pulsante "Invita" seleziona/deseleziona l'amico
         private async void OnInviteFriendClicked(object sender, EventArgs e)
         {
             if (sender is Button button && button.CommandParameter is FriendInfo friend)
@@ -207,12 +207,12 @@ namespace trovagiocatoriApp.Views
                         _selectedCount++;
 
                         // Aggiorna UI del pulsante per mostrare "Selezionato"
-                        button.Text = "✅ Selezionato";
+                        button.Text = " Selezionato";
                         button.Style = (Style)Resources["InvitedButtonStyle"];
                         button.BackgroundColor = Color.FromArgb("#FF9800");
                         button.IsEnabled = true; // Mantieni cliccabile per deselezionare
 
-                        Debug.WriteLine($"[INVITE] ✅ Selezionato {friend.Email}");
+                        Debug.WriteLine($"[INVITE] Selezionato {friend.Email}");
                     }
 
                     // Aggiorna statistiche
@@ -226,7 +226,7 @@ namespace trovagiocatoriApp.Views
             }
         }
 
-        // NUOVO: Invia tutti gli inviti selezionati
+        // Invia tutti gli inviti selezionati
         private async Task SendAllSelectedInvites()
         {
             var successCount = 0;
@@ -241,15 +241,15 @@ namespace trovagiocatoriApp.Views
                     if (success)
                     {
                         successCount++;
-                        Debug.WriteLine($"[INVITE] ✅ Invito inviato a {friendEmail}");
+                        Debug.WriteLine($"[INVITE] Invito inviato a {friendEmail}");
                     }
                     else
                     {
                         failCount++;
-                        Debug.WriteLine($"[INVITE] ❌ Invito fallito a {friendEmail}");
+                        Debug.WriteLine($"[INVITE] Invito fallito a {friendEmail}");
                     }
 
-                    // Piccola pausa tra gli inviti per evitare sovraccarico
+                    // Piccola pausa tra gli inviti
                     await Task.Delay(200);
                 }
                 catch (Exception ex)
@@ -260,10 +260,10 @@ namespace trovagiocatoriApp.Views
             }
 
             // Mostra risultato finale
-            var message = $"Inviti completati!\n✅ Inviati: {successCount}";
+            var message = $"Inviti completati!\n Inviati: {successCount}";
             if (failCount > 0)
             {
-                message += $"\n❌ Falliti: {failCount}";
+                message += $"\n Falliti: {failCount}";
             }
 
             await DisplayAlert("Inviti Inviati", message, "OK");
@@ -320,7 +320,7 @@ namespace trovagiocatoriApp.Views
             await Navigation.PopAsync();
         }
 
-        // MODIFICATO: Ora invia effettivamente tutti gli inviti selezionati
+        // Ora invia effettivamente tutti gli inviti selezionati
         private async void OnFinishInvitesClicked(object sender, EventArgs e)
         {
             if (_selectedCount == 0)
@@ -368,7 +368,7 @@ namespace trovagiocatoriApp.Views
             finally
             {
                 FinishButton.IsEnabled = true;
-                FinishButton.Text = "✅ Termina Inviti";
+                FinishButton.Text = "Termina Inviti";
             }
         }
     }

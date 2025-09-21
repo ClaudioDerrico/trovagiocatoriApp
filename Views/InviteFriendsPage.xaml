@@ -30,7 +30,7 @@
                 <Setter Property="Text" Value="Invita"/>
             </Style>
 
-            <!-- NUOVO: Stile per pulsante "Selezionato" -->
+            <!-- Stile per pulsante "Selezionato" -->
             <Style x:Key="SelectedButtonStyle" TargetType="Button">
                 <Setter Property="FontFamily" Value="OpenSansBold"/>
                 <Setter Property="FontSize" Value="12"/>
@@ -245,19 +245,30 @@
 						</DataTemplate>
 					</CollectionView.ItemTemplate>
                     <CollectionView.EmptyView>
-                        <VerticalStackLayout Spacing="16" HorizontalOptions="Center" Padding="32">
-                            <Label Text="✅" FontSize="40" HorizontalOptions="Center" Opacity="0.5"/>
-                            <Label Text="Tutti gli amici sono già coinvolti!"
-                                       HorizontalOptions="Center"
-                                       FontSize="18"
-                                       FontAttributes="Bold"
-                                       TextColor="{StaticResource TextSecondary}"/>
-                            <Label Text="I tuoi amici sono già stati invitati o stanno già partecipando a questo evento."
-                                       HorizontalOptions="Center"
-                                       FontSize="14"
-                                       TextColor="{StaticResource TextSecondary}"
-                                       HorizontalTextAlignment="Center"/>
-                        </VerticalStackLayout>
+                        <Grid RowDefinitions="Auto,Auto,Auto" 
+                          RowSpacing="16" 
+                          HorizontalOptions="Center" 
+                          VerticalOptions="Center" 
+                          Padding="32">
+                            <Label Grid.Row="0"
+                               Text="✅" 
+                               FontSize="40" 
+                               HorizontalOptions="Center" 
+                               Opacity="0.5"/>
+                            <Label Grid.Row="1"
+                               Text="Tutti gli amici sono già coinvolti!"
+                               FontSize="18"
+                               FontAttributes="Bold"
+                               TextColor="{StaticResource TextSecondary}"
+                               HorizontalOptions="Center"
+                               HorizontalTextAlignment="Center"/>
+                            <Label Grid.Row="2"
+                               Text="I tuoi amici sono già stati invitati o stanno già partecipando a questo evento."
+                               FontSize="14"
+                               TextColor="{StaticResource TextSecondary}"
+                               HorizontalOptions="Center"
+                               HorizontalTextAlignment="Center"/>
+                        </Grid>
                     </CollectionView.EmptyView>
                 </CollectionView>
 			</VerticalStackLayout>
