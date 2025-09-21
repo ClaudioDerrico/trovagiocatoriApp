@@ -278,11 +278,29 @@
                             </DataTemplate>
                         </CollectionView.ItemTemplate>
                         <CollectionView.EmptyView>
-                            <VerticalStackLayout Spacing="12" HorizontalOptions="Center" Padding="32">
-                                <Label Text="📝" FontSize="48" HorizontalOptions="Center" Opacity="0.5"/>
-                                <Label Text="Nessun post trovato" HorizontalOptions="Center" FontSize="16" TextColor="{StaticResource TextSecondary}"/>
-                                <Label Text="Prova a modificare i filtri di ricerca" HorizontalOptions="Center" FontSize="14" TextColor="{StaticResource TextSecondary}"/>
-                            </VerticalStackLayout>
+                            <Grid RowDefinitions="Auto,Auto,Auto" 
+                                  RowSpacing="12" 
+                                  HorizontalOptions="Center" 
+                                  VerticalOptions="Center" 
+                                  Padding="32">
+                                <Label Grid.Row="0"
+                                       Text="📝" 
+                                       FontSize="48" 
+                                       HorizontalOptions="Center" 
+                                       Opacity="0.5"/>
+                                <Label Grid.Row="1"
+                                       Text="Nessun post trovato" 
+                                       FontSize="16" 
+                                       TextColor="{StaticResource TextSecondary}"
+                                       HorizontalOptions="Center"
+                                       HorizontalTextAlignment="Center"/>
+                                <Label Grid.Row="2"
+                                       Text="Prova a modificare i filtri di ricerca" 
+                                       FontSize="14" 
+                                       TextColor="{StaticResource TextSecondary}"
+                                       HorizontalOptions="Center"
+                                       HorizontalTextAlignment="Center"/>
+                            </Grid>
                         </CollectionView.EmptyView>
                     </CollectionView>
                 </VerticalStackLayout>
@@ -346,11 +364,29 @@
                             </DataTemplate>
                         </CollectionView.ItemTemplate>
                         <CollectionView.EmptyView>
-                            <VerticalStackLayout Spacing="12" HorizontalOptions="Center" Padding="32">
-                                <Label Text="💬" FontSize="48" HorizontalOptions="Center" Opacity="0.5"/>
-                                <Label Text="Nessun commento trovato" HorizontalOptions="Center" FontSize="16" TextColor="{StaticResource TextSecondary}"/>
-                                <Label Text="Prova a modificare i filtri di ricerca" HorizontalOptions="Center" FontSize="14" TextColor="{StaticResource TextSecondary}"/>
-                            </VerticalStackLayout>
+                            <Grid RowDefinitions="Auto,Auto,Auto" 
+                                  RowSpacing="12" 
+                                  HorizontalOptions="Center" 
+                                  VerticalOptions="Center" 
+                                  Padding="32">
+                                <Label Grid.Row="0"
+                                       Text="💬" 
+                                       FontSize="48" 
+                                       HorizontalOptions="Center" 
+                                       Opacity="0.5"/>
+                                <Label Grid.Row="1"
+                                       Text="Nessun commento trovato" 
+                                       FontSize="16" 
+                                       TextColor="{StaticResource TextSecondary}"
+                                       HorizontalOptions="Center"
+                                       HorizontalTextAlignment="Center"/>
+                                <Label Grid.Row="2"
+                                       Text="Prova a modificare i filtri di ricerca" 
+                                       FontSize="14" 
+                                       TextColor="{StaticResource TextSecondary}"
+                                       HorizontalOptions="Center"
+                                       HorizontalTextAlignment="Center"/>
+                            </Grid>
                         </CollectionView.EmptyView>
                     </CollectionView>
                 </VerticalStackLayout>
@@ -437,11 +473,29 @@
                             </DataTemplate>
                         </CollectionView.ItemTemplate>
                         <CollectionView.EmptyView>
-                            <VerticalStackLayout Spacing="12" HorizontalOptions="Center" Padding="32">
-                                <Label Text="👥" FontSize="48" HorizontalOptions="Center" Opacity="0.5"/>
-                                <Label Text="Nessun utente trovato" HorizontalOptions="Center" FontSize="16" TextColor="{StaticResource TextSecondary}"/>
-                                <Label Text="Prova a modificare i filtri di ricerca" HorizontalOptions="Center" FontSize="14" TextColor="{StaticResource TextSecondary}"/>
-                            </VerticalStackLayout>
+                            <Grid RowDefinitions="Auto,Auto,Auto" 
+                                  RowSpacing="12" 
+                                  HorizontalOptions="Center" 
+                                  VerticalOptions="Center" 
+                                  Padding="32">
+                                <Label Grid.Row="0"
+                                       Text="👥" 
+                                       FontSize="48" 
+                                       HorizontalOptions="Center" 
+                                       Opacity="0.5"/>
+                                <Label Grid.Row="1"
+                                       Text="Nessun utente trovato" 
+                                       FontSize="16" 
+                                       TextColor="{StaticResource TextSecondary}"
+                                       HorizontalOptions="Center"
+                                       HorizontalTextAlignment="Center"/>
+                                <Label Grid.Row="2"
+                                   Text="Prova a modificare i filtri di ricerca" 
+                                   FontSize="14" 
+                                   TextColor="{StaticResource TextSecondary}"
+                                   HorizontalOptions="Center"
+                                   HorizontalTextAlignment="Center"/>
+                            </Grid>
                         </CollectionView.EmptyView>
                     </CollectionView>
                 </VerticalStackLayout>
