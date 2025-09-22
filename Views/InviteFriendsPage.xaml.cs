@@ -1,5 +1,4 @@
-﻿// Views/InviteFriendsPage.xaml.cs - VERSIONE AGGIORNATA CON FILTRAGGIO AUTOMATICO
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 using System.Text.Json;
 using System.Text;
 using System.Net.Http;

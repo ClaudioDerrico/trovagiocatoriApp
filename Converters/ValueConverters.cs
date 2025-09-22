@@ -30,7 +30,6 @@ namespace trovagiocatoriApp.Converters
         }
     }
 
-    // NUOVO: Converter per controllare se un numero è maggiore di zero
     public class IsGreaterThanZeroConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
@@ -53,7 +52,7 @@ namespace trovagiocatoriApp.Converters
         }
     }
 
-    // NUOVO: Converter per mostrare il colore in base alla disponibilità
+    // Converter per mostrare il colore in base alla disponibilità
     public class AvailabilityColorConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
@@ -71,7 +70,7 @@ namespace trovagiocatoriApp.Converters
         }
     }
 
-    // NUOVO: Converter per il testo della disponibilità
+    // Converter per il testo della disponibilità
     public class AvailabilityTextConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)

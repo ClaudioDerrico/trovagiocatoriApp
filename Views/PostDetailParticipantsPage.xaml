@@ -279,7 +279,7 @@
                                                     x:Name="ChatWithParticipantButton"
                                                     Clicked="OnChatWithParticipantClicked"
                                                     CommandParameter="{Binding .}">             
-                                                <!-- Logica di visibilità: mostra solo se l'utente corrente è organizzatore E questo partecipante NON è organizzatore -->
+                                                <!-- mostra solo se l'utente corrente è organizzatore e questo partecipante NON è organizzatore -->
                                                 <Button.Triggers>
                                                     <DataTrigger TargetType="Button" Binding="{Binding IsOrganizer}" Value="True">
                                                         <Setter Property="IsVisible" Value="False"/>
