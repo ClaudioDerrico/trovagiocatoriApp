@@ -143,7 +143,7 @@ namespace trovagiocatoriApp.Views
                     {
                         Friends.Add(friend);
                     }
-                    Debug.WriteLine($"[INVITE] 🔄 Usato fallback: {Friends.Count} amici dalla lista originale");
+                    Debug.WriteLine($"[INVITE] Usato fallback: {Friends.Count} amici dalla lista originale");
                 });
             });
         }
@@ -197,7 +197,7 @@ namespace trovagiocatoriApp.Views
                         button.BackgroundColor = Color.FromArgb("#10B981");
                         button.IsEnabled = true;
 
-                        Debug.WriteLine($"[INVITE] ❌ Deselezionato {friend.Email}");
+                        Debug.WriteLine($"[INVITE] Deselezionato {friend.Email}");
                     }
                     else
                     {

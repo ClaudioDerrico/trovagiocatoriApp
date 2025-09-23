@@ -282,7 +282,7 @@ namespace trovagiocatoriApp.Views
                     var chatPage = new ChatPage(_currentPost, _currentUserEmail, participant.email, true); // true = isPostAuthor
                     await Navigation.PushAsync(chatPage);
 
-                    Debug.WriteLine($"[CHAT] ✅ Chat avviata tra organizzatore {_currentUserEmail} e partecipante {participant.email}");
+                    Debug.WriteLine($"[CHAT] Chat avviata tra organizzatore {_currentUserEmail} e partecipante {participant.email}");
                 }
                 catch (Exception ex)
                 {
@@ -442,7 +442,7 @@ namespace trovagiocatoriApp.Views
                         await MessagesScrollView.ScrollToAsync(0, MessagesScrollView.ContentSize.Height, true);
                     });
 
-                    Debug.WriteLine($"[CHAT] ✅ Commento pubblico inviato da {_currentUserEmail}");
+                    Debug.WriteLine($"[CHAT] Commento pubblico inviato da {_currentUserEmail}");
                 }
                 else
                 {

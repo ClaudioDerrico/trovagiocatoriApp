@@ -146,7 +146,7 @@ namespace trovagiocatoriApp.Services
                     
                     var users = JsonSerializer.Deserialize<List<AdminUserInfo>>(json, _jsonOptions); //converte quel JSON in una lista (List<T>) di oggetti AdminUserInfo
 
-                    Debug.WriteLine($"[ADMIN_SERVICE] ✅ Caricati {users?.Count ?? 0} utenti");
+                    Debug.WriteLine($"[ADMIN_SERVICE] Caricati {users?.Count ?? 0} utenti");
                     return users ?? new List<AdminUserInfo>();
                 }
                 else

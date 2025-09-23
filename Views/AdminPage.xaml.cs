@@ -462,10 +462,10 @@ public partial class AdminPage : ContentPage
             bool confirm = await DisplayAlert(
                 "Elimina Post",
                 $"Sei sicuro di voler eliminare il post:\n\n" +
-                $"📝 {post.Titolo}\n" +
-                $"👤 di {post.AutoreEmail}\n" +
-                $"📅 {post.DataCreazione:dd/MM/yyyy}\n\n" +
-                $"⚠️ Questa azione è irreversibile e eliminerà anche tutti i commenti associati!",
+                $"Titolo del post: {post.Titolo}\n" +
+                $"Post di {post.AutoreEmail}\n" +
+                $"Data: {post.DataCreazione:dd/MM/yyyy}\n\n" +
+                $"Questa azione è irreversibile e eliminerà anche tutti i commenti associati!",
                 "Elimina",
                 "Annulla"
             );
@@ -501,12 +501,12 @@ public partial class AdminPage : ContentPage
                     $"Eliminati anche {commentsToRemove.Count} commenti associati.",
                     "OK");
 
-                Debug.WriteLine($"[ADMIN] ✅ Post {post.Id} eliminato con successo insieme a {commentsToRemove.Count} commenti");
+                Debug.WriteLine($"[ADMIN] Post {post.Id} eliminato con successo insieme a {commentsToRemove.Count} commenti");
             }
             else
             {
                 await DisplayAlert("Errore", "Impossibile eliminare il post. Riprova più tardi.", "OK");
-                Debug.WriteLine($"[ADMIN] ❌ Errore eliminazione post {post.Id}");
+                Debug.WriteLine($"[ADMIN] Errore eliminazione post {post.Id}");
             }
         }
         catch (Exception ex)
@@ -648,12 +648,12 @@ public partial class AdminPage : ContentPage
                         $"Ban revocato per {user.Username}!\n\n" +
                         $"L'utente può nuovamente accedere alla piattaforma.",
                         "OK");
-                    Debug.WriteLine($"[ADMIN] ✅ Ban revocato per {user.Username}");
+                    Debug.WriteLine($"[ADMIN] Ban revocato per {user.Username}");
                 }
                 else
                 {
                     await DisplayAlert("Errore", response.Error ?? "Errore durante la revoca del ban", "OK");
-                    Debug.WriteLine($"[ADMIN] ❌ Errore revoca ban {user.Username}: {response.Error}");
+                    Debug.WriteLine($"[ADMIN] Errore revoca ban {user.Username}: {response.Error}");
                 }
             }
 
@@ -696,7 +696,7 @@ public partial class AdminPage : ContentPage
             }
 
             await DisplayAlert("Aggiornato", "Tutti i dati sono stati aggiornati con successo!", "OK");
-            Debug.WriteLine("[ADMIN] ✅ Refresh completo completato");
+            Debug.WriteLine("[ADMIN] Refresh completo completato");
         }
         catch (Exception ex)
         {
