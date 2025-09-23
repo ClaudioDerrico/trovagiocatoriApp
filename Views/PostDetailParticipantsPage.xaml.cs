@@ -198,7 +198,7 @@ namespace trovagiocatoriApp.Views
                     var availabilityData = JsonSerializer.Deserialize<PostAvailabilityResponse>(availabilityJson,
                         new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
 
-                    _participantsCount = availabilityData.partecipanti_iscritti;
+                    _participantsCount = participantsData.count;
                     _postiDisponibili = availabilityData.posti_disponibili;
 
                     // Aggiorna la UI delle statistiche
