@@ -38,7 +38,7 @@ public partial class AdminPage : ContentPage
         InitializeComponent();
         BindingContext = this;
 
-        // Inizializza il service (normalmente dovrebbe essere iniettato via DI)
+        // Inizializza il service 
         _adminService = new AdminService();
         _banService = new BanService();
     }
@@ -48,7 +48,7 @@ public partial class AdminPage : ContentPage
         base.OnAppearing();
         await LoadAdminInfo();
         await LoadDashboardStats();
-        await LoadAllData(); // Questo ora include anche LoadAllBans()
+        await LoadAllData(); 
         await LoadBanStats(); // Carica statistiche ban
     }
 
@@ -75,7 +75,7 @@ public partial class AdminPage : ContentPage
                 var user = JsonSerializer.Deserialize<Models.User>(json,
                     new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
 
-                // NUOVO: Salva l'email dell'admin corrente
+                // Salva l'email dell'admin corrente
                 _currentAdminEmail = user.Email;
 
                 MainThread.BeginInvokeOnMainThread(() =>
@@ -98,7 +98,7 @@ public partial class AdminPage : ContentPage
         {
             Debug.WriteLine("[ADMIN] Caricamento statistiche ban...");
             var stats = await _banService.GetBanStatsAsync();
-            Debug.WriteLine($"[ADMIN] ✅ Ban Stats: {stats.ActiveBans} attivi, {stats.TotalBans} totali");
+            Debug.WriteLine($"[ADMIN] Ban Stats: {stats.ActiveBans} attivi, {stats.TotalBans} totali");
         }
         catch (Exception ex)
         {
@@ -112,7 +112,7 @@ public partial class AdminPage : ContentPage
         {
             Debug.WriteLine("[ADMIN] Caricamento ban attivi...");
             var bans = await _banService.GetActiveBansAsync();
-            Debug.WriteLine($"[ADMIN] ✅ Caricati {bans.Count} ban attivi");
+            Debug.WriteLine($"[ADMIN] Caricati {bans.Count} ban attivi");
         }
         catch (Exception ex)
         {
@@ -126,7 +126,6 @@ public partial class AdminPage : ContentPage
         {
             Debug.WriteLine("[ADMIN] Aggiornamento statistiche dashboard con dati locali...");
 
-            // Usa i dati già caricati nelle collezioni locali
             int totalPosts = AllPosts.Count;
             int totalComments = AllComments.Count;
             int totalUsers = AllUsers.Count;
@@ -136,10 +135,9 @@ public partial class AdminPage : ContentPage
                 TotalPostsLabel.Text = totalPosts.ToString();
                 TotalCommentsLabel.Text = totalComments.ToString();
                 TotalUsersLabel.Text = totalUsers.ToString();
-                // Rimossa la riga TotalFieldsLabel
             });
 
-            Debug.WriteLine($"[ADMIN] ✅ Statistiche aggiornate: {totalPosts} post, {totalComments} commenti, {totalUsers} utenti");
+            Debug.WriteLine($"[ADMIN] Statistiche aggiornate: {totalPosts} post, {totalComments} commenti, {totalUsers} utenti");
         }
         catch (Exception ex)
         {
@@ -151,7 +149,7 @@ public partial class AdminPage : ContentPage
                 TotalPostsLabel.Text = "0";
                 TotalCommentsLabel.Text = "0";
                 TotalUsersLabel.Text = "0";
-                // Rimossa la riga TotalFieldsLabel
+           
             });
         }
     }
@@ -168,7 +166,7 @@ public partial class AdminPage : ContentPage
     {
         try
         {
-            // Per ogni utente, controlla se è bannato (senza controlli di scadenza)
+            // Per ogni utente, controlla se è bannato 
             foreach (var user in AllUsers)
             {
                 var isBanned = await _banService.CheckUserBanStatusAsync(user.Id);
@@ -400,7 +398,7 @@ public partial class AdminPage : ContentPage
     private void FilterUsers()
     {
         var filtered = AllUsers.Where(u =>
-            // NUOVO: Escludi l'admin corrente dalla lista
+            // Escludi l'admin corrente dalla lista
             !u.Email.Equals(_currentAdminEmail, StringComparison.OrdinalIgnoreCase) &&
             (string.IsNullOrEmpty(_userSearchFilter) ||
             u.Username.ToLower().Contains(_userSearchFilter) ||
@@ -464,10 +462,10 @@ public partial class AdminPage : ContentPage
             bool confirm = await DisplayAlert(
                 "Elimina Post",
                 $"Sei sicuro di voler eliminare il post:\n\n" +
-                $"📝 {post.Titolo}\n" +
-                $"👤 di {post.AutoreEmail}\n" +
-                $"📅 {post.DataCreazione:dd/MM/yyyy}\n\n" +
-                $"⚠️ Questa azione è irreversibile e eliminerà anche tutti i commenti associati!",
+                $"Titolo del post: {post.Titolo}\n" +
+                $"Post di {post.AutoreEmail}\n" +
+                $"Data: {post.DataCreazione:dd/MM/yyyy}\n\n" +
+                $"Questa azione è irreversibile e eliminerà anche tutti i commenti associati!",
                 "Elimina",
                 "Annulla"
             );
@@ -503,12 +501,12 @@ public partial class AdminPage : ContentPage
                     $"Eliminati anche {commentsToRemove.Count} commenti associati.",
                     "OK");
 
-                Debug.WriteLine($"[ADMIN] ✅ Post {post.Id} eliminato con successo insieme a {commentsToRemove.Count} commenti");
+                Debug.WriteLine($"[ADMIN] Post {post.Id} eliminato con successo insieme a {commentsToRemove.Count} commenti");
             }
             else
             {
                 await DisplayAlert("Errore", "Impossibile eliminare il post. Riprova più tardi.", "OK");
-                Debug.WriteLine($"[ADMIN] ❌ Errore eliminazione post {post.Id}");
+                Debug.WriteLine($"[ADMIN] Errore eliminazione post {post.Id}");
             }
         }
         catch (Exception ex)
@@ -525,11 +523,11 @@ public partial class AdminPage : ContentPage
             bool confirm = await DisplayAlert(
                 "Elimina Commento",
                 $"Sei sicuro di voler eliminare il commento:\n\n" +
-                $"💬 {comment.ContenutoPreview}\n" +
-                $"👤 di {comment.AutoreEmail}\n" +
-                $"📝 nel post: {comment.PostTitolo}\n" +
-                $"📅 {comment.DataCreazione:dd/MM/yyyy HH:mm}\n\n" +
-                $"⚠️ Questa azione è irreversibile!",
+                $"{comment.ContenutoPreview}\n" +
+                $"di {comment.AutoreEmail}\n" +
+                $"nel post: {comment.PostTitolo}\n" +
+                $"{comment.DataCreazione:dd/MM/yyyy HH:mm}\n\n" +
+                $"Questa azione è irreversibile!",
                 "Elimina",
                 "Annulla"
             );
@@ -553,12 +551,12 @@ public partial class AdminPage : ContentPage
 
                 await DisplayAlert("Successo", "Commento eliminato con successo!", "OK");
 
-                Debug.WriteLine($"[ADMIN] ✅ Commento {comment.Id} eliminato con successo");
+                Debug.WriteLine($"[ADMIN] Commento {comment.Id} eliminato con successo");
             }
             else
             {
                 await DisplayAlert("Errore", "Impossibile eliminare il commento. Riprova più tardi.", "OK");
-                Debug.WriteLine($"[ADMIN] ❌ Errore eliminazione commento {comment.Id}");
+                Debug.WriteLine($"[ADMIN] Errore eliminazione commento {comment.Id}");
             }
         }
         catch (Exception ex)
@@ -580,9 +578,9 @@ public partial class AdminPage : ContentPage
                 bool confirm = await DisplayAlert(
                     "Ban Permanente",
                     $"Sei sicuro di voler bannare permanentemente {user.Username}?\n\n" +
-                    $"👤 {user.NomeCompleto}\n" +
-                    $"📧 {user.Email}\n\n" +
-                    $"⚠️ Il ban sarà PERMANENTE e l'utente non potrà più accedere alla piattaforma!\n\n" +
+                    $"{user.NomeCompleto}\n" +
+                    $"{user.Email}\n\n" +
+                    $"Il ban sarà PERMANENTE e l'utente non potrà più accedere alla piattaforma!\n\n" +
                     $"Questa azione può essere revocata solo manualmente dall'amministratore.",
                     "Ban Permanente",
                     "Annulla"
@@ -613,12 +611,12 @@ public partial class AdminPage : ContentPage
                         $"Utente {user.Username} bannato permanentemente!\n\n" +
                         $"Non potrà più accedere alla piattaforma fino a revoca manuale del ban.",
                         "OK");
-                    Debug.WriteLine($"[ADMIN] ✅ Utente {user.Username} bannato permanentemente");
+                    Debug.WriteLine($"[ADMIN] Utente {user.Username} bannato permanentemente");
                 }
                 else
                 {
                     await DisplayAlert("Errore", response.Error ?? "Errore durante il ban dell'utente", "OK");
-                    Debug.WriteLine($"[ADMIN] ❌ Errore ban {user.Username}: {response.Error}");
+                    Debug.WriteLine($"[ADMIN] Errore ban {user.Username}: {response.Error}");
                 }
             }
             else
@@ -627,8 +625,8 @@ public partial class AdminPage : ContentPage
                 bool confirm = await DisplayAlert(
                     "Revoca Ban",
                     $"Vuoi revocare il ban per {user.Username}?\n\n" +
-                    $"👤 {user.NomeCompleto}\n" +
-                    $"📧 {user.Email}\n\n" +
+                    $"{user.NomeCompleto}\n" +
+                    $"{user.Email}\n\n" +
                     $"L'utente potrà nuovamente accedere alla piattaforma.",
                     "Revoca Ban",
                     "Annulla"
@@ -650,12 +648,12 @@ public partial class AdminPage : ContentPage
                         $"Ban revocato per {user.Username}!\n\n" +
                         $"L'utente può nuovamente accedere alla piattaforma.",
                         "OK");
-                    Debug.WriteLine($"[ADMIN] ✅ Ban revocato per {user.Username}");
+                    Debug.WriteLine($"[ADMIN] Ban revocato per {user.Username}");
                 }
                 else
                 {
                     await DisplayAlert("Errore", response.Error ?? "Errore durante la revoca del ban", "OK");
-                    Debug.WriteLine($"[ADMIN] ❌ Errore revoca ban {user.Username}: {response.Error}");
+                    Debug.WriteLine($"[ADMIN] Errore revoca ban {user.Username}: {response.Error}");
                 }
             }
 
@@ -682,7 +680,7 @@ public partial class AdminPage : ContentPage
             var originalText = button?.Text;
             if (button != null)
             {
-                button.Text = "🔄 Aggiornamento...";
+                button.Text = "Aggiornamento...";
                 button.IsEnabled = false;
             }
 
@@ -698,7 +696,7 @@ public partial class AdminPage : ContentPage
             }
 
             await DisplayAlert("Aggiornato", "Tutti i dati sono stati aggiornati con successo!", "OK");
-            Debug.WriteLine("[ADMIN] ✅ Refresh completo completato");
+            Debug.WriteLine("[ADMIN] Refresh completo completato");
         }
         catch (Exception ex)
         {
@@ -723,6 +721,7 @@ public partial class AdminPage : ContentPage
         }
     }
 
+    //Mostra i post dell’utente selezionato
     private async void OnViewUserPostsClicked(object sender, EventArgs e)
     {
         if (sender is Button button && button.CommandParameter is AdminUserInfo user)
@@ -758,21 +757,10 @@ public partial class AdminPage : ContentPage
 
     protected override bool OnBackButtonPressed()
     {
-        // Gestione personalizzata del pulsante indietro se necessario
         return base.OnBackButtonPressed();
     }
 
-    private async void OnBackToMainClicked(object sender, EventArgs e)
-    {
-        try
-        {
-            await Navigation.PopAsync();
-        }
-        catch (Exception ex)
-        {
-            Debug.WriteLine($"[ADMIN] Errore navigazione indietro: {ex.Message}");
-        }
-    }
+
 
     // ========== GESTIONE CICLO DI VITA ==========
 

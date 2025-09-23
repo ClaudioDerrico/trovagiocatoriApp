@@ -131,7 +131,7 @@ namespace trovagiocatoriApp.Views
         // Carica i dati dell'utente autore del post
         private async Task<User> LoadUserDataAsync(string email)
         {
-            var encodedEmail = Uri.EscapeDataString(email);
+            var encodedEmail = Uri.EscapeDataString(email); //codifica una stringa in modo sicuro per un URL.
             var response = await _sharedClient.GetAsync(
                 $"{ApiConfig.BaseUrl}/api/user/by-email?email={encodedEmail}");
 
@@ -446,7 +446,7 @@ namespace trovagiocatoriApp.Views
             if (_isPostAuthor && OrganizerPostiLabel != null)
             {
                 OrganizerPostiLabel.Text = _isEventFull
-                    ? "Evento completo! 🎉"
+                    ? "Evento completo!"
                     : $"{_postiDisponibili} posti disponibili su {_currentPost.numero_giocatori}";
                 OrganizerPostiLabel.TextColor = _isEventFull ? Colors.Green : Colors.Orange;
             }
@@ -473,7 +473,7 @@ namespace trovagiocatoriApp.Views
             {
                 if (_isParticipant)
                 {
-                    StatusPartecipazioneLabel.Text = "✅ Sei iscritto a questo evento";
+                    StatusPartecipazioneLabel.Text =  "Sei iscritto a questo evento";
                     StatusPartecipazioneLabel.TextColor = Colors.Green;
                 }
                 else
@@ -739,10 +739,10 @@ namespace trovagiocatoriApp.Views
                 "Gestisci Amici per questo Evento",
                 "Annulla",
                 null,
-                "👥 Invita Amici all'Evento"
+                "Invita Amici all'Evento"
             );
 
-            if (action == "👥 Invita Amici all'Evento")
+            if (action == "Invita Amici all'Evento")
             {
                 await InviteFriendsToEvent();
             }
@@ -755,10 +755,10 @@ namespace trovagiocatoriApp.Views
                 "Opzioni Amico",
                 "Annulla",
                 null,
-                "❌ Rimuovi amicizia"
+                "Rimuovi amicizia"
             );
 
-            if (action == "❌ Rimuovi amicizia")
+            if (action == "Rimuovi amicizia")
             {
                 await RemoveFriend();
             }
@@ -771,10 +771,10 @@ namespace trovagiocatoriApp.Views
                 "Opzioni Utente",
                 "Annulla",
                 null,
-                "👥 Aggiungi come Amico"
+                "Aggiungi come Amico"
             );
 
-            if (action == "👥 Aggiungi come Amico")
+            if (action == "Aggiungi come Amico")
             {
                 await SendFriendRequest();
             }
@@ -804,7 +804,7 @@ namespace trovagiocatoriApp.Views
                 if (response.IsSuccessStatusCode)
                 {
                     await DisplayAlert("Successo", "Richiesta di amicizia inviata!", "OK");
-                    Debug.WriteLine($"[FRIENDS] ✅ Richiesta amicizia inviata a {_postAuthorEmail}");
+                    Debug.WriteLine($"[FRIENDS] Richiesta amicizia inviata a {_postAuthorEmail}");
                 }
                 else
                 {

@@ -107,7 +107,7 @@
                 <StackLayout x:Name="MessagesContainer" Spacing="0">
                     <!-- I messaggi verranno aggiunti dinamicamente qui -->
 
-                    <!-- Placeholder per quando non ci sono messaggi - CORRETTO -->
+                    <!-- Placeholder per quando non ci sono messaggi  -->
                     <Grid x:Name="EmptyStateContainer" 
                           IsVisible="True"
                           RowDefinitions="Auto,Auto,Auto"

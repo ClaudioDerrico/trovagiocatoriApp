@@ -1,5 +1,4 @@
-﻿// Converters/InvertBooleanConverter.cs
-using System;
+﻿using System;
 using System.Globalization;
 using Microsoft.Maui.Controls;
 

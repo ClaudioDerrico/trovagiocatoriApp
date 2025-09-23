@@ -56,7 +56,7 @@
                 <Setter Property="VerticalOptions" Value="Center"/>
             </Style>
 
-            <!-- NUOVO: Stile per il pulsante chat -->
+            <!-- Stile per il pulsante chat -->
             <Style x:Key="ChatButtonStyle" TargetType="ImageButton">
                 <Setter Property="BackgroundColor" Value="#10B981"/>
                 <Setter Property="CornerRadius" Value="20"/>
@@ -195,7 +195,7 @@
                             </Frame>
                         </HorizontalStackLayout>
 
-                        <!-- NUOVO: Messaggio informativo per organizzatore -->
+                        <!-- Messaggio informativo per organizzatore -->
                         <Frame x:Name="OrganizerChatInfo"
                                BackgroundColor="#E8F5E8"
                                BorderColor="#4CAF50"
@@ -264,7 +264,7 @@
                                                        FontAttributes="Bold"/>
                                             </Frame>
 
-                                            <!-- NUOVO: Pulsante Chat (visibile solo se utente è organizzatore E il partecipante NON è organizzatore) -->
+                                            <!-- Pulsante Chat (visibile solo se utente è organizzatore E il partecipante NON è organizzatore) -->
                                             <Button Grid.Column="3"
                                                     BackgroundColor="Transparent"
                                                     BorderColor="#10B981"
@@ -279,7 +279,7 @@
                                                     x:Name="ChatWithParticipantButton"
                                                     Clicked="OnChatWithParticipantClicked"
                                                     CommandParameter="{Binding .}">             
-                                                <!-- Logica di visibilità: mostra solo se l'utente corrente è organizzatore E questo partecipante NON è organizzatore -->
+                                                <!-- mostra solo se l'utente corrente è organizzatore e questo partecipante NON è organizzatore -->
                                                 <Button.Triggers>
                                                     <DataTrigger TargetType="Button" Binding="{Binding IsOrganizer}" Value="True">
                                                         <Setter Property="IsVisible" Value="False"/>

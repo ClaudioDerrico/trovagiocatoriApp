@@ -368,7 +368,7 @@ namespace trovagiocatoriApp.Views
                     SearchResults.Remove(user);
                     await LoadSentRequestsFromBackend();
                     await DisplayAlert("Successo", $"Richiesta di amicizia inviata a {user.Username}!", "OK");
-                    Debug.WriteLine($"[FRIENDS] ✅ Richiesta inviata a {user.Email}");
+                    Debug.WriteLine($"[FRIENDS] Richiesta inviata a {user.Email}");
                 }
                 else
                 {
@@ -534,7 +534,7 @@ namespace trovagiocatoriApp.Views
                 {
                     SentRequests.Remove(request);
                     await DisplayAlert("Richiesta annullata", $"Richiesta a {request.Username} annullata.", "OK");
-                    Debug.WriteLine($"[FRIENDS] ✅ Richiesta annullata a {request.Email}");
+                    Debug.WriteLine($"[FRIENDS] Richiesta annullata a {request.Email}");
                 }
                 else
                 {
@@ -577,7 +577,7 @@ namespace trovagiocatoriApp.Views
                     await LoadFriendsFromBackend();
                     await LoadReceivedRequestsFromBackend();
                     await DisplayAlert("Amicizia accettata", $"Ora sei amico di {request.Username}!", "OK");
-                    Debug.WriteLine($"[FRIENDS] ✅ Richiesta accettata da {request.Email}");
+                    Debug.WriteLine($"[FRIENDS] Richiesta accettata da {request.Email}");
                 }
                 else
                 {

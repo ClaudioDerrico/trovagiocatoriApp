@@ -32,7 +32,8 @@ namespace trovagiocatoriApp.Services
             _jsonOptions = new JsonSerializerOptions
             {
                 PropertyNameCaseInsensitive = true,
-                PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase //In JSON la convenzione è camelCase: prima lettera minuscola, poi maiuscola per le successive parole
+                //es: "userId"
             };
         }
 
@@ -55,7 +56,6 @@ namespace trovagiocatoriApp.Services
             {
                 Debug.WriteLine($"[BAN_SERVICE] Richiesta ban permanente per user ID: {banRequest.UserId}");
 
-                // Forza sempre ban permanente
                 banRequest.BanType = "permanent";
 
                 var json = JsonSerializer.Serialize(banRequest, _jsonOptions);
@@ -65,12 +65,12 @@ namespace trovagiocatoriApp.Services
                 request.Content = content;
 
                 var response = await _client.SendAsync(request);
-                var responseJson = await response.Content.ReadAsStringAsync();
+                var responseJson = await response.Content.ReadAsStringAsync(); // Legge il contenuto della risposta come stringa
 
                 if (response.IsSuccessStatusCode)
                 {
                     var banResponse = JsonSerializer.Deserialize<BanResponse>(responseJson, _jsonOptions);
-                    Debug.WriteLine($"[BAN_SERVICE] ✅ Utente {banRequest.UserId} bannato permanentemente");
+                    Debug.WriteLine($"[BAN_SERVICE] Utente {banRequest.UserId} bannato permanentemente");
                     return banResponse;
                 }
                 else
@@ -109,7 +109,7 @@ namespace trovagiocatoriApp.Services
                 if (response.IsSuccessStatusCode)
                 {
                     var banResponse = JsonSerializer.Deserialize<BanResponse>(responseJson, _jsonOptions);
-                    Debug.WriteLine($"[BAN_SERVICE] ✅ Utente {userId} sbannato con successo");
+                    Debug.WriteLine($"[BAN_SERVICE] Utente {userId} sbannato con successo");
                     return banResponse;
                 }
                 else
@@ -154,7 +154,7 @@ namespace trovagiocatoriApp.Services
                         var bansJson = JsonSerializer.Serialize(banResponse.Data);
                         var bans = JsonSerializer.Deserialize<List<UserBan>>(bansJson, _jsonOptions);
 
-                        Debug.WriteLine($"[BAN_SERVICE] ✅ Recuperati {bans?.Count ?? 0} ban attivi");
+                        Debug.WriteLine($"[BAN_SERVICE] Recuperati {bans?.Count ?? 0} ban attivi");
                         return bans ?? new List<UserBan>();
                     }
                 }
@@ -188,7 +188,7 @@ namespace trovagiocatoriApp.Services
                         var banJson = JsonSerializer.Serialize(banResponse.Data);
                         var userBan = JsonSerializer.Deserialize<UserBan>(banJson, _jsonOptions);
 
-                        Debug.WriteLine($"[BAN_SERVICE] ✅ Recuperato ban per user {userId}");
+                        Debug.WriteLine($"[BAN_SERVICE] Recuperato ban per user {userId}");
                         return userBan;
                     }
                 }
@@ -222,7 +222,7 @@ namespace trovagiocatoriApp.Services
                         var statsJson = JsonSerializer.Serialize(banResponse.Data);
                         var stats = JsonSerializer.Deserialize<BanStats>(statsJson, _jsonOptions);
 
-                        Debug.WriteLine($"[BAN_SERVICE] ✅ Recuperate statistiche ban");
+                        Debug.WriteLine($"[BAN_SERVICE] Recuperate statistiche ban");
                         return stats;
                     }
                 }
@@ -242,7 +242,7 @@ namespace trovagiocatoriApp.Services
             try
             {
                 var userBan = await GetUserBanAsync(userId);
-                // Solo controlla se è attivo, non ci sono più scadenze
+                // controlla se è attivo
                 return userBan != null && userBan.IsActive;
             }
             catch (Exception ex)
@@ -252,11 +252,7 @@ namespace trovagiocatoriApp.Services
             }
         }
 
-        // Metodi di utilità semplificati
-        public static string GetBanReasonOptions()
-        {
-            return "Violazione regole comunità|Spam|Linguaggio inappropriato|Comportamento molesto|Contenuti offensivi|Account fake|Altro";
-        }
+
 
         public void Dispose()
         {

@@ -63,7 +63,7 @@
                 </Setter>
             </Style>
 
-            <!-- MODIFICA: Stili per i pulsanti delle azioni (più grandi) -->
+            <!--  Stili per i pulsanti delle azioni  -->
             <Style x:Key="ActionButtonStyle" TargetType="Button">
                 <Setter Property="FontFamily" Value="OpenSansBold"/>
                 <Setter Property="FontSize" Value="12"/>
@@ -74,7 +74,7 @@
                 <Setter Property="MinimumWidthRequest" Value="70"/>
             </Style>
 
-            <!-- NUOVO: Stile specifico per pulsanti amici (ancora più grandi) -->
+            <!-- Stile specifico per pulsanti amici  -->
             <Style x:Key="FriendActionButtonStyle" TargetType="Button">
                 <Setter Property="FontFamily" Value="OpenSansBold"/>
                 <Setter Property="FontSize" Value="11"/>
@@ -154,7 +154,7 @@
                             Clicked="OnSearchFriendsClicked"/>
                 </Grid>
 
-                <!-- Risultati ricerca (inizialmente nascosti) -->
+                <!-- Risultati ricerca  -->
                 <CollectionView x:Name="SearchResultsCollectionView"
                                 ItemsSource="{Binding SearchResults}"
                                 IsVisible="False"
@@ -293,7 +293,7 @@
                                                    TextColor="{StaticResource TextSecondary}"/>
                                         </VerticalStackLayout>
 
-                                        <!-- MODIFICA: Pulsante messaggio più grande -->
+                                        <!-- Pulsante messaggio più grande -->
                                         <Button Grid.Column="2"
                                                 Text="💬 Chat"
                                                 Style="{StaticResource FriendActionButtonStyle}"
@@ -301,7 +301,7 @@
                                                 Clicked="OnMessageFriendClicked"
                                                 CommandParameter="{Binding .}"/>
 
-                                        <!-- MODIFICA: Menu opzioni più grande -->
+                                        <!-- Menu opzioni più grande -->
                                         <Button Grid.Column="3"
                                                 Text="⚙️ Opzioni"
                                                 Style="{StaticResource FriendActionButtonStyle}"

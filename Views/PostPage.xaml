@@ -214,7 +214,7 @@
                                         </Label>
                                     </Grid>
 
-                                    <!-- AGGIORNATO: Numero Giocatori con stato partecipanti -->
+                                    <!--  Numero Giocatori con stato partecipanti -->
                                     <Grid Grid.Row="4" ColumnDefinitions="Auto,*,Auto">
                                         <Image Source="people_icon.png"
                                                Grid.Column="0"
@@ -225,7 +225,7 @@
                                                    Style="{StaticResource CardDateTime}"
                                                    TextColor="#2196F3"
                                                    FontAttributes="Bold"/>
-                                            <!-- NUOVO: Mostra partecipanti iscritti -->
+                                            <!-- Mostra partecipanti iscritti -->
                                             <Label FontSize="11" TextColor="#666">
                                                 <Label.FormattedText>
                                                     <FormattedString>
@@ -239,7 +239,7 @@
                                             </Label>
                                         </VerticalStackLayout>
 
-                                        <!-- NUOVO: Badge disponibilità -->
+                                        <!-- Badge disponibilità -->
                                         <Frame Grid.Column="2"
                                                CornerRadius="10"
                                                Padding="6,3"
@@ -280,7 +280,7 @@
                                              Color="#F0F2F5" 
                                              Margin="0,4,0,8"/>
 
-                                    <!-- NUOVO: Anteprima partecipanti (solo se ci sono iscritti) -->
+                                    <!-- Anteprima partecipanti (solo se ci sono iscritti) -->
                                     <Grid Grid.Row="6" 
                                           ColumnDefinitions="Auto,*"
                                           IsVisible="{Binding partecipanti_iscritti, Converter={StaticResource IsGreaterThanZeroConverter}}">

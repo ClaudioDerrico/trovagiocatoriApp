@@ -10,7 +10,7 @@ namespace trovagiocatoriApp.Views;
 public partial class HomePage : ContentPage
 {
     private readonly HttpClient _client = new HttpClient();
-    private bool _hasShownAdminWelcome = false;
+    private bool _hasShownAdminWelcome = false; // Flag per mostrare il messaggio di benvenuto admin una sola volta
 
     public HomePage()
     {
@@ -112,7 +112,7 @@ public partial class HomePage : ContentPage
     // Mostra il messaggio di benvenuto per amministratori
     private async Task ShowAdminWelcome()
     {
-        await DisplayAlert("👑 Benvenuto Amministratore",
+        await DisplayAlert("Benvenuto Amministratore",
             "Hai effettuato l'accesso come amministratore.\n\nPuoi accedere al pannello di gestione dal tuo profilo.",
             "Capito");
         Debug.WriteLine("[ADMIN] Welcome message mostrato");

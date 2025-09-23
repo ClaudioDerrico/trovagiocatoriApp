@@ -35,7 +35,7 @@ namespace trovagiocatoriApp.Views
         {
             isPasswordVisible = !isPasswordVisible;
             PasswordEntry.IsPassword = !isPasswordVisible;
-            var button = sender as ImageButton;
+            var button = sender as ImageButton; //cast
             button.Source = isPasswordVisible ? "eye_close.png" : "eye_open.png";
         }
 
@@ -125,7 +125,7 @@ namespace trovagiocatoriApp.Views
                         Preferences.Set("session_id", sessionId);
                         Preferences.Set("login_timestamp", DateTime.Now.ToString());
 
-                        Debug.WriteLine($"[LOGIN] ✅ Session salvata: {sessionId}");
+                        Debug.WriteLine($"[LOGIN] Session salvata: {sessionId}");
                     }
                 }
 
@@ -189,7 +189,7 @@ namespace trovagiocatoriApp.Views
             }
             catch
             {
-                // Usa il messaggio di default se la deserializzazione fallisce
+                Console.WriteLine($"Errore deserializzazione login:");
             }
 
             await DisplayAlert("Errore Login", errorMessage, "OK");

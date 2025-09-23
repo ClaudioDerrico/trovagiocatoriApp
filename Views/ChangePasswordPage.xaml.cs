@@ -12,10 +12,7 @@ namespace trovagiocatoriApp.Views
     public partial class ChangePasswordPage : ContentPage
     {
         private readonly HttpClient _client = new HttpClient();
-        private string ApiBaseUrl =>
-            DeviceInfo.Platform == DevicePlatform.Android
-                ? "http://10.0.2.2:8080"    // loopback dell’emulatore Android
-                : "http://localhost:8080";  // Windows, macOS, iOS, ecc.
+  
 
         // Stato di visibilità delle password
         private bool _isCurrentVisible = false;
@@ -74,7 +71,7 @@ namespace trovagiocatoriApp.Views
                     new_password = NewPasswordEntry.Text
                 };
 
-                var request = new HttpRequestMessage(HttpMethod.Post, $"{ApiBaseUrl}/update-password");
+                var request = new HttpRequestMessage(HttpMethod.Post, $"{ApiConfig.BaseUrl}/update-password");
 
                 if (Preferences.ContainsKey("session_id"))
                 {
