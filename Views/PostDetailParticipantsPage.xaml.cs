@@ -325,7 +325,6 @@ namespace trovagiocatoriApp.Views
             try
             {
                 var request = new HttpRequestMessage(HttpMethod.Get, $"{_pythonApiBaseUrl}/posts/{_postId}/comments/");
-
                 if (Preferences.ContainsKey("session_id"))
                 {
                     string sessionId = Preferences.Get("session_id", "");
@@ -333,7 +332,6 @@ namespace trovagiocatoriApp.Views
                 }
 
                 var response = await _sharedClient.SendAsync(request);
-
                 if (response.IsSuccessStatusCode)
                 {
                     var json = await response.Content.ReadAsStringAsync();
@@ -341,16 +339,15 @@ namespace trovagiocatoriApp.Views
                         new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
 
                     Comments.Clear(); // Pulisce la collezione prima di ricaricare
+
                     foreach (var comment in comments ?? new List<Comment>())
                     {
-                        comment.autore_username = await GetUsernameByEmail(comment.autore_email);
                         comment.IsAuthorComment = comment.autore_email.Equals(_postAuthorEmail, StringComparison.OrdinalIgnoreCase);
                         Comments.Add(comment);
                     }
 
                     CommentsCollectionView.ItemsSource = Comments;
-
-                    Debug.WriteLine($"[CHAT] Caricati {Comments.Count} messaggi pubblici");
+                    Debug.WriteLine($"[COMMENTS] Caricati {Comments.Count} commenti");
 
                     // Scrolla alla fine se la chat è visibile
                     if (!_isParticipantsTabActive)
@@ -365,7 +362,7 @@ namespace trovagiocatoriApp.Views
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"[CHAT] Errore nel caricamento commenti: {ex.Message}");
+                Debug.WriteLine($"[COMMENTS] Errore nel caricamento commenti: {ex.Message}");
             }
         }
 

@@ -65,12 +65,12 @@ namespace trovagiocatoriApp.Views
                     if (_isAdmin)
                     {
                         await SetupAdminProfile();
-                        Debug.WriteLine("[PROFILE] ✅ Configurato profilo ADMIN");
+                        Debug.WriteLine("[PROFILE] Configurato profilo ADMIN");
                     }
                     else
                     {
                         await SetupUserProfile();
-                        Debug.WriteLine("[PROFILE] ✅ Configurato profilo USER");
+                        Debug.WriteLine("[PROFILE] Configurato profilo USER");
                     }
                 }
                 else
@@ -112,7 +112,7 @@ namespace trovagiocatoriApp.Views
                         ReplaceContentWithAdminInterface(mainGrid);
                     }
 
-                    Debug.WriteLine("[PROFILE] ✅ Interfaccia admin configurata");
+                    Debug.WriteLine("[PROFILE] Interfaccia admin configurata");
                 }
                 catch (Exception ex)
                 {
