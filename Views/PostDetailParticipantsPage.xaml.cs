@@ -366,30 +366,6 @@ namespace trovagiocatoriApp.Views
             }
         }
 
-        private async Task<string> GetUsernameByEmail(string email)
-        {
-            try
-            {
-                var encodedEmail = Uri.EscapeDataString(email);
-
-                var response = await _sharedClient.GetAsync($"{_apiBaseUrl}/api/user/by-email?email={encodedEmail}");
-
-                if (response.IsSuccessStatusCode)
-                {
-                    var json = await response.Content.ReadAsStringAsync();
-                    var user = JsonSerializer.Deserialize<User>(json, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-                    return user?.Username ?? email;
-                }
-
-                return email;
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine($"[CHAT] Errore nel recupero username per {email}: {ex.Message}");
-                return email;
-            }
-        }
-
         private async void OnSendMessageClicked(object sender, EventArgs e)
         {
             string messaggio = MessageEntry.Text?.Trim();
