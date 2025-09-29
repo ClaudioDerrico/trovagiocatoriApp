@@ -127,7 +127,7 @@ namespace trovagiocatoriApp.Services
                     var historyMessages = new List<LiveChatMessage>();
                     foreach (var messageElement in messagesArray)
                     {
-                        var message = ParseChatMessage(messageElement);
+                        var message = ParseChatMessage(messageElement); 
                         message.IsSentByMe = message.SenderEmail == _currentUserEmail;
                         historyMessages.Add(message);
                     }
@@ -197,7 +197,7 @@ namespace trovagiocatoriApp.Services
                 }
             });
 
-            // Altri event handlers rimangono invariati...
+
             _socket.On("user_typing", response =>
             {
                 try
