@@ -318,7 +318,6 @@ namespace trovagiocatoriApp.Services
             }
         }
 
-        // Resto dei metodi rimangono invariati...
         public async Task NotifyTypingStartAsync(string recipientEmail)
         {
             if (!_isConnected) return;
