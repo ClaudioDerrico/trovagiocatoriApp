@@ -1,5 +1,4 @@
-﻿// Services/ChatService.cs - VERSIONE CORRETTA
-using Microsoft.Maui.Storage;
+﻿using Microsoft.Maui.Storage;
 using SocketIOClient;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
