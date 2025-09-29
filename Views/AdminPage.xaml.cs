@@ -12,7 +12,6 @@ public partial class AdminPage : ContentPage
     private readonly IBanService _banService;
     private string _currentAdminEmail = "";
 
-    // Collections per i dati utilizzando i nuovi Models
     public ObservableCollection<AdminPostInfo> AllPosts { get; set; } = new ObservableCollection<AdminPostInfo>();
     public ObservableCollection<AdminCommentInfo> AllComments { get; set; } = new ObservableCollection<AdminCommentInfo>();
     public ObservableCollection<AdminUserInfo> AllUsers { get; set; } = new ObservableCollection<AdminUserInfo>();
@@ -38,7 +37,7 @@ public partial class AdminPage : ContentPage
         InitializeComponent();
         BindingContext = this;
 
-        // Inizializza il service 
+      
         _adminService = new AdminService();
         _banService = new BanService();
     }
@@ -49,7 +48,7 @@ public partial class AdminPage : ContentPage
         await LoadAdminInfo();
         await LoadDashboardStats();
         await LoadAllData(); 
-        await LoadBanStats(); // Carica statistiche ban
+        await LoadBanStats(); 
     }
 
     // ========== CARICAMENTO DATI ==========
