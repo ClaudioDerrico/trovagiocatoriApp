@@ -159,7 +159,6 @@ namespace trovagiocatoriApp.Views
             };
 
             adminStack.Children.Add(CreateWelcomeCard());
-            adminStack.Children.Add(CreateQuickAccessCard());
 
             return adminStack;
         }
