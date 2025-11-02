@@ -66,7 +66,7 @@ namespace trovagiocatoriApp.Views
                 client.Timeout = TimeSpan.FromSeconds(30);
 
                 var response = await client.PostAsync($"{ApiConfig.BaseUrl}/login", content);
-                var responseJson = await response.Content.ReadAsStringAsync();
+                var responseJson = await response.Content.ReadAsStringAsync(); //serve a leggere il contenuto della risposta HTTP come stringa.
 
                 Debug.WriteLine($"[LOGIN] Response status: {response.StatusCode}");
 
@@ -118,10 +118,12 @@ namespace trovagiocatoriApp.Views
                 // Salva il cookie di sessione
                 if (response.Headers.TryGetValues("Set-Cookie", out var cookies))
                 {
-                    var sessionCookie = cookies.FirstOrDefault(c => c.StartsWith("session_id="));
+                    var sessionCookie = cookies.FirstOrDefault(c => c.StartsWith("session_id="));//Cerca tra tutti i cookie quello che inizia con session_id=.
                     if (sessionCookie != null)
                     {
                         var sessionId = sessionCookie.Split(';')[0].Split('=')[1];
+                        //Split(';')[0] prende solo la parte prima del punto e virgola, che contiene session_id=VALORE
+                        //Split('=')[1] prende solo il VALORE del cookie, cioè l’ID di sessione.
                         Preferences.Set("session_id", sessionId);
                         Preferences.Set("login_timestamp", DateTime.Now.ToString());
 

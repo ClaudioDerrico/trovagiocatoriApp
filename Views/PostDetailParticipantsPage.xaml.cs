@@ -49,6 +49,7 @@ namespace trovagiocatoriApp.Views
             _isPostAuthor = isPostAuthor;
             _postAuthorEmail = currentPost.autore_email;
 
+            // IMPORTANTE: Imposta il BindingContext della pagina
             BindingContext = this;
 
             // Imposta le informazioni dell'evento nell'header
@@ -57,8 +58,7 @@ namespace trovagiocatoriApp.Views
             // Mostra info chat per organizzatore       
             OrganizerChatInfo.IsVisible = _isPostAuthor;
 
-           
-            if (startWithChat) 
+            if (startWithChat)
             {
                 _isParticipantsTabActive = false;
                 UpdateTabsUI();
@@ -238,62 +238,79 @@ namespace trovagiocatoriApp.Views
 
 
         // ========== GESTIONE CHAT PRIVATA ==========
-                private async void OnChatWithParticipantClicked(object sender, EventArgs e)
-                {
-            if (sender is ImageButton button && button.CommandParameter is ParticipantInfo participant)
+        private async void OnChatWithParticipantClicked(object sender, EventArgs e)
+        {
+            try
             {
+                // Verifica che il sender sia un ImageButton con CommandParameter
+                if (!(sender is ImageButton button))
+                {
+                    Debug.WriteLine("[CHAT] Errore: sender non è un ImageButton");
+                    await DisplayAlert("Errore", "Errore nell'interfaccia", "OK");
+                    return;
+                }
+
+                if (!(button.CommandParameter is ParticipantInfo participant))
+                {
+                    Debug.WriteLine("[CHAT] Errore: CommandParameter non è un ParticipantInfo");
+                    await DisplayAlert("Errore", "Impossibile identificare il partecipante selezionato", "OK");
+                    return;
+                }
+
                 Debug.WriteLine($"[CHAT] Organizzatore {_currentUserEmail} vuole chattare con {participant.email}");
 
-                try
+                // Verifica che l'utente corrente sia effettivamente l'organizzatore
+                if (!_isPostAuthor)
                 {
-                    // Verifica che l'utente corrente sia effettivamente l'organizzatore
-                    if (!_isPostAuthor)
-                    {
-                        await DisplayAlert("Errore", "Solo l'organizzatore può iniziare chat con i partecipanti", "OK");
-                        return;
-                    }
-
-                    // Verifica che il partecipante non sia l'organizzatore stesso
-                    if (participant.IsOrganizer)
-                    {
-                        await DisplayAlert("Info", "Non puoi chattare con te stesso!", "OK");
-                        return;
-                    }
-
-                    // Verifica che sia effettivamente un partecipante iscritto
-                    if (string.IsNullOrEmpty(participant.email))
-                    {
-                        await DisplayAlert("Errore", "Informazioni partecipante non disponibili", "OK");
-                        return;
-                    }
-
-                    // Conferma prima di avviare la chat
-                    bool startChat = await DisplayAlert(
-                        "Avvia Chat",
-                        $"Vuoi iniziare una chat privata con {participant.DisplayName}?",
-                        "Avvia Chat",
-                        "Annulla"
-                    );
-
-                    if (!startChat)
-                        return;
-
-                    // Avvia la chat con il partecipante selezionato
-                    var chatPage = new ChatPage(_currentPost, _currentUserEmail, participant.email, true); // true = isPostAuthor
-                    await Navigation.PushAsync(chatPage);
-
-                    Debug.WriteLine($"[CHAT] Chat avviata tra organizzatore {_currentUserEmail} e partecipante {participant.email}");
+                    await DisplayAlert("Errore", "Solo l'organizzatore può iniziare chat con i partecipanti", "OK");
+                    return;
                 }
-                catch (Exception ex)
+
+                // Verifica che il partecipante non sia l'organizzatore stesso
+                if (participant.IsOrganizer)
                 {
-                    Debug.WriteLine($"[CHAT] Errore nell'avvio chat: {ex.Message}");
-                    await DisplayAlert("Errore", "Impossibile avviare la chat. Riprova più tardi.", "OK");
+                    await DisplayAlert("Info", "Non puoi chattare con te stesso!", "OK");
+                    return;
                 }
+
+                // Verifica che sia effettivamente un partecipante iscritto
+                if (string.IsNullOrEmpty(participant.email))
+                {
+                    await DisplayAlert("Errore", "Informazioni partecipante non disponibili", "OK");
+                    return;
+                }
+
+                // Verifica che l'email corrente sia caricata
+                if (string.IsNullOrEmpty(_currentUserEmail))
+                {
+                    await DisplayAlert("Errore", "Email utente corrente non disponibile", "OK");
+                    return;
+                }
+
+                // Conferma prima di avviare la chat
+                bool startChat = await DisplayAlert(
+                    "Avvia Chat",
+                    $"Vuoi iniziare una chat privata con {participant.DisplayName}?",
+                    "Avvia Chat",
+                    "Annulla"
+                );
+
+                if (!startChat)
+                    return;
+
+                Debug.WriteLine($"[CHAT] Creazione ChatPage - Post: {_currentPost.titolo}, CurrentUser: {_currentUserEmail}, Recipient: {participant.email}, IsAuthor: true");
+
+                // Avvia la chat con il partecipante selezionato
+                var chatPage = new ChatPage(_currentPost, _currentUserEmail, participant.email, true); // true = isPostAuthor
+                await Navigation.PushAsync(chatPage);
+
+                Debug.WriteLine($"[CHAT] Chat avviata tra organizzatore {_currentUserEmail} e partecipante {participant.email}");
             }
-            else
+            catch (Exception ex)
             {
-                Debug.WriteLine("[CHAT] Errore: CommandParameter non valido o mancante");
-                await DisplayAlert("Errore", "Impossibile identificare il partecipante selezionato", "OK");
+                Debug.WriteLine($"[CHAT] Eccezione nell'avvio chat: {ex.Message}");
+                Debug.WriteLine($"[CHAT] Stack trace: {ex.StackTrace}");
+                await DisplayAlert("Errore", $"Impossibile avviare la chat: {ex.Message}", "OK");
             }
         }
 

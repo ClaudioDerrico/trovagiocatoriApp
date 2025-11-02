@@ -56,15 +56,17 @@
                 <Setter Property="VerticalOptions" Value="Center"/>
             </Style>
 
+
+
             <!-- Stile per il pulsante chat -->
             <Style x:Key="ChatButtonStyle" TargetType="ImageButton">
-                <Setter Property="BackgroundColor" Value="#10B981"/>
+                <Setter Property="BackgroundColor" Value="White"/>
                 <Setter Property="CornerRadius" Value="20"/>
                 <Setter Property="WidthRequest" Value="40"/>
                 <Setter Property="HeightRequest" Value="40"/>
                 <Setter Property="Padding" Value="8"/>
                 <Setter Property="VerticalOptions" Value="Center"/>
-                <Setter Property="Source" Value="chat_icon.png"/>
+                <Setter Property="Source" Value="chat.png"/>
             </Style>
         </ResourceDictionary>
     </ContentPage.Resources>
@@ -265,30 +267,21 @@
                                             </Frame>
 
                                             <!-- Pulsante Chat (visibile solo se utente è organizzatore E il partecipante NON è organizzatore) -->
-                                            <Button Grid.Column="3"
-                                                    BackgroundColor="Transparent"
-                                                    BorderColor="#10B981"
-                                                    BorderWidth="2"
-                                                    CornerRadius="20"
-                                                    WidthRequest="40"
-                                                    HeightRequest="40"
-                                                    VerticalOptions="Center"
-                                                    Text="🖋️"
-                                                    FontSize="16"
-                                                    TextColor="White"
-                                                    x:Name="ChatWithParticipantButton"
-                                                    Clicked="OnChatWithParticipantClicked"
-                                                    CommandParameter="{Binding .}">             
-                                                <!-- mostra solo se l'utente corrente è organizzatore e questo partecipante NON è organizzatore -->
-                                                <Button.Triggers>
-                                                    <DataTrigger TargetType="Button" Binding="{Binding IsOrganizer}" Value="True">
+                                            <ImageButton Grid.Column="3"
+                                                         Style="{StaticResource ChatButtonStyle}"
+                                                         Clicked="OnChatWithParticipantClicked"
+                                                         CommandParameter="{Binding .}">                        
+                                                <ImageButton.Triggers>
+                                                    <!-- Nascondi se il partecipante è l'organizzatore -->
+                                                    <DataTrigger TargetType="ImageButton" Binding="{Binding IsOrganizer}" Value="True">
                                                         <Setter Property="IsVisible" Value="False"/>
                                                     </DataTrigger>
-                                                    <DataTrigger TargetType="Button" Binding="{Binding IsOrganizer}" Value="False">
+                                                    <!-- Mostra solo se l'utente corrente è l'organizzatore del post -->
+                                                    <DataTrigger TargetType="ImageButton" Binding="{Binding IsOrganizer}" Value="False">
                                                         <Setter Property="IsVisible" Value="{Binding Source={x:Reference ParticipantsCollectionView}, Path=BindingContext.IsPostAuthor}"/>
                                                     </DataTrigger>
-                                                </Button.Triggers>
-                                            </Button>
+                                                </ImageButton.Triggers>
+                                            </ImageButton>
                                         </Grid>
                                     </Border>
                                 </DataTemplate>
